@@ -20,39 +20,39 @@
 
 using namespace std;
 
-class BPHTriggerPathFilter : public edm::EDFilter {
+class BPHTriggerPathProducer : public edm::EDProducer {
    public:
-      explicit BPHTriggerPathFilter(const edm::ParameterSet& iConfig);
-      ~BPHTriggerPathFilter();
+      explicit BPHTriggerPathProducer(const edm::ParameterSet& iConfig);
+      ~BPHTriggerPathProducer() {};
 
    private:
-      bool filter(edm::Event& iEvent, const edm::EventSetup& iSetup) override;
+      void beginJob(const edm::EventSetup&) {};
+      void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) override;
 
-      vector<pat::Muon> TriggerObj_matching(edm::Handle<vector<pat::Muon>>, pat::TriggerObjectStandAlone);
+      vector<pat::Muon> TriggerObj_matching(edm::Handle<vector<pat::Muon>>, pat::TriggerObjectStandAlone, int mu_charge=0);
 
 
       // ----------member data ---------------------------
       edm::EDGetTokenT<edm::TriggerResults> triggerBitsSrc_;
-      int muon_charge_ = 0;
+      int muonCharge_ = 0;
       edm::EDGetTokenT<vector<pat::TriggerObjectStandAlone>> triggerObjectsSrc_;
-      edm::EDGetTokenT<std::vector<pat::Muon>> muonSrc_;
-
-      int verbose = 1;
+      edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
+      int verbose = 0;
 };
 
 
-BPHTriggerPathFilter::BPHTriggerPathFilter(const edm::ParameterSet& iConfig):
+BPHTriggerPathProducer::BPHTriggerPathProducer(const edm::ParameterSet& iConfig):
   triggerBitsSrc_( consumes<edm::TriggerResults> ( iConfig.getParameter<edm::InputTag>("triggerBits") ) ),
-  muon_charge_( iConfig.getParameter<int>( "muon_charge" ) ),
+  muonCharge_( iConfig.getParameter<int>( "muon_charge" ) ),
   triggerObjectsSrc_(consumes<vector<pat::TriggerObjectStandAlone>> ( iConfig.getParameter<edm::InputTag>("triggerObjects") ) ),
-  muonSrc_( consumes<std::vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "muonCollection" ) ) )
+  muonSrc_( consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "muonCollection" ) ) ),
+  verbose( iConfig.getParameter<int>( "verbose" ) )
 {
-  produces<std::vector<pat::Muon>>("TrgMu").setBranchAlias( "TrgMu");
+  produces<vector<pat::Muon>>("trgMuonsMatched").setBranchAlias( "trgMuonsMatched");
+  produces<map<string, float>>("output_RDntuplizer").setBranchAlias( "output_RDntuplizer");
 }
 
-BPHTriggerPathFilter::~BPHTriggerPathFilter(){};
-
-bool BPHTriggerPathFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   edm::Handle<edm::TriggerResults> triggerBits;
   iEvent.getByToken(triggerBitsSrc_, triggerBits);
 
@@ -64,21 +64,17 @@ bool BPHTriggerPathFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSe
   unsigned int muonNumber = muonHandle->size();
 
   // Output collection
-  std::unique_ptr<std::vector<pat::Muon>> result( new std::vector<pat::Muon> );
+  unique_ptr<vector<pat::Muon>> trgMuonsMatched( new vector<pat::Muon> );
 
   //BPH trigger footprint
   std::regex txt_regex_path("HLT_Mu[0-9]+_IP[0-9]+.*");
   if (verbose) {std::cout << "\n == BPH TRIGGER OBJ == " << std::endl;}
 
   for (pat::TriggerObjectStandAlone obj : *triggerObjects) {
-    if(muon_charge_ && obj.charge() != muon_charge_) continue;
-
     obj.unpackNamesAndLabels(iEvent, *triggerBits);
-    vector pathNamesAll = obj.pathNames(false);
     vector pathNamesLast = obj.pathNames(true);
-
     unsigned int obj_BPH_path = 0;
-    for (unsigned h = 0, n = pathNamesAll.size(); h < n; ++h) {
+    for (unsigned h = 0, n = pathNamesLast.size(); h < n; ++h) {
       if (regex_match(pathNamesAll[h], txt_regex_path)) obj_BPH_path++;
     }
 
@@ -99,8 +95,8 @@ bool BPHTriggerPathFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSe
         }
       }
 
-      auto matching_muons = TriggerObj_matching(muonHandle, obj);
-      if (matching_muons.size()>0) result->push_back(matching_muons[0]);
+      auto matching_muons = TriggerObj_matching(muonHandle, obj, muonCharge_);
+      if (matching_muons.size()>0) trgMuonsMatched->push_back(matching_muons[0]);
 
     }
   }
@@ -113,15 +109,31 @@ bool BPHTriggerPathFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSe
     }
   }
 
-  iEvent.put(std::move(result));
+  unique_ptr<map<string, float>> output_RDntuplizer(new map<string, float>);
+  if (trgMuonsMatched->size()) {
+    auto m = trgMuonsMatched[0];
+    (*output_RDntuplizer)["trgMu_pt"] = m.pt();
+    (*output_RDntuplizer)["trgMu_eta"] = m.eta();
+    (*output_RDntuplizer)["trgMu_phi"] = m.phi();
+    (*output_RDntuplizer)["trgMu_charge"] = m.charge();
+  }
+  else {
+    (*output_RDntuplizer)["trgMu_pt"] = 0;
+    (*output_RDntuplizer)["trgMu_eta"] = 0;
+    (*output_RDntuplizer)["trgMu_phi"] = 0;
+    (*output_RDntuplizer)["trgMu_charge"] = 0;
+  }
+
+  iEvent.put(move(trgMuonsMatched), "trgMuonsMatched");
+  iEvent.put(move(output_RDntuplizer), "output_RDntuplizer");
 
   if (verbose) {std::cout << "======================== " << std::endl;}
-  return result->size()>0;
+  return trgMuonsMatched->size()>0;
 }
 
 
 
-vector<pat::Muon> BPHTriggerPathFilter::TriggerObj_matching(edm::Handle<vector<pat::Muon>> muon_list, pat::TriggerObjectStandAlone obj) {
+vector<pat::Muon> BPHTriggerPathProducer::TriggerObj_matching(edm::Handle<vector<pat::Muon>> muon_list, pat::TriggerObjectStandAlone obj, int mu_charge=0) {
   double max_DeltaR = 0.005;
   double max_Delta_pt_rel = 0.01;
 
@@ -130,6 +142,8 @@ vector<pat::Muon> BPHTriggerPathFilter::TriggerObj_matching(edm::Handle<vector<p
   vector<pat::Muon> out;
 
   for( auto muon : *muon_list) {
+    if(mu_charge && mu_charge!=muon.charge()) continue;
+
     double dEta = muon.eta() - obj.eta();
     double dPhi = muon.phi() - obj.phi();
     double deltaR = sqrt(dEta*dEta + dPhi*dPhi);
@@ -149,4 +163,4 @@ vector<pat::Muon> BPHTriggerPathFilter::TriggerObj_matching(edm::Handle<vector<p
   return out;
 }
 
-DEFINE_FWK_MODULE(BPHTriggerPathFilter);
+DEFINE_FWK_MODULE(BPHTriggerPathProducer);
