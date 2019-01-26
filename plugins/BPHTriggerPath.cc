@@ -29,7 +29,7 @@ class BPHTriggerPathProducer : public edm::EDProducer {
       void beginJob(const edm::EventSetup&) {};
       void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) override;
 
-      vector<pat::Muon> TriggerObj_matching(edm::Handle<vector<pat::Muon>>, pat::TriggerObjectStandAlone, int mu_charge=0);
+      vector<pat::Muon> TriggerObj_matching(edm::Handle<vector<pat::Muon>>, pat::TriggerObjectStandAlone, int);
 
 
       // ----------member data ---------------------------
@@ -49,7 +49,7 @@ BPHTriggerPathProducer::BPHTriggerPathProducer(const edm::ParameterSet& iConfig)
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
   produces<vector<pat::Muon>>("trgMuonsMatched").setBranchAlias( "trgMuonsMatched");
-  produces<map<string, float>>("output_RDntuplizer").setBranchAlias( "output_RDntuplizer");
+  produces<map<string, float>>("outputRDNtuplizer").setBranchAlias( "outputRDNtuplizer");
 }
 
 void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -75,7 +75,7 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     vector pathNamesLast = obj.pathNames(true);
     unsigned int obj_BPH_path = 0;
     for (unsigned h = 0, n = pathNamesLast.size(); h < n; ++h) {
-      if (regex_match(pathNamesAll[h], txt_regex_path)) obj_BPH_path++;
+      if (regex_match(pathNamesLast[h], txt_regex_path)) obj_BPH_path++;
     }
 
     std::regex txt_regex_coll("hlt.*MuonCandidates::HLT");
@@ -89,9 +89,9 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         cout << "\tCollection: " << obj.collection() << endl;
 
         // Print associated trigger paths
-        cout << "\tPaths (" << pathNamesAll.size()<<"/"<<pathNamesLast.size()<<"):"<< endl;
-        for (unsigned h = 0, n = pathNamesAll.size(); h < n; ++h) {
-          cout << "\t\t" << pathNamesAll[h] << endl;
+        cout << "\tPaths:"<< endl;
+        for (unsigned h = 0, n = pathNamesLast.size(); h < n; ++h) {
+          cout << "\t\t" << pathNamesLast[h] << endl;
         }
       }
 
@@ -109,26 +109,26 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     }
   }
 
-  unique_ptr<map<string, float>> output_RDntuplizer(new map<string, float>);
+  unique_ptr<map<string, float>> outputRDNtuplizer(new map<string, float>);
   if (trgMuonsMatched->size()) {
-    auto m = trgMuonsMatched[0];
-    (*output_RDntuplizer)["trgMu_pt"] = m.pt();
-    (*output_RDntuplizer)["trgMu_eta"] = m.eta();
-    (*output_RDntuplizer)["trgMu_phi"] = m.phi();
-    (*output_RDntuplizer)["trgMu_charge"] = m.charge();
+    auto m = (*trgMuonsMatched)[0];
+    (*outputRDNtuplizer)["trgMu_pt"] = m.pt();
+    (*outputRDNtuplizer)["trgMu_eta"] = m.eta();
+    (*outputRDNtuplizer)["trgMu_phi"] = m.phi();
+    (*outputRDNtuplizer)["trgMu_charge"] = m.charge();
   }
   else {
-    (*output_RDntuplizer)["trgMu_pt"] = 0;
-    (*output_RDntuplizer)["trgMu_eta"] = 0;
-    (*output_RDntuplizer)["trgMu_phi"] = 0;
-    (*output_RDntuplizer)["trgMu_charge"] = 0;
+    (*outputRDNtuplizer)["trgMu_pt"] = 0;
+    (*outputRDNtuplizer)["trgMu_eta"] = 0;
+    (*outputRDNtuplizer)["trgMu_phi"] = 0;
+    (*outputRDNtuplizer)["trgMu_charge"] = 0;
   }
 
   iEvent.put(move(trgMuonsMatched), "trgMuonsMatched");
-  iEvent.put(move(output_RDntuplizer), "output_RDntuplizer");
+  iEvent.put(move(outputRDNtuplizer), "outputRDNtuplizer");
 
   if (verbose) {std::cout << "======================== " << std::endl;}
-  return trgMuonsMatched->size()>0;
+  return;
 }
 
 

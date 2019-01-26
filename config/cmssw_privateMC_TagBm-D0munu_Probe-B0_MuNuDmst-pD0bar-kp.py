@@ -9,8 +9,8 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 
 
 
-from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12', '')
+# from Configuration.AlCa.GlobalTag import GlobalTag
+# process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12', '')
 
 '''
 #####################   Input    ###################
@@ -24,7 +24,7 @@ process.maxEvents = cms.untracked.PSet(
 # flist = glob('/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_NoPU_10-2-3_v1/jobs_out/*MINIAODSIM*.root')
 # for i in range(len(flist)):
 #     flist[i] = 'file:' + flist[i]
-flist =[ '/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_NoPU_10-2-3_v1/jobs_out/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_MINIAODSIM_merged_1-300.root']
+flist =[ 'file:/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_NoPU_10-2-3_v1/jobs_out/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_MINIAODSIM_merged_1-300.root']
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(tuple(flist)) )
 
 process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
@@ -45,7 +45,7 @@ process.TFileService = cms.Service("TFileService",
 #################   Sequence    ####################
 '''
 
-BPHTriggerPath = cms.EDFilter("BPHTriggerPathProducer",
+process.trgP = cms.EDProducer("BPHTriggerPathProducer",
         muonCollection = cms.InputTag("slimmedMuons","", "PAT"),
         triggerObjects = cms.InputTag("slimmedPatTrigger"),
         triggerBits = cms.InputTag("TriggerResults","","HLT"),
@@ -54,14 +54,14 @@ BPHTriggerPath = cms.EDFilter("BPHTriggerPathProducer",
 )
 
 
-FlatTreeWriter = cms.EDAnalyzer("FlatTreeWriter",
+process.outA = cms.EDAnalyzer("FlatTreeWriter",
                         cmssw = cms.string(cmssw_version)
 )
 
 
 process.p = cms.Path(
-                    BPHTriggerPath +
-                    FlatTreeWriter
+                    process.trgP +
+                    process.outA
                     )
 
 

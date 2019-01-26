@@ -1,3 +1,4 @@
+#ifdef _CIAONEEEEEEE_
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -357,3 +358,4 @@ vector<int> BPH_MCTruth::RecoMC_matching(edm::Handle<edm::View<reco::Candidate>>
 
 
 DEFINE_FWK_MODULE(BPH_MCTruth);
+#endif
