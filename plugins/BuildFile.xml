@@ -7,8 +7,5 @@
 <use name="DataFormats/StdDictionaries"/>
 <use name="DataFormats/Candidate"/>
 <use name="PhysicsTools/UtilAlgos"/>
-<use   name="boost"/>
+<use name="boost"/>
 <flags EDM_PLUGIN="1"/>
-<export>
-  <lib   name="1"/>
-</export>

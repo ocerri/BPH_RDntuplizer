@@ -48,8 +48,8 @@ BPHTriggerPathProducer::BPHTriggerPathProducer(const edm::ParameterSet& iConfig)
   muonSrc_( consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "muonCollection" ) ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
-  produces<vector<pat::Muon>>("trgMuonsMatched").setBranchAlias( "trgMuonsMatched");
-  produces<map<string, float>>("outputRDNtuplizer").setBranchAlias( "outputRDNtuplizer");
+  produces<vector<pat::Muon>>("trgMuonsMatched");
+  produces<map<string, float>>("outputRDNtuplizer");
 }
 
 void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
