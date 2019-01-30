@@ -16,7 +16,7 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100)
+    input = cms.untracked.int32(50)
     # input = cms.untracked.int32(-1)
 )
 
@@ -45,12 +45,16 @@ process.TFileService = cms.Service("TFileService",
 #################   Sequence    ####################
 '''
 
-process.trgP = cms.EDProducer("BPHTriggerPathProducer",
+process.trgBPH = cms.EDProducer("BPHTriggerPathProducer",
         muonCollection = cms.InputTag("slimmedMuons","", "PAT"),
         triggerObjects = cms.InputTag("slimmedPatTrigger"),
         triggerBits = cms.InputTag("TriggerResults","","HLT"),
         muon_charge = cms.int32(-1),
         verbose = cms.int32(1)
+)
+
+process.trgF = cms.EDFilter("BPHTriggerPathFilter",
+        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", "")
 )
 
 
@@ -60,7 +64,8 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 
 
 process.p = cms.Path(
-                    process.trgP +
+                    process.trgBPH +
+                    process.trgF +
                     process.outA
                     )
 

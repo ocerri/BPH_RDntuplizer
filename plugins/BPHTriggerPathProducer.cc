@@ -49,7 +49,7 @@ BPHTriggerPathProducer::BPHTriggerPathProducer(const edm::ParameterSet& iConfig)
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
   produces<vector<pat::Muon>>("trgMuonsMatched");
-  produces<map<string, float>>("outputRDNtuplizer");
+  produces<map<string, float>>("outputNtuplizer");
 }
 
 void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -109,23 +109,23 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     }
   }
 
-  unique_ptr<map<string, float>> outputRDNtuplizer(new map<string, float>);
+  unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
   if (trgMuonsMatched->size()) {
     auto m = (*trgMuonsMatched)[0];
-    (*outputRDNtuplizer)["trgMu_pt"] = m.pt();
-    (*outputRDNtuplizer)["trgMu_eta"] = m.eta();
-    (*outputRDNtuplizer)["trgMu_phi"] = m.phi();
-    (*outputRDNtuplizer)["trgMu_charge"] = m.charge();
+    (*outputNtuplizer)["trgMu_pt"] = m.pt();
+    (*outputNtuplizer)["trgMu_eta"] = m.eta();
+    (*outputNtuplizer)["trgMu_phi"] = m.phi();
+    (*outputNtuplizer)["trgMu_charge"] = m.charge();
   }
   else {
-    (*outputRDNtuplizer)["trgMu_pt"] = 0;
-    (*outputRDNtuplizer)["trgMu_eta"] = 0;
-    (*outputRDNtuplizer)["trgMu_phi"] = 0;
-    (*outputRDNtuplizer)["trgMu_charge"] = 0;
+    (*outputNtuplizer)["trgMu_pt"] = -1;
+    (*outputNtuplizer)["trgMu_eta"] = 0;
+    (*outputNtuplizer)["trgMu_phi"] = 0;
+    (*outputNtuplizer)["trgMu_charge"] = 0;
   }
 
   iEvent.put(move(trgMuonsMatched), "trgMuonsMatched");
-  iEvent.put(move(outputRDNtuplizer), "outputRDNtuplizer");
+  iEvent.put(move(outputNtuplizer), "outputNtuplizer");
 
   if (verbose) {std::cout << "======================== " << std::endl;}
   return;

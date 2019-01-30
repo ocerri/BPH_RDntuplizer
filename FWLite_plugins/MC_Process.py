@@ -33,6 +33,12 @@ def getNuMomentum(d_flightB, p_vis, pt_B):
     p_nu = rt.TLorentzVector(p_nu_vec, p_nu_vec.Mag())
     return p_nu
 
+def addToOutput(p, tag, outmap):
+    outmap[tag+'_pt'] = p.pt()
+    outmap[tag+'_eta'] = p.eta()
+    outmap[tag+'_phi'] = p.phi()
+    outmap[tag+'_pdgId'] = p.pdgId()
+
 handlePruned  = Handle("std::vector<reco::GenParticle>")
 handlePacked  = Handle("std::vector<pat::PackedGenParticle>")
 labelPruned = ("prunedGenParticles")
@@ -149,7 +155,8 @@ class MC_Process:
                     if abs(dd.pdgId()) == 13:
                         mu_probe = dd
                 break
-        out['mu_pt'] = mu_probe.pt()
+
+        addToOutput(mu_probe, 'mu', out)
         vtx_D = np.array([D.vx(), D.vy(), D.vz()])
         vtx_mu = np.array([mu_probe.vx(), mu_probe.vy(), mu_probe.vz()])
 
@@ -170,13 +177,38 @@ class MC_Process:
             out['M_ext'] = -999
             print '------------> Istantaneus decay'
 
+        event.MC_part = {}
+        event.MC_part['D'] = D
+        event.MC_part['mu'] = mu_probe
+        event.MC_part['B'] = Bprobe
+
+        if abs(D.pdgId()) == 421:
+            D0 = D
+        else:
+            for d in D.daughterRefVector():
+                if abs(d.pdgId()) == 211:
+                    event.MC_part['pisoft'] = d
+                    addToOutput(d, 'pisoft', out)
+                elif abs(d.pdgId()) == 421:
+                    event.MC_part['D0'] = d
+                    D0 = d
+        for d in D0.daughterRefVector():
+            if abs(d.pdgId()) == 211:
+                event.MC_part['pi'] = d
+                addToOutput(d, 'pi', out)
+            elif abs(d.pdgId()) == 321:
+                event.MC_part['K'] = d
+                addToOutput(d, 'K', out)
+
+
         #Print muons info:
-        print '----- MC info -----'
-        for d in Btag.daughterRefVector():
-            if abs(d.pdgId()) ==  13:
-                print 'Tag Mu:'
-                getTLorenzVector(d, True)
-        print 'Probe Mu:'
-        getTLorenzVector(mu_probe, True)
+        # print '----- MC info -----'
+        # for d in Btag.daughterRefVector():
+        #     if abs(d.pdgId()) ==  13:
+        #         print 'Tag Mu:'
+        #         getTLorenzVector(d, True)
+        # print 'Probe Mu:'
+        # getTLorenzVector(mu_probe, True)
+
 
         return True

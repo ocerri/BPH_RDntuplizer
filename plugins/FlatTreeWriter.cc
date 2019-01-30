@@ -24,31 +24,53 @@ private:
   virtual void analyze( const edm::Event& , const edm::EventSetup& ) override;
 
   // edm::InputTag src_;
-  string cmssw_;
+  string cmssw;
+  // vector<string> output_soruce_modules;
+
   TTree* tree;
   map<string, float> out_map;
+
+  bool first_call = true;
 };
 
 FlatTreeWriter::FlatTreeWriter( const edm::ParameterSet & cfg ) :
-  // src_( cfg.getUntrackedParameter<edm::InputTag>( "src" ) ),
-  cmssw_( cfg.getParameter<string>("cmssw") )
+  cmssw( cfg.getParameter<string>("cmssw") )
+  // output_soruce_modules( cfg.getParameter<vector<string>>("output_soruce_modules") )
 {
   edm::Service<TFileService> fs;
   tree = fs->make<TTree>( "Tevts", "Events Tree from BPHRDntuplizer");
 
-  fs->make<TNamed>("cmssw",cmssw_.c_str() );
+  fs->make<TNamed>("cmssw",cmssw.c_str() );
+
+  consumesMany<map<string, float>>();
 }
 
 void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  out_map["test"] = 7;
+  // for( auto mn : output_soruce_modules) {
+  //   edm::Handle<map<string, float>> outMapHandle;
+  //   iEvent.getByLabel(mn, "outputNtuplizer", outMapHandle);
+  //   for(auto& kv : *outMapHandle) {
+  //     cout << kv.first <<  "  " << kv.second << endl;
+  //   }
+  // }
 
-  if (tree->GetNbranches() == 0) {
+  vector< edm::Handle<map<string, float>> > outMapHandle;
+  iEvent.getManyByType(outMapHandle);
+  for( auto h : outMapHandle ) {
+    for( auto& kv : *(h.product()) ) {
+      out_map[kv.first] = kv.second;
+      cout << Form("%s: %.2f", kv.first.c_str(), kv.second) << endl;
+    }
+  }
+
+  if (first_call) {
     // Creating the branches in the output tree
     for(auto& kv : out_map) {
       auto k = kv.first;
       tree->Branch(k.c_str(), &(out_map[k]));
     }
+    first_call = false;
   }
 
   tree->Fill();

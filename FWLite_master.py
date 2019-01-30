@@ -54,6 +54,11 @@ class OutputBauble:
         print self.outfile
 
         if (not self.out_names is None) and len(self.out_names)>0 and len(self.global_out_list)>0:
+            # idx_alphab_order = np.argsort(self.out_names)
+            # self.out_names = self.out_names[idx_alphab_order]
+            # for i in len(self.global_out_list):
+            #     self.global_out_list[i] = self.global_out_list[i][idx_alphab_order]
+
             dtypes = [(f, np.float) for f in self.out_names]
             aux = np.array(self.global_out_list, dtype=dtypes)
 
@@ -97,7 +102,7 @@ if __name__ == '__main__':
 
                 if verbose:
                     print '\nEvent {}: run {}, lumi {}, event {}'.format(iev,event.eventAuxiliary().run(), event.eventAuxiliary().luminosityBlock(),event.eventAuxiliary().event())
-                elif time() - t_last_print > 5:
+                elif time() - t_last_print > 5 and iev%100==0:
                     t_last_print = time()
                     print 'File {}/{} - Evt {}'.format(ifl+1, len(cfg.files), iev)
 
