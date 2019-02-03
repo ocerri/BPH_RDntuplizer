@@ -89,6 +89,7 @@ class MC_Process:
 
         out['Btag_pt'] = Btag.pt()
         out['Bp_pt'] = Bprobe.pt()
+        out['Bp_pz'] = Bprobe.pz()
         out['Bp_p'] = Bprobe.p()
         out['Bp_eta'] = Bprobe.eta()
         dphi = Bprobe.phi() - (Btag.phi()+np.pi)
@@ -102,7 +103,12 @@ class MC_Process:
         d = Bprobe.daughter(0)
         vtx_decay = np.array([d.vx(), d.vy(), d.vz()])
         d_flightB = vtx_decay - vtx_prod
+        if np.sum(d_flightB) == 0 and Bprobe.mother(0).pdgId() == -Bprobe.pdgId():
+            Bbar = Bprobe.mother(0)
+            vtx_prod = np.array([Bbar.vx(), Bbar.vy(), Bbar.vz()])
+            d_flightB = vtx_decay - vtx_prod
         d_flightB = rt.TVector3(d_flightB[0], d_flightB[1], d_flightB[2])
+        event.d_flightB_MC = d_flightB
         dl = np.linalg.norm(vtx_prod - vtx_decay)
         out['dl'] = dl
         out['Bp_tau'] = dl/c_light * Bprobe.mass()/Bprobe.p() #ns
@@ -128,11 +134,11 @@ class MC_Process:
         p4_vis, N_neutral = sumVisibleP4(Bprobe, p4_vis, N_neutral)
 
         out['N_neutral'] = N_neutral
-        out['M_vis'] = p4_vis.M()
-        out['M_miss'] = Bprobe.mass() - p4_vis.M()
+        out['M_vis_MC'] = p4_vis.M()
+        out['M_miss_MC'] = Bprobe.mass() - p4_vis.M()
 
         p4_Bprobe = getTLorenzVector(Bprobe)
-        out['dTheta_visB'] = p4_vis.Angle(p4_Bprobe.Vect())
+        out['dTheta_visB_MC'] = p4_vis.Angle(p4_Bprobe.Vect())
 
         #Find the D or D*
         for d in Bprobe.daughterRefVector():
@@ -163,20 +169,25 @@ class MC_Process:
         dir_mu = np.array([mu_probe.px(), mu_probe.py(), mu_probe.pz()])
         dir_mu /= np.linalg.norm(dir_mu)
 
-        out['mu_ip'] = np.linalg.norm(np.cross(dir_mu, vtx_mu-vtx_D))
+        out['mu_ip_MC'] = np.linalg.norm(np.cross(dir_mu, vtx_mu-vtx_D))
 
 
-        out['D_pt'] = D.pt()
+        out['D_pt_MC'] = D.pt()
         p4_D = getTLorenzVector(D)
+        out['q2_MC'] = (p4_Bprobe - p4_D).M2()
         if d_flightB.Mag() > 0:
-            out['D_pthat'] = p4_D.Pt(d_flightB*(1/d_flightB.Mag()))
+            out['D_pthat_MC'] = p4_D.Pt(d_flightB*(1/d_flightB.Mag()))
             pnu_ext = getNuMomentum(d_flightB, p4_vis, Btag.pt())
-            out['M_ext'] = (p4_vis + pnu_ext).M()
+            out['M_ext_MC'] = (p4_vis + pnu_ext).M()
         else:
-            out['D_pthat'] = -999
-            out['M_ext'] = -999
+            out['D_pthat_MC'] = -999
+            out['M_ext_MC'] = -999
             print '------------> Istantaneus decay'
+            print vtx_decay - vtx_prod
+            for i in range(Bprobe.numberOfMothers()):
+                print Bprobe.mother(i).pdgId()
 
+        #Save in the event the interesting MC particles
         event.MC_part = {}
         event.MC_part['D'] = D
         event.MC_part['mu'] = mu_probe

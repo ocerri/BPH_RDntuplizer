@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
                 if verbose:
                     print '\nEvent {}: run {}, lumi {}, event {}'.format(iev,event.eventAuxiliary().run(), event.eventAuxiliary().luminosityBlock(),event.eventAuxiliary().event())
-                elif time() - t_last_print > 5 and iev%100==0:
+                elif time() - t_last_print > 10 and iev%100==0:
                     t_last_print = time()
                     print 'File {}/{} - Evt {}'.format(ifl+1, len(cfg.files), iev)
 

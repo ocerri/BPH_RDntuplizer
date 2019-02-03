@@ -11,12 +11,14 @@ outfile=outfile.replace('MINIAODSIM', 'BPHMC')
 
 
 #load specific moduels
-from MC_Process import MC_Process
-from BPHTriggerPath import BPHTriggerPath
+from FWLite_plugins.MC_Process import MC_Process
+from FWLite_plugins.BPHTriggerPath import BPHTriggerPath
 from FWLite_plugins.RECO2MC_matching import RECO2MC_matching
+from FWLite_plugins.EasyRecoQuantities import EasyRecoQuantities
 
 exe_seq = [
            BPHTriggerPath(mu_charge=-1, filter=True),
            MC_Process(probe_pdgId=511, tag_pdgId=-521),
-           RECO2MC_matching(verbose=False)
+           RECO2MC_matching(verbose=False),
+           EasyRecoQuantities(verbose=False)
           ]

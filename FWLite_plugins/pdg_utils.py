@@ -46,11 +46,23 @@ def getName(pdgId):
         return str(pdgId)
 
 pdgId2MeanLife_dic = {} #ns
+pdgId2MeanLife_dic[511] = 1.520e-3
 pdgId2MeanLife_dic[521] = 1.638e-3
 
 def getMeanLife(pdgId):
     if abs(pdgId) in pdgId2MeanLife_dic.keys():
         return pdgId2MeanLife_dic[abs(pdgId)]
+    else:
+        print 'Add Mean life to dic for', abs(pdgId)
+        exit()
+
+pdgId2mass = {} #ns
+pdgId2mass[511] = 5.2796
+pdgId2mass[521] = 5.2793
+
+def getMass(pdgId):
+    if abs(pdgId) in pdgId2mass.keys():
+        return pdgId2mass[abs(pdgId)]
     else:
         print 'Add Mean life to dic for', abs(pdgId)
         exit()
