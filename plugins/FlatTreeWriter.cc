@@ -31,12 +31,16 @@ private:
   map<string, float> out_map;
 
   bool first_call = true;
+
+  int verbose = 0;
 };
 
 FlatTreeWriter::FlatTreeWriter( const edm::ParameterSet & cfg ) :
   cmssw( cfg.getParameter<string>("cmssw") )
   // output_soruce_modules( cfg.getParameter<vector<string>>("output_soruce_modules") )
 {
+  verbose = cfg.getParameter<int>( "verbose" );
+
   edm::Service<TFileService> fs;
   tree = fs->make<TTree>( "Tevts", "Events Tree from BPHRDntuplizer");
 
@@ -47,20 +51,12 @@ FlatTreeWriter::FlatTreeWriter( const edm::ParameterSet & cfg ) :
 
 void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  // for( auto mn : output_soruce_modules) {
-  //   edm::Handle<map<string, float>> outMapHandle;
-  //   iEvent.getByLabel(mn, "outputNtuplizer", outMapHandle);
-  //   for(auto& kv : *outMapHandle) {
-  //     cout << kv.first <<  "  " << kv.second << endl;
-  //   }
-  // }
-
   vector< edm::Handle<map<string, float>> > outMapHandle;
   iEvent.getManyByType(outMapHandle);
   for( auto h : outMapHandle ) {
     for( auto& kv : *(h.product()) ) {
       out_map[kv.first] = kv.second;
-      cout << Form("%s: %.2f", kv.first.c_str(), kv.second) << endl;
+      if (verbose) {cout << Form("%s: %.2f", kv.first.c_str(), kv.second) << endl;}
     }
   }
 

@@ -15,7 +15,6 @@ outfile = outfile.replace('MINIAODSIM', 'BPHMC')
 #load specific moduels
 from FWLite_plugins.MC_Process import MC_Process
 from FWLite_plugins.BPHTriggerPath import BPHTriggerPath
-from FWLite_plugins.ReCo_Decay_B0_DstMu_D0piMu_KpipiMu import ReCo_Decay_B0_DstMu_D0piMu_KpipiMu
 from FWLite_plugins.RECO2MC_matching import RECO2MC_matching
 from FWLite_plugins.EasyRecoQuantities import EasyRecoQuantities
 

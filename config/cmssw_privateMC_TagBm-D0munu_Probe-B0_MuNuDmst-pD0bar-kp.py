@@ -50,7 +50,7 @@ process.trgBPH = cms.EDProducer("BPHTriggerPathProducer",
         triggerObjects = cms.InputTag("slimmedPatTrigger"),
         triggerBits = cms.InputTag("TriggerResults","","HLT"),
         muon_charge = cms.int32(-1),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.trgF = cms.EDFilter("BPHTriggerPathFilter",
@@ -58,14 +58,27 @@ process.trgF = cms.EDFilter("BPHTriggerPathFilter",
 )
 
 
+process.R2Mmatch = cms.EDProducer("RECOMCmatchDecayRecoProducer",
+        verbose = cms.int32(0)
+)
+
+process.R2MmatchFilter = cms.EDFilter("RECOMCmatchDecayRecoFilter",
+        verbose = cms.int32(0)
+)
+
+
 process.outA = cms.EDAnalyzer("FlatTreeWriter",
-                        cmssw = cms.string(cmssw_version)
+        cmssw = cms.string(cmssw_version),
+        verbose = cms.int32(0)
+
 )
 
 
 process.p = cms.Path(
                     process.trgBPH +
                     process.trgF +
+                    process.R2Mmatch +
+                    process.R2MmatchFilter +
                     process.outA
                     )
 

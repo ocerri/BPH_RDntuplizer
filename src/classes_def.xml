@@ -1,8 +1,5 @@
 <lcgdict>
- <!-- <class name="std::char_traits<char>"/>
- <class name="std::basic_string<char,std::char_traits<char> >"/> -->
  <class name="std::string"/>
  <class name="std::map<std::string,float>"/>
  <class name="edm::Wrapper<std::map<std::string,float>>" persistent="false"/>
- <!-- <class name="edm::Wrapper<std::map<std::basic_string<char,std::char_traits<char> >,float> >"/> -->
 </lcgdict>
