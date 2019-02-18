@@ -1,16 +1,25 @@
 import FWCore.ParameterSet.Config as cms
 import os
 
-process = cms.Process("BPHRDntuplizer")
+from Configuration.StandardSequences.Eras import eras
+process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
 cmssw_version = os.environ['CMSSW_VERSION']
 # import of standard configurations
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
 
+# Needed for transient track builder
+# process.load('Configuration.StandardSequences.Services_cff')
+# process.load('Configuration.EventContent.EventContent_cff')
+process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
+process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
+process.load('Configuration.StandardSequences.MagneticField_cff')
+# process.load('Configuration.StandardSequences.EndOfProcess_cff')
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 
-# from Configuration.AlCa.GlobalTag import GlobalTag
-# process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12', '')
+from Configuration.AlCa.GlobalTag import GlobalTag
+process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12', '')
 
 '''
 #####################   Input    ###################
@@ -34,8 +43,12 @@ process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 #####################   Output   ###################
 '''
 
+outname = flist[0].replace('jobs_out/', '')
+outname = outname.replace('MINIAODSIM', 'BPHRDntuplizer')
+# outname = "flat_tree.root"
+
 process.TFileService = cms.Service("TFileService",
-      fileName = cms.string("flat_tree.root"),
+      fileName = cms.string(outname),
       closeFileFast = cms.untracked.bool(True)
       )
 
@@ -59,7 +72,7 @@ process.trgF = cms.EDFilter("BPHTriggerPathFilter",
 
 
 process.R2Mmatch = cms.EDProducer("RECOMCmatchDecayRecoProducer",
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
 process.R2MmatchFilter = cms.EDFilter("RECOMCmatchDecayRecoFilter",

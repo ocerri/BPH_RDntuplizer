@@ -49,7 +49,7 @@ RECOMCmatchDecayRecoFilter::filter(edm::Event& iEvent, const edm::EventSetup& iS
     }
   }
 
-  return true;
+  return false;
 }
 
 // ------------ method called once each stream before processing any runs, lumis or events  ------------
