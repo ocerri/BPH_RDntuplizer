@@ -107,7 +107,21 @@ RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedC
   }
 }
 
-TLorentzVector getTLVfromKinPart(ReferenceCountingPointer<KinematicParticle> p) {
+double vtxu::computeDCA(const edm::EventSetup& iSetup, pat::PackedCandidate cand, GlobalPoint p) {
+  // Get transient track builder
+  edm::ESHandle<TransientTrackBuilder> TTBuilder;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+
+  reco::TransientTrack tk = TTBuilder->build(cand.bestTrack());
+
+  TrajectoryStateClosestToPoint theDCAXBS = tk.trajectoryStateClosestToPoint(p);
+  double DCA = theDCAXBS.perigeeParameters().transverseImpactParameter();
+  // double DCABSErr = theDCAXBS.perigeeError().transverseImpactParameterError();
+  // pair<double,double> DCA = make_pair(DCABS,DCABSErr);
+  return DCA;
+}
+
+TLorentzVector vtxu::getTLVfromKinPart(ReferenceCountingPointer<KinematicParticle> p) {
   auto pvec = p->currentState().globalMomentum();
   auto mass = p->currentState().mass();
   TLorentzVector out;
@@ -121,5 +135,11 @@ TLorentzVector vtxu::getTLVfromTrack(reco::Track t, double mass) {
   auto p3 = t.momentum();
   auto pt = sqrt(p3.perp2());
   out.SetPtEtaPhiM(pt, p3.eta(), p3.phi(), mass);
+  return out;
+}
+
+TLorentzVector vtxu::getTLVfromCand(pat::PackedCandidate p, double mass) {
+  TLorentzVector out;
+  out.SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), mass);
   return out;
 }

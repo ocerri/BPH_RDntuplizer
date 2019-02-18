@@ -30,10 +30,10 @@ process.maxEvents = cms.untracked.PSet(
 )
 
 # from glob import glob
-# flist = glob('/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_NoPU_10-2-3_v1/jobs_out/*MINIAODSIM*.root')
+# flist = glob('/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Bm_D0kpmunu_Probe-B0_TauNuDmst-pD0bar-kp-tau2mununu_NoPU_10-2-3_v0/jobs_out/*MINIAODSIM*.root')
 # for i in range(len(flist)):
 #     flist[i] = 'file:' + flist[i]
-flist =[ 'file:/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_NoPU_10-2-3_v1/jobs_out/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_MINIAODSIM_merged_1-300.root']
+flist =[ 'file:/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Bm_D0kpmunu_Probe-B0_TauNuDmst-pD0bar-kp-tau2mununu_NoPU_10-2-3_v0/jobs_out/BPH_Tag-Bm_D0kpmunu_Probe-B0_TauNuDmst-pD0bar-kp-tau2mununu_MINIAODSIM_merged_1-300.root']
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(tuple(flist)) )
 
 process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')

@@ -39,6 +39,11 @@ private:
     edm::EDGetTokenT<vector<reco::GenParticle>> PrunedParticlesSrc_;
     edm::EDGetTokenT<vector<pat::PackedCandidate>> PFCandSrc_;
 
+    double mass_B0 = 5.27961;
+    double mass_mu = 0.1056583745;
+    double mass_K = 0.493677;
+    double mass_pi = 0.13957018;
+
     int verbose = 0;
 };
 
@@ -96,6 +101,25 @@ void RECOMCmatchDecayRecoProducer::produce(edm::Event& iEvent, const edm::EventS
               auto p_reco = get<0>(match_res);
               if(p_reco.isStandAloneMuon() && dR < 0.015 && fabs(dpt) < 0.05) {
                 matchedPart["mu"] = p_reco;
+              }
+            }
+          }
+          if(d->pdgId() == -15) {
+            for (auto dd : d->daughterRefVector()) {
+              if (dd->pdgId() == -13) {
+                auto match_res = RecoMC_matching(*dd, *pfCandHandle);
+                auto dR = get<1>(match_res);
+                auto dpt = get<2>(match_res);
+                if (verbose) {
+                  cout << Form("Mu generated at: {%.4f, %.4f, %.4f}\n", dd->vx(), dd->vy(), dd->vz());
+                  cout << "Mu dR: " << dR << " dpt: " << dpt << endl;
+                }
+                if(dR > 0) {
+                  auto p_reco = get<0>(match_res);
+                  if(p_reco.isStandAloneMuon() && dR < 0.015 && fabs(dpt) < 0.05) {
+                    matchedPart["mu"] = p_reco;
+                  }
+                }
               }
             }
           }
@@ -196,7 +220,9 @@ void RECOMCmatchDecayRecoProducer::produce(edm::Event& iEvent, const edm::EventS
 
     if (matched_pi && matched_K) {
       // cout << "Matched pi and K\n";
-      (*outputNtuplizer)["D0prefit_mass"] = (matchedPart["pi"].p4() + matchedPart["K"].p4()).M();
+      auto p4_pi = vtxu::getTLVfromCand(matchedPart["pi"], mass_pi);
+      auto p4_K = vtxu::getTLVfromCand(matchedPart["K"], mass_K);
+      (*outputNtuplizer)["D0prefit_mass"] = (p4_pi + p4_K).M();
 
       auto D0KinTree = vtxu::FitD0(iSetup, matchedPart["pi"], matchedPart["K"], false, 0);
       if(!D0KinTree->isValid()) return;
@@ -215,20 +241,15 @@ void RECOMCmatchDecayRecoProducer::produce(edm::Event& iEvent, const edm::EventS
 
       D0KinTree->movePointerToTheTop();
       D0KinTree->movePointerToTheFirstChild();
-      auto K_refitD0 = D0KinTree->currentParticle()->refittedTransientTrack().track();
+      auto K_refitD0 = D0KinTree->currentParticle();
       D0KinTree->movePointerToTheNextChild();
-      auto pi_refitD0 = D0KinTree->currentParticle()->refittedTransientTrack().track();
+      auto pi_refitD0 = D0KinTree->currentParticle();
 
-      (*outputNtuplizer)["PiKrefitD0_mass"] = (vtxu::getTLVfromTrack(pi_refitD0, 0.13957018) + vtxu::getTLVfromTrack(K_refitD0, 0.493677)).M();
-
-      cout << "---DEBUG---\n";
-      auto v1 = vtxu::getTLVfromTrack(pi_refitD0, 0.13957018);
-      auto v2 = vtxu::getTLVfromKinPart(D0KinTree->currentParticle());
-      v1.Print();
-      v2.Print();
+      (*outputNtuplizer)["PiKrefitD0_mass"] = (vtxu::getTLVfromKinPart(pi_refitD0) + vtxu::getTLVfromKinPart(K_refitD0)).M();
 
       if(matched_pisoft) {
-        (*outputNtuplizer)["Dstprefit_mass"] = (matchedPart["pisoft"].p4() + matchedPart["pi"].p4() + matchedPart["K"].p4()).M();
+        auto p4_pisoft = vtxu::getTLVfromCand(matchedPart["pisoft"], mass_pi);
+        (*outputNtuplizer)["Dstprefit_mass"] = (p4_pisoft + p4_pi + p4_K).M();
 
         auto DstKinTree = vtxu::FitDst(iSetup, matchedPart["pisoft"], matchedPart["pi"], matchedPart["K"], false, 0);
         if(!DstKinTree->isValid()) return;
@@ -248,20 +269,31 @@ void RECOMCmatchDecayRecoProducer::produce(edm::Event& iEvent, const edm::EventS
           auto pVtx = matchedPart["mu"].vertexRef();
           TVector3 d_flightB(Dstvtx.x()-pVtx->x(), Dstvtx.y()-pVtx->y(), Dstvtx.z()-pVtx->z());
 
-          // auto Dst_reco = D0KinTree->currentParticle()->currentState();
-        }
+          // Get reco p4
+          auto Dst_reco = D0KinTree->currentParticle();
+          auto p4_Dst = vtxu::getTLVfromKinPart(Dst_reco);
+          auto p4_mu = vtxu::getTLVfromCand(matchedPart["mu"], mass_mu);
 
+          auto p4_vis = p4_Dst + p4_mu;
+          double pz_B_reco = p4_vis.Pz() * mass_B0/ p4_vis.M();
+          auto B_vect = d_flightB * ( pz_B_reco / d_flightB.z() );
+          TLorentzVector p4_B;
+          p4_B.SetVectM(B_vect, mass_B0);
+
+          (*outputNtuplizer)["M2_miss_RECO"] = (p4_B - p4_Dst - p4_mu).M2();
+          (*outputNtuplizer)["q2_RECO"] = (p4_B - p4_Dst).M2();
+
+          TLorentzVector p4st_mu(p4_mu);
+          p4st_mu.Boost(-1*p4_B.BoostVector());
+          (*outputNtuplizer)["Est_mu_RECO"] = p4st_mu.E();
+
+          (*outputNtuplizer)["ip_mu_RECO"] = vtxu::computeDCA(iSetup, matchedPart["mu"], Dstvtx);
+        }
       }
     }
 
-    // This was a debug
-    // (*outputNtuplizer)["matchMu"] = matchedPart.count("mu");
-    // (*outputNtuplizer)["matchPisoft"] = matchedPart.count("pisoft");
-    // (*outputNtuplizer)["matchPi"] = matchedPart.count("pi");
-    // (*outputNtuplizer)["matchK"] = matchedPart.count("K");
-
     // Needed to filter out the events with no matched particles
-    (*outputNtuplizer)["NMatchedPart"] = matchedPart.size() * (matched_pi && matched_K && matched_pisoft);
+    (*outputNtuplizer)["NMatchedPart"] = matchedPart.size() * (matched_pi && matched_K && matched_pisoft && matched_mu);
     // cout << (*outputNtuplizer)["NMatchedPart"] << " " << matchedPart.size() << endl;
     // cout << " ------------- \n";
 
