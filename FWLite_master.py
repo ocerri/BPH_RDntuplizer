@@ -4,6 +4,7 @@ import numpy as np
 import root_numpy as rtnp
 import imp
 from time import time
+from glob import glob
 
 # load FWLite C++ libraries
 rt.gSystem.Load('libFWCoreFWLite.so');
@@ -21,6 +22,7 @@ def parsing():
     parser.add_argument('-N', '--max_accepted', default=-1, help='max number of events', type=int)
     parser.add_argument('-B', '--batch', default=True, action='store_false', help='Root batch mode')
     parser.add_argument('-v', '--verbose', default=False, action='store_true', help='Activate verbose mode')
+    parser.add_argument('-i', '--input_files', default='', help='Input file to be passed to glob')
 
     args = parser.parse_args()
     return args
@@ -49,16 +51,14 @@ class OutputBauble:
         self.global_out_list.append(tuple(aux))
 
     def dump_to_tree(self):
-        print 'Writing output form {} events'.format(len(self.global_out_list))
-        print 'Writing output file:'
-        print self.outfile
-
         if (not self.out_names is None) and len(self.out_names)>0 and len(self.global_out_list)>0:
+            print 'Writing output form {} events'.format(len(self.global_out_list))
+            print 'Writing output file:'
+            print self.outfile
             # idx_alphab_order = np.argsort(self.out_names)
             # self.out_names = self.out_names[idx_alphab_order]
             # for i in len(self.global_out_list):
             #     self.global_out_list[i] = self.global_out_list[i][idx_alphab_order]
-
             dtypes = [(f, np.float) for f in self.out_names]
             aux = np.array(self.global_out_list, dtype=dtypes)
 
@@ -72,17 +72,14 @@ class OutputBauble:
 
 
 if __name__ == '__main__':
-    rt.gErrorIgnoreLevel = 6000
-
     args = parsing()
 
+    rt.gErrorIgnoreLevel = 6000
     if args.batch:
         rt.gROOT.SetBatch()
     verbose = args.verbose
 
     cfg = imp.load_source('cfg', args.config)
-
-    output = OutputBauble(cfg.outfile)
 
     try:
         t_last_print = -99999999
@@ -90,7 +87,20 @@ if __name__ == '__main__':
         N_processed = 0
         stop = False
 
-        for ifl, f in enumerate(cfg.files):
+        if args.input_files:
+            input_files = glob(args.input_files)
+            if hasattr(cfg, 'makeOutname'):
+                outfile = cfg.makeOutname(input_files[0])
+        elif cfg.files:
+            input_files = cfg.files
+            outfile = cfg.outfile
+        else:
+            print 'No input files provided'
+            raise
+
+        output = OutputBauble(outfile)
+
+        for ifl, f in enumerate(input_files):
             # open file (you can use 'edmFileUtil -d /store/whatever.root' to get the physical file name)
             if verbose:
                 print '->Opening file',f.split()[0]
@@ -104,7 +114,7 @@ if __name__ == '__main__':
                     print '\nEvent {}: run {}, lumi {}, event {}'.format(iev,event.eventAuxiliary().run(), event.eventAuxiliary().luminosityBlock(),event.eventAuxiliary().event())
                 elif time() - t_last_print > 10 and iev%100==0:
                     t_last_print = time()
-                    print 'File {}/{} - Evt {}'.format(ifl+1, len(cfg.files), iev)
+                    print 'File {}/{} - Evt {}'.format(ifl+1, len(input_files), iev)
 
                 for module in cfg.exe_seq:
                     accepted = module.process(event, output, verbose)
@@ -123,11 +133,15 @@ if __name__ == '__main__':
             if stop: break
 
 
-        print 'File {}/{} - Evt {}'.format(ifl+1, len(cfg.files), iev)
+        print 'File {}/{} - Evt {}'.format(ifl+1, len(input_files), iev)
 
         print 'Processed events', N_processed
         print 'Accepted events', N_accepted
         output.dump_to_tree()
 
     except KeyboardInterrupt:
+        print 'File {}/{} - Evt {}'.format(ifl+1, len(input_files), iev)
+
+        print 'Processed events', N_processed
+        print 'Accepted events', N_accepted
         output.dump_to_tree()

@@ -45,12 +45,14 @@ class BPHTriggerPath:
                  mu_charge=0,
                  filter=True,
                  hltpath_template='HLT_Mu[0-9]+_IP[0-9]+.*',
-                 mu_collection='hlt.*MuonCandidates::HLT'
+                 mu_collection='hlt.*MuonCandidates::HLT',
+                 produce_output=True
                  ):
         self.filter = filter
         self.mu_charge = mu_charge
         self.path_tmp = hltpath_template
         self.mu_collection = mu_collection
+        self.produce_output = produce_output
 
     def process(self, event, output, verbose):
         out = output.evt_out
@@ -92,15 +94,17 @@ class BPHTriggerPath:
                     print 'Collection:', to.collection()
                     print 'Paths:', BPH_paths
 
-        out['BPH_TrgObj'] = len(event.offline_BPH_trg)
-        out['BPH_TrgObJ_matched'] = 0
-        for d in event.offline_BPH_trg:
-            if len(d['matched_mu']) > 0:
-                out['BPH_TrgObJ_matched']+=1
+        if self.produce_output:
+            out['BPH_TrgObj'] = len(event.offline_BPH_trg)
+            out['BPH_TrgObJ_matched'] = 0
+            for d in event.offline_BPH_trg:
+                if len(d['matched_mu']) > 0:
+                    out['BPH_TrgObJ_matched']+=1
 
 
         if self.filter:
             return Triggered
         else:
-            out['BPH_trg'] = 1 if Triggered else 0
+            if self.produce_output:
+                out['BPH_trg'] = 1 if Triggered else 0
             return True

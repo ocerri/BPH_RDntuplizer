@@ -36,6 +36,7 @@ class EasyRecoQuantities:
 
         if verbose or self.verbose:
             print '------- Easy RECO Quantities ---------'
+            print event.RECO_MCmatch.keys()
 
         p4_D0_RECO = getTLorenzVector(event.RECO_MCmatch['K'][0]) + getTLorenzVector(event.RECO_MCmatch['pi'][0])
         addP4ToOutput(p4_D0_RECO, 'D0_RECO', out)

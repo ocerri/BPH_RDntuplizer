@@ -205,21 +205,13 @@ void RECOMCmatchDecayRecoProducer::produce(edm::Event& iEvent, const edm::EventS
         cout << kv.first << endl;
         cout << "PV assoc: " << kv.second.fromPV() << endl;
         cout << Form("part.v at: {%.4f, %.4f, %.4f}\n", kv.second.vx(), kv.second.vy(), kv.second.vz());
-        auto vtx = kv.second.vertex();
-        cout << Form("part.v at: {%.4f, %.4f, %.4f}\n", vtx.x(), vtx.y(), vtx.z());
         auto vtx_ptr = kv.second.vertexRef();
         cout << Form("vtx_ptr at: {%.4f, %.4f, %.4f}\n", vtx_ptr->x(), vtx_ptr->y(), vtx_ptr->z());
       }
     }
-    // cout << endl;
-    // if(matched_pi && !(matchedPart["pi"].bestTrack())) matched_pi = false;
-    // cout << matchedPart["pi"].bestTrack() << endl;
-    // if(matched_K && !(matchedPart["K"].bestTrack())) matched_K = false;
-    // cout << matchedPart["K"].bestTrack() << endl;
 
 
     if (matched_pi && matched_K) {
-      // cout << "Matched pi and K\n";
       auto p4_pi = vtxu::getTLVfromCand(matchedPart["pi"], mass_pi);
       auto p4_K = vtxu::getTLVfromCand(matchedPart["K"], mass_K);
       (*outputNtuplizer)["D0prefit_mass"] = (p4_pi + p4_K).M();
@@ -239,13 +231,12 @@ void RECOMCmatchDecayRecoProducer::produce(edm::Event& iEvent, const edm::EventS
       (*outputNtuplizer)["D0reco_mass"] = D0_reco.mass();
       (*outputNtuplizer)["D0reco_massErr"] = sqrt(D0_reco.kinematicParametersError().matrix()(6,6));
 
-      D0KinTree->movePointerToTheTop();
-      D0KinTree->movePointerToTheFirstChild();
-      auto K_refitD0 = D0KinTree->currentParticle();
-      D0KinTree->movePointerToTheNextChild();
-      auto pi_refitD0 = D0KinTree->currentParticle();
-
-      (*outputNtuplizer)["PiKrefitD0_mass"] = (vtxu::getTLVfromKinPart(pi_refitD0) + vtxu::getTLVfromKinPart(K_refitD0)).M();
+      // D0KinTree->movePointerToTheTop();
+      // D0KinTree->movePointerToTheFirstChild();
+      // auto K_refitD0 = D0KinTree->currentParticle();
+      // D0KinTree->movePointerToTheNextChild();
+      // auto pi_refitD0 = D0KinTree->currentParticle();
+      // (*outputNtuplizer)["PiKrefitD0_mass"] = (vtxu::getTLVfromKinPart(pi_refitD0) + vtxu::getTLVfromKinPart(K_refitD0)).M();
 
       if(matched_pisoft) {
         auto p4_pisoft = vtxu::getTLVfromCand(matchedPart["pisoft"], mass_pi);
@@ -254,7 +245,7 @@ void RECOMCmatchDecayRecoProducer::produce(edm::Event& iEvent, const edm::EventS
         auto DstKinTree = vtxu::FitDst(iSetup, matchedPart["pisoft"], matchedPart["pi"], matchedPart["K"], false, 0);
         if(!DstKinTree->isValid()) return;
         DstKinTree->movePointerToTheTop();
-        auto Dst_reco = D0KinTree->currentParticle()->currentState();
+        auto Dst_reco = DstKinTree->currentParticle()->currentState();
         (*outputNtuplizer)["Dstreco_mass"] = Dst_reco.mass();
         (*outputNtuplizer)["Dstreco_massErr"] = sqrt(Dst_reco.kinematicParametersError().matrix()(6,6));
 

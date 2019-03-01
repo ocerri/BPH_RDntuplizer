@@ -78,7 +78,6 @@ RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedC
   D0KinTree->movePointerToTheTop();
   auto D0_reco = D0KinTree->currentParticle();
 
-
   // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
