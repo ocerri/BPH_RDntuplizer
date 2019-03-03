@@ -80,6 +80,7 @@ if __name__ == '__main__':
     verbose = args.verbose
 
     cfg = imp.load_source('cfg', args.config)
+    print '\nConfiguration: ' + args.config + ' loaded'
 
     try:
         t_last_print = -99999999
@@ -87,10 +88,14 @@ if __name__ == '__main__':
         N_processed = 0
         stop = False
 
+        outfile = ''
         if args.input_files:
             input_files = glob(args.input_files)
             if hasattr(cfg, 'makeOutname'):
                 outfile = cfg.makeOutname(input_files[0])
+            else:
+                print 'No outname provided. Using default one.'
+                outfile = 'test.root'
         elif cfg.files:
             input_files = cfg.files
             outfile = cfg.outfile
@@ -100,6 +105,7 @@ if __name__ == '__main__':
 
         output = OutputBauble(outfile)
 
+        print 'Ready to run on {} files'.format(len(input_files))
         for ifl, f in enumerate(input_files):
             # open file (you can use 'edmFileUtil -d /store/whatever.root' to get the physical file name)
             if verbose:

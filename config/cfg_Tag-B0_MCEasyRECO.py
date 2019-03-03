@@ -9,7 +9,9 @@ def makeOutname(l):
         l = l.replace('/jobs_out/', '/')
     l = l.replace('MINIAODSIM', 'BPHMCEasyRECO')
     if not 'merge' in l:
-        exit()
+        out = re.search('_[0-9]+\.root]', l)
+        if hasattr(out, 'group'):
+            l = l.replace(out.group(0), '.root')
     return l
 
 

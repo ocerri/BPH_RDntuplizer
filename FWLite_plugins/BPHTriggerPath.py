@@ -95,11 +95,22 @@ class BPHTriggerPath:
                     print 'Paths:', BPH_paths
 
         if self.produce_output:
-            out['BPH_TrgObj'] = len(event.offline_BPH_trg)
+            out['BPH_NTrgObj'] = len(event.offline_BPH_trg)
             out['BPH_TrgObJ_matched'] = 0
+            out['trgMu_pt'] = -1
+            out['trgMu_eta'] = -1
+            out['trgMu_phi'] = -1
+
             for d in event.offline_BPH_trg:
                 if len(d['matched_mu']) > 0:
                     out['BPH_TrgObJ_matched']+=1
+                    if out['trgMu_pt'] == -1:
+                        m = d['matched_mu'][0]
+                        out['trgMu_pt'] = m.pt()
+                        out['trgMu_eta'] = m.eta()
+                        out['trgMu_phi'] = m.phi()
+
+
 
 
         if self.filter:

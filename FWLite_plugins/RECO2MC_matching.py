@@ -12,6 +12,7 @@ from DataFormats.FWLite import Handle
 handle = {}
 handle['PFCand'] = [Handle('vector<pat::PackedCandidate>'), 'packedPFCandidates']
 handle['Muons'] = [Handle('std::vector<pat::Muon>'), 'slimmedMuons']
+handle['Vtxs'] = [Handle('vector<reco::Vertex>'), 'offlineSlimmedPrimaryVertices']
 
 def print_candidate(p, addon=''):
     print addon+'Pt: {:.2f} Eta: {:.2f} Phi: {:.2f}'.format(p.pt(), p.eta(), p.phi())
@@ -39,8 +40,25 @@ def addToOutput(p, tag, outmap):
     outmap[tag+'_pt'] = p.pt()
     outmap[tag+'_eta'] = p.eta()
     outmap[tag+'_phi'] = p.phi()
-    outmap[tag+'_dz'] = p.dz(0)
     outmap[tag+'_pdgId'] = p.pdgId()
+    outmap[tag+'_dz'] = p.dz()
+    outmap[tag+'_dxy'] = p.dxy()
+
+    if p.hasTrackDetails():
+        outmap[tag+'_dzError'] = p.dzError()
+        outmap[tag+'_dxyError'] = p.dxyError()
+        t = p.bestTrack()
+        outmap[tag+'_Nchi2'] = t.normalizedChi2()
+        outmap[tag+'_chi2'] = t.chi2()
+        outmap[tag+'_ndof'] = t.ndof()
+        outmap[tag+'_Nhits'] = t.numberOfValidHits()
+    else:
+        outmap[tag+'_dzError'] = -1
+        outmap[tag+'_dxyError'] = -1
+        outmap[tag+'_Nchi2'] = -1
+        outmap[tag+'_chi2'] = -1
+        outmap[tag+'_ndof'] = -1
+        outmap[tag+'_Nhits'] = -1
 
 
 class RECO2MC_matching:
@@ -64,6 +82,7 @@ class RECO2MC_matching:
         for n, p_MC in event.MC_part.iteritems():
             m = None
             if 'mu' in n:
+                # m = matchRECO2MC(p_MC, prods['Muons'])
                 m = matchRECO2MC(p_MC, prods['PFCand'])
                 if not m[0] is None:
                     out['muReco_pdgId'] = m[0].pdgId()
@@ -72,6 +91,23 @@ class RECO2MC_matching:
                     out['muReco_isTrackerMuon'] = m[0].isTrackerMuon()
                     out['muReco_isStandAloneMuon'] = m[0].isStandAloneMuon()
                     out['muReco_isGlobalMuon'] = m[0].isGlobalMuon()
+
+                    out['muReco_isTightMuon'] = -1
+                    out['muReco_isSoftMuon'] = -1
+                    out['muReco_isLooseMuon'] = -1
+                    out['muReco_isMediumMuon'] = -1
+                    for mu in prods['Muons']:
+                        c = np.abs(mu.pt() - m[0].pt())/mu.pt() < 5e-3
+                        c *= np.abs(mu.eta() - m[0].eta())/mu.eta() < 5e-3
+                        c *= np.abs(mu.phi() - m[0].phi())/mu.phi() < 5e-3
+                        if c:
+                            out['muReco_isLooseMuon'] = mu.isLooseMuon()
+                            out['muReco_isMediumMuon'] = mu.isMediumMuon()
+                            for v in prods['Vtxs']:
+                                if mu.isTightMuon(v):
+                                    out['muReco_isTightMuon'] = mu.isTightMuon(v)
+                                if mu.isSoftMuon(v):
+                                    out['muReco_isSoftMuon'] = mu.isSoftMuon(v)
             elif abs(p_MC.pdgId()) in [211, 321]:
                 m = matchRECO2MC(p_MC, prods['PFCand'])
 
