@@ -298,7 +298,13 @@ tuple<pat::PackedCandidate, double, double> RECOMCmatchDecayRecoProducer::RecoMC
 
   for(auto p : reco_coll) {
     if(p.charge() == p_MC.charge()) {
-      double dR = hypot(p_MC.phi()-p.phi(), p_MC.eta()-p.eta());
+      double dPhi = p_MC.phi()-p.phi();
+      double pi = 3.14159265358979323846;
+      while (fabs(dPhi) > pi) {
+        int sgn = dPhi > 0? 1 : -1;
+        dPhi -= sgn*2*pi;
+      }
+      double dR = hypot(dPhi, p_MC.eta()-p.eta());
       double dpt = (p.pt() - p_MC.pt()) / p_MC.pt();
       if(dR_best == -1 || dR < dR_best || (fabs(dR-dR_best) < 1e-3 && dpt < dpt_best)) {
         p_best = p;

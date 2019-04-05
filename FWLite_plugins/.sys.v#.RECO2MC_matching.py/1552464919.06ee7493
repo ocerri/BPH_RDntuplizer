@@ -25,8 +25,8 @@ def deltaR(p1, p2):
 
 def matchRECO2MC(p_MC, reco_collection):
     p_best = None
-    dR_best = -999
-    dpt_best = -999
+    dR_best = -1
+    dpt_best = 0
 
     for p in reco_collection:
         if p.charge() == p_MC.charge():

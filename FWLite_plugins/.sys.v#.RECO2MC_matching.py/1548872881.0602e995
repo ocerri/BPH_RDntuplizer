@@ -18,20 +18,17 @@ def print_candidate(p, addon=''):
     print addon+'Pt: {:.2f} Eta: {:.2f} Phi: {:.2f}'.format(p.pt(), p.eta(), p.phi())
 
 def deltaR(p1, p2):
-    dphi = p1.phi()-p2.phi()
-    while np.abs(dphi) > np.pi:
-        dphi -= np.sign(dphi)*2*np.pi
-    return np.hypot(dphi, p1.eta()-p2.eta())
+    return np.hypot(p1.phi()-p2.phi(), p1.eta()-p2.eta())
 
 def matchRECO2MC(p_MC, reco_collection):
     p_best = None
-    dR_best = -999
-    dpt_best = -999
+    dR_best = -1
+    dpt_best = 0
 
     for p in reco_collection:
         if p.charge() == p_MC.charge():
             dR = deltaR(p, p_MC)
-            dpt = np.abs(p.pt() - p_MC.pt())/ p_MC.pt()
+            dpt = (p.pt() - p_MC.pt())/ p_MC.pt()
             if (p_best is None) or dR < dR_best or (abs(dR-dR_best) < 1e-3 and dpt < dpt_best):
                 p_best = p
                 dR_best = dR

@@ -11,8 +11,8 @@ from DataFormats.FWLite import Handle
 
 handle = {}
 handle['PFCand'] = [Handle('vector<pat::PackedCandidate>'), 'packedPFCandidates']
-handle['Muons'] = [Handle('std::vector<pat::Muon>'), 'slimmedMuons']
-handle['Vtxs'] = [Handle('vector<reco::Vertex>'), 'offlineSlimmedPrimaryVertices']
+# handle['Muons'] = [Handle('std::vector<pat::Muon>'), 'slimmedMuons']
+# handle['Vtxs'] = [Handle('vector<reco::Vertex>'), 'offlineSlimmedPrimaryVertices']
 
 def print_candidate(p, addon=''):
     print addon+'Pt: {:.2f} Eta: {:.2f} Phi: {:.2f}'.format(p.pt(), p.eta(), p.phi())
@@ -25,13 +25,13 @@ def deltaR(p1, p2):
 
 def matchRECO2MC(p_MC, reco_collection):
     p_best = None
-    dR_best = -999
-    dpt_best = -999
+    dR_best = -1
+    dpt_best = 0
 
     for p in reco_collection:
         if p.charge() == p_MC.charge():
             dR = deltaR(p, p_MC)
-            dpt = np.abs(p.pt() - p_MC.pt())/ p_MC.pt()
+            dpt = (p.pt() - p_MC.pt())/ p_MC.pt()
             if (p_best is None) or dR < dR_best or (abs(dR-dR_best) < 1e-3 and dpt < dpt_best):
                 p_best = p
                 dR_best = dR
@@ -63,12 +63,28 @@ def addToOutput(p, tag, outmap):
         outmap[tag+'_ndof'] = -1
         outmap[tag+'_Nhits'] = -1
 
+def put_part(closest_particles, p, dR, dz):
+    if len(closest_particles) == 0:
+        closest_particles.append([p, dR, dz])
+    else:
+        idx = -1
+        for i_s, cp in enumerate(closest_particles):
+            if cp[1] > dR:
+                idx = i_s
+                break
+        if idx == -1:
+            closest_particles.append([p, dR, dz])
+        else:
+            closest_particles.insert(idx, [p, dR, dz])
+
 
 class RECO2MC_matching:
     def __init__(self,
-                 verbose=False
+                 verbose=False,
+                 N_part = 5
                 ):
         self.verbose = verbose
+        self.N_part = N_part
 
     def process(self, event, output, verbose):
         out = output.evt_out
@@ -79,9 +95,36 @@ class RECO2MC_matching:
             prods[k] = v[0].product()
 
         if verbose or self.verbose:
-            print '------- Matching MC to RECO ---------'
+            print '------- Gathering the first particles around the muon ---------'
 
-        event.RECO_MCmatch = {}
+        pt_l = []
+        eta_l = []
+        phi_l = []
+        for p in event.RECO_MCmatch.values():
+            pt_l.append(p[0].pt())
+            eta_l.append(p[0].eta())
+            phi_l.append(p[0].phi())
+        pt_l = np.array(pt_l)
+        eta_l = np.array(eta_l)
+        phi_l = np.array(phi_l)
+
+
+        muon = event.RECO_MCmatch['mu'][0]
+
+        closest_particles = []
+
+        for p in prods['PFCand']:
+            if np.min(pt_l - p.pt()) == 0 and np.min(eta_l - p.eta()) == 0 and np.min(phi_l - p.phi()) == 0:
+                print 'Same found!'
+                continue
+
+            if len(closest_particles) < self.N_part:
+
+
+
+
+
+
         for n, p_MC in event.MC_part.iteritems():
             m = None
             if 'mu' in n:

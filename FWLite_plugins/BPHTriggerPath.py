@@ -16,8 +16,8 @@ handle['Muons'] = [Handle("std::vector<pat::Muon>"), "slimmedMuons"]
 
 
 def TriggerObj_matching(muon_list, obj, charge, verbose=False):
-    max_DeltaR = 0.005
-    max_Delta_pt_rel = 0.01
+    max_DeltaR = 0.02
+    max_Delta_pt_rel = 0.1
     bestM_DeltaR = max_DeltaR
 
     out = []
@@ -27,6 +27,8 @@ def TriggerObj_matching(muon_list, obj, charge, verbose=False):
 
         dEta = mu.eta() - obj.eta()
         dPhi = mu.phi() - obj.phi()
+        while np.abs(dPhi) > np.pi:
+            dPhi -= np.sign(dPhi)*2*np.pi
 
         deltaR = np.sqrt(dEta*dEta + dPhi*dPhi)
         dpt_rel = abs(mu.pt() - obj.pt())/obj.pt();

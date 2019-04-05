@@ -13,6 +13,7 @@
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
 
 #include <iostream>
 #include <string>
@@ -29,7 +30,7 @@ class BPHTriggerPathProducer : public edm::EDProducer {
       void beginJob(const edm::EventSetup&) {};
       void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) override;
 
-      vector<pat::Muon> TriggerObj_matching(edm::Handle<vector<pat::Muon>>, pat::TriggerObjectStandAlone, int);
+      vector<pat::Muon> TriggerObj_matching(edm::Handle<vector<pat::Muon>>, pat::TriggerObjectStandAlone, edm::Handle<std::vector<reco::Vertex>>, int);
 
 
       // ----------member data ---------------------------
@@ -37,6 +38,7 @@ class BPHTriggerPathProducer : public edm::EDProducer {
       int muonCharge_ = 0;
       edm::EDGetTokenT<vector<pat::TriggerObjectStandAlone>> triggerObjectsSrc_;
       edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
+      edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
       int verbose = 0;
 };
 
@@ -46,6 +48,7 @@ BPHTriggerPathProducer::BPHTriggerPathProducer(const edm::ParameterSet& iConfig)
   muonCharge_( iConfig.getParameter<int>( "muon_charge" ) ),
   triggerObjectsSrc_(consumes<vector<pat::TriggerObjectStandAlone>> ( iConfig.getParameter<edm::InputTag>("triggerObjects") ) ),
   muonSrc_( consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "muonCollection" ) ) ),
+  vtxSrc_( consumes<vector<reco::Vertex>> ( iConfig.getParameter<edm::InputTag>( "vertexCollection" ) ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
   produces<vector<pat::Muon>>("trgMuonsMatched");
@@ -62,6 +65,9 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
   edm::Handle<std::vector<pat::Muon>> muonHandle;
   iEvent.getByToken(muonSrc_, muonHandle);
   unsigned int muonNumber = muonHandle->size();
+
+  edm::Handle<std::vector<reco::Vertex>> vtxHandle;
+  iEvent.getByToken(vtxSrc_, vtxHandle);
 
   // Output collection
   unique_ptr<vector<pat::Muon>> trgMuonsMatched( new vector<pat::Muon> );
@@ -95,7 +101,7 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         }
       }
 
-      auto matching_muons = TriggerObj_matching(muonHandle, obj, muonCharge_);
+      auto matching_muons = TriggerObj_matching(muonHandle, obj, vtxHandle, muonCharge_);
       if (matching_muons.size()>0) trgMuonsMatched->push_back(matching_muons[0]);
 
     }
@@ -133,7 +139,11 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
 
 
 
-vector<pat::Muon> BPHTriggerPathProducer::TriggerObj_matching(edm::Handle<vector<pat::Muon>> muon_list, pat::TriggerObjectStandAlone obj, int mu_charge=0) {
+vector<pat::Muon> BPHTriggerPathProducer::TriggerObj_matching(edm::Handle<vector<pat::Muon>> muon_list,
+                                                              pat::TriggerObjectStandAlone obj,
+                                                              edm::Handle<std::vector<reco::Vertex>> vtx_list,
+                                                              int mu_charge=0)
+{
   double max_DeltaR = 0.005;
   double max_Delta_pt_rel = 0.01;
 
@@ -146,17 +156,29 @@ vector<pat::Muon> BPHTriggerPathProducer::TriggerObj_matching(edm::Handle<vector
 
     double dEta = muon.eta() - obj.eta();
     double dPhi = muon.phi() - obj.phi();
+    double pi = 3.14159265358979323846;
+    while (fabs(dPhi) > pi) {
+      int sgn = dPhi > 0? 1 : -1;
+      dPhi -= sgn*2*pi;
+    }
+
     double deltaR = sqrt(dEta*dEta + dPhi*dPhi);
 
     double dpt_rel = abs(muon.pt() - obj.pt())/obj.pt();
 
     if (dpt_rel < max_Delta_pt_rel && deltaR < max_DeltaR) {
-      if(verbose) {cout << "\t\tMuon matched with deltaR=" << deltaR << " and dpt_rel=" << dpt_rel << endl;}
-      if (deltaR <= bestM_DeltaR) {
-        bestM_DeltaR = deltaR;
-        out.insert(out.begin(), muon);
+      bool isTightMuon = false;
+      for (auto vtx : *vtx_list) {
+        if(muon.isTightMuon(vtx)) isTightMuon = true;
       }
-      else out.push_back(muon);
+      if (isTightMuon) {
+        if(verbose) {cout << "\t\tMuon matched with deltaR=" << deltaR << " and dpt_rel=" << dpt_rel << endl;}
+        if (deltaR <= bestM_DeltaR) {
+          bestM_DeltaR = deltaR;
+          out.insert(out.begin(), muon);
+        }
+        else out.push_back(muon);
+      }
     }
   }
 
