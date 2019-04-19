@@ -5,4 +5,8 @@
  <class name="std::map<std::string,std::vector<float>>"/>
  <class name="edm::Wrapper<std::map<std::string,float>>" persistent="false"/>
  <class name="edm::Wrapper<std::map<std::string,std::vector<float>>>" persistent="false"/>
+ <class name="std::char_traits<char>"/>
+ <class name="std::basic_string<char,std::char_traits<char> >"/>
+ <class name="std::pair<const std::basic_string<char,std::char_traits<char> >,std::vector<float> >"/>
+ <class name="edm::Wrapper<std::pair<const std::basic_string<char,std::char_traits<char> >,std::vector<float> >>" persistent="false"/>
 </lcgdict>

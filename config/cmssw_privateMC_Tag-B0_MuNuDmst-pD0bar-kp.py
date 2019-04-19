@@ -25,10 +25,11 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(50)
-    # input = cms.untracked.int32(-1)
+    # input = cms.untracked.int32(50)
+    input = cms.untracked.int32(-1)
 )
 
+#data 2018 template: /eos/cms/store/data/Run2018*/ParkingBPH*/MINIAOD/20Mar*/*/*.root
 from glob import glob
 flist = glob('/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root')
 for i in range(len(flist)):
@@ -43,9 +44,9 @@ process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 #####################   Output   ###################
 '''
 
-outname = flist[0].replace('jobs_out/', '')
-outname = outname.replace('MINIAODSIM', 'BPHRDntuplizer')
-# outname = "flat_tree.root"
+# outname = flist[0].replace('jobs_out/', '')
+# outname = outname.replace('MINIAODSIM', 'BPHRDntuplizer')
+outname = "/eos/user/o/ocerri/BPhysics/data/cmsMC_private/flat_tree.root"
 
 process.TFileService = cms.Service("TFileService",
       fileName = cms.string(outname),

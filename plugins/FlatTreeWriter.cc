@@ -73,12 +73,20 @@ void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
 
   if (first_call) {
-    // Creating the branches in the output tree
+    if(verbose) {cout << "\nCreating the branches in the output tree:\n";}
     for(auto& kv : out_map) {
       auto k = kv.first;
+      if(verbose) {cout << k << endl;}
       tree->Branch(k.c_str(), &(out_map[k]));
     }
+
+    for(auto& kv : outv_map) {
+      auto k = kv.first;
+      if(verbose) {cout << k << endl;}
+      tree->Branch(k.c_str(), &(outv_map[k]));
+    }
     first_call = false;
+    if(verbose) {cout << '\n';}
   }
 
   tree->Fill();

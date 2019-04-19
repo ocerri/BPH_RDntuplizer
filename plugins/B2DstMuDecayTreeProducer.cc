@@ -15,6 +15,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <TMath.h>
 
 #include "VtxUtils.hh"
 
@@ -38,10 +39,10 @@ private:
     edm::EDGetTokenT<vector<pat::Muon>> TrgMuonSrc_;
 
 
-    double mass_B0 = 5.27961;
-    double mass_mu = 0.1056583745;
-    double mass_K = 0.493677;
-    double mass_pi = 0.13957018;
+    // double mass_B0 = 5.27961;
+    // double mass_mu = 0.1056583745;
+    // double mass_K = 0.493677;
+    // double mass_pi = 0.13957018;
 
     int verbose = 0;
 };
@@ -65,6 +66,7 @@ B2DstMuDecayTreeProducer::B2DstMuDecayTreeProducer(const edm::ParameterSet &iCon
 void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     edm::Handle<vector<pat::PackedCandidate>> pfCandHandle;
     iEvent.getByToken(PFCandSrc_, pfCandHandle);
+    unsigned int N_pfCand = pfCandHandle->size();
 
     edm::Handle<vector<pat::Muon>> trgMuonsHandle;
     iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
@@ -86,33 +88,71 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     }
 
     int n_K = 0;
-    vector<float> n_pi;
+    vector<float> n_pi = {};
+    vector<float> chi2_kpi = {};
+    vector<float> mass_kpi = {};
 
+    if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
     // Look for the K+ (321)
     for(auto k : *pfCandHandle) {
+      if (!k.hasTrackDetails()) continue;
       //Require a positive charged hadron
       if (k.pdgId() != 211 ) continue;
       // Require to be close to the trigger muon;
       if (fabs(k.dz() - trgMu.dz()) > 1.) continue;
       if (vtxu::dR(k.phi(), trgMu.phi(), k.eta(), trgMu.eta()) > 1.) continue;
       n_K++;
+      if (verbose) {cout << "###-### K number " << n_K << endl;}
 
       int n_pi_aux = 0;
-      for(auto pi : *pfCandHandle) {
+      for(uint i_pi = 0; i_pi < N_pfCand; ++i_pi) {
+        const pat::PackedCandidate & pi = (*pfCandHandle)[i_pi];
+        if (!pi.hasTrackDetails()) continue;
         //Require a negative charged hadron
         if (pi.pdgId() != -211 ) continue;
         // Require to be close to the trigger muon;
         if (fabs(pi.dz() - trgMu.dz()) > 1.) continue;
         if (vtxu::dR(pi.phi(), trgMu.phi(), pi.eta(), trgMu.eta()) > 1.) continue;
+
+        // Require to be close to the K;
+        if (fabs(pi.dz() - k.dz()) > 1.) continue;
+        if (vtxu::dR(pi.phi(), k.phi(), pi.eta(), k.eta()) > 1.) continue;
+
         n_pi_aux++;
+        if (verbose) {cout << "---> pi number " << n_pi_aux << endl;}
+        //Fit the vertex
+        auto D0KinTree = vtxu::FitD0(iSetup, pi, k, false, 0);
+        if(D0KinTree->isValid()) {
+          D0KinTree->movePointerToTheTop();
+
+          auto D0vtx = D0KinTree->currentDecayVertex();
+          auto chi2 = D0vtx->chiSquared();
+          auto max_chi2 = TMath::ChisquareQuantile(0.95, D0vtx->degreesOfFreedom());
+          if (verbose) {cout << "Chi2: " << chi2 << Form(" (%.1f)", max_chi2) << endl;}
+
+          auto D0_reco = D0KinTree->currentParticle()->currentState();
+          auto mass = D0_reco.mass();
+          if (verbose) {cout << "Mass: " << mass << endl;}
+          // auto mass_err = sqrt(D0_reco.kinematicParametersError().matrix()(6,6));
+
+          chi2_kpi.push_back(chi2);
+          mass_kpi.push_back(mass);
+        }
+        else {
+          chi2_kpi.push_back(-1);
+          mass_kpi.push_back(-1);
+        }
+
       }
       n_pi.push_back(n_pi_aux);
     }
 
     (*outputNtuplizer)["n_K"] = n_K;
-    cout << n_K << endl;
+
     (*outputVecNtuplizer)["n_pi"] = n_pi;
-    cout << n_pi.size() << endl;
+    (*outputVecNtuplizer)["chi2_kpi"] = chi2_kpi;
+    (*outputVecNtuplizer)["mass_kpi"] = mass_kpi;
+
     iEvent.put(move(outputNtuplizer), "outputNtuplizer");
     iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");
     return;
