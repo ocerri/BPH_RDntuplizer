@@ -29,6 +29,7 @@ private:
 
   TTree* tree;
   map<string, float> out_map;
+  map<string, vector<float>> outv_map;
 
   bool first_call = true;
 
@@ -47,6 +48,7 @@ FlatTreeWriter::FlatTreeWriter( const edm::ParameterSet & cfg ) :
   fs->make<TNamed>("cmssw",cmssw.c_str() );
 
   consumesMany<map<string, float>>();
+  consumesMany<map<string, vector<float>>>();
 }
 
 void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -59,6 +61,16 @@ void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       if (verbose) {cout << Form("%s: %.2f", kv.first.c_str(), kv.second) << endl;}
     }
   }
+
+  vector< edm::Handle<map<string, vector<float>>> > outVMapHandle;
+  iEvent.getManyByType(outVMapHandle);
+  for( auto h : outVMapHandle ) {
+    for( auto& kv : *(h.product()) ) {
+      outv_map[kv.first] = kv.second;
+      if (verbose) {cout << kv.first.c_str() << ": "<< kv.second.size() << endl;}
+    }
+  }
+
 
   if (first_call) {
     // Creating the branches in the output tree

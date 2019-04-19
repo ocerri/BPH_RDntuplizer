@@ -16,4 +16,6 @@ namespace vtxu {
   TLorentzVector getTLVfromKinPart(ReferenceCountingPointer<KinematicParticle>);
   TLorentzVector getTLVfromTrack(reco::Track, double);
   TLorentzVector getTLVfromCand(pat::PackedCandidate, double);
+  double dPhi(double, double);
+  double dR(double, double, double, double);
 }

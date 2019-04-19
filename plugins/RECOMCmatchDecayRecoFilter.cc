@@ -31,7 +31,7 @@ class RECOMCmatchDecayRecoFilter : public edm::stream::EDFilter<> {
 RECOMCmatchDecayRecoFilter::RECOMCmatchDecayRecoFilter(const edm::ParameterSet& iConfig)
 {
   verbose = iConfig.getParameter<int>( "verbose" );
-  consumesMany<map<string, float>>();
+  consumes<map<string, float>>(edm::InputTag("outputNtuplizer", "RECOMCmatchDecayRecoProducer"));
 }
 
 // ------------ method called on each new Event  ------------

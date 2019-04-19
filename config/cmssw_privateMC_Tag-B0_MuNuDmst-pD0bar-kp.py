@@ -80,6 +80,10 @@ process.R2MmatchFilter = cms.EDFilter("RECOMCmatchDecayRecoFilter",
         verbose = cms.int32(0)
 )
 
+process.B2DstMuDT = cms.EDProducer("B2DstMuDecayTreeProducer",
+        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
+        verbose = cms.int32(0)
+)
 
 process.outA = cms.EDAnalyzer("FlatTreeWriter",
         cmssw = cms.string(cmssw_version),
@@ -91,8 +95,9 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 process.p = cms.Path(
                     process.trgBPH +
                     process.trgF +
-                    process.R2Mmatch +
-                    process.R2MmatchFilter +
+                    # process.R2Mmatch +
+                    # process.R2MmatchFilter +
+                    process.B2DstMuDT +
                     process.outA
                     )
 

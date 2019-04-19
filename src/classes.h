@@ -15,6 +15,9 @@ namespace {
     std::vector<string> dummy_s2;
     edm::Wrapper<std::vector<string>> dummy_w2;
 
+    std::map<std::string, std::vector<float>> dummy_i3;
+    edm::Wrapper<std::map<std::string,std::vector<float>>> dummy_wi3;
+
     // pat::PackedCandidate dummy_ci2;
     // std::pair<const std::basic_string<char,std::char_traits<char> >,pat::PackedCandidate> dummy_pi2;
     // std::pair<std::string, pat::PackedCandidate> dummy_pi2;

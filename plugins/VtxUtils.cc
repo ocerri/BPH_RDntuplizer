@@ -142,3 +142,17 @@ TLorentzVector vtxu::getTLVfromCand(pat::PackedCandidate p, double mass) {
   out.SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), mass);
   return out;
 }
+
+double vtxu::dPhi(double p1, double p2) {
+  double dPhi = p1 - p2;
+  double pi = 3.14159265358979323846;
+  while (fabs(dPhi) > pi) {
+    int sgn = dPhi > 0? 1 : -1;
+    dPhi -= sgn*2*pi;
+  }
+  return dPhi;
+}
+
+double vtxu::dR(double p1, double p2, double e1, double e2) {
+  return hypot(dPhi(p1, p2), e1 - e2);
+}
