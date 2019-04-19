@@ -19,28 +19,24 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_Prompt_v13', '')
 
 '''
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    # input = cms.untracked.int32(50)
-    input = cms.untracked.int32(-1)
+    # input = cms.untracked.int32(100)
+    # input = cms.untracked.int32(-1)
 )
 
 from glob import glob
-flist = glob('/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root')
+flist = glob('/eos/cms/store/data/Run2018D/ParkingBPH*/MINIAOD/20Mar*/*/*.root')
 for i in range(len(flist)):
     flist[i] = 'file:' + flist[i]
 # flist =[ 'file:/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_NoPU_10-2-3_v1/jobs_out/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_MINIAODSIM_merged_1-300.root']
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring(tuple(flist)),
-                            inputCommands=cms.untracked.vstring('keep *',
-                                                                'drop GenLumiInfoHeader_generator__SIM')
+                            fileNames = cms.untracked.vstring(tuple(flist))
                            )
-
-process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
 
 '''
@@ -49,7 +45,7 @@ process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
 # outname = flist[0].replace('jobs_out/', '')
 # outname = outname.replace('MINIAODSIM', 'BPHRDntuplizer')
-outname = "/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/kpi_candidates.root"
+outname = "/eos/user/o/ocerri/BPhysics/data/cmsRD/Run2018D/kpi_candidates.root"
 
 process.TFileService = cms.Service("TFileService",
       fileName = cms.string(outname),
@@ -63,8 +59,8 @@ process.TFileService = cms.Service("TFileService",
 '''
 
 process.trgBPH = cms.EDProducer("BPHTriggerPathProducer",
-        muonCollection = cms.InputTag("slimmedMuons","", "PAT"),
-        vertexCollection = cms.InputTag("offlineSlimmedPrimaryVertices","", "PAT"),
+        muonCollection = cms.InputTag("slimmedMuons","", ""),
+        vertexCollection = cms.InputTag("offlineSlimmedPrimaryVertices","", ""),
         triggerObjects = cms.InputTag("slimmedPatTrigger"),
         triggerBits = cms.InputTag("TriggerResults","","HLT"),
         muon_charge = cms.int32(1),
