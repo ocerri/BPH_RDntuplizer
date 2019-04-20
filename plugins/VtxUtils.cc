@@ -106,18 +106,22 @@ RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedC
   }
 }
 
-double vtxu::computeDCA(const edm::EventSetup& iSetup, pat::PackedCandidate cand, GlobalPoint p) {
+pair<double,double> vtxu::computeDCA(const edm::EventSetup& iSetup, pat::PackedCandidate cand, GlobalPoint p) {
   // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
   reco::TransientTrack tk = TTBuilder->build(cand.bestTrack());
 
-  TrajectoryStateClosestToPoint theDCAXBS = tk.trajectoryStateClosestToPoint(p);
-  double DCA = theDCAXBS.perigeeParameters().transverseImpactParameter();
-  // double DCABSErr = theDCAXBS.perigeeError().transverseImpactParameterError();
-  // pair<double,double> DCA = make_pair(DCABS,DCABSErr);
-  return DCA;
+  TrajectoryStateClosestToPoint stateCA = tk.trajectoryStateClosestToPoint(p);
+  double dT = stateCA.perigeeParameters().transverseImpactParameter();
+  double dL = stateCA.perigeeParameters().longitudinalImpactParameter();
+  double dCA = hypot(dL, dT);
+
+  double EdT = stateCA.perigeeError().transverseImpactParameterError();
+  double EdL = stateCA.perigeeError().longitudinalImpactParameterError();
+  double EdCA = hypot(dT*EdT, dL*EdL)/dCA;
+  return make_pair(dCA,EdCA);
 }
 
 TLorentzVector vtxu::getTLVfromKinPart(ReferenceCountingPointer<KinematicParticle> p) {

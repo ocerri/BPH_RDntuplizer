@@ -36,6 +36,7 @@ private:
     // ----------member data ---------------------------
 
     edm::EDGetTokenT<vector<pat::PackedCandidate>> PFCandSrc_;
+    edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
     edm::EDGetTokenT<vector<pat::Muon>> TrgMuonSrc_;
 
 
@@ -53,6 +54,7 @@ B2DstMuDecayTreeProducer::B2DstMuDecayTreeProducer(const edm::ParameterSet &iCon
 {
     verbose = iConfig.getParameter<int>( "verbose" );
     PFCandSrc_ = consumes<vector<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"));
+    vtxSrc_ = consumes<vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"));
     // TrgMuonSrc_ = consumes<vector<pat::Muon>>(edm::InputTag("trgMuonsMatched", "BPHTriggerPathProducer"));
     TrgMuonSrc_ = consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "trgMuons" ) );
 
@@ -68,6 +70,10 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     iEvent.getByToken(PFCandSrc_, pfCandHandle);
     unsigned int N_pfCand = pfCandHandle->size();
 
+    edm::Handle<vector<reco::Vertex>> vtxHandle;
+    iEvent.getByToken(vtxSrc_, vtxHandle);
+
+
     edm::Handle<vector<pat::Muon>> trgMuonsHandle;
     iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
 
@@ -78,6 +84,15 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     // unique_ptr<vector<string>> RECO_MCmatchNames( new vector<string> );
 
     auto mu = (*trgMuonsHandle)[0];
+    reco::Vertex PV;
+    int N_PV = 0;
+    for(auto v : *vtxHandle){
+      if(mu.isTightMuon(v)) {
+        PV = v;
+        N_PV++;
+      }
+    }
+    if(N_PV>1 && verbose) {cout << "[Warning]: " << N_PV << " PV reco\n";}
     pat::PackedCandidate trgMu;
     for (auto p : *pfCandHandle) {
       if (fabs(mu.pt() - p.pt())/mu.pt() > 5e-3) continue;
@@ -101,6 +116,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       // Require to be close to the trigger muon;
       if (fabs(k.dz() - trgMu.dz()) > 1.) continue;
       if (vtxu::dR(k.phi(), trgMu.phi(), k.eta(), trgMu.eta()) > 1.) continue;
+      // Require significant displacement from PV
       n_K++;
       if (verbose) {cout << "###-### K number " << n_K << endl;}
 

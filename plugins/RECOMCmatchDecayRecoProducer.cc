@@ -278,7 +278,8 @@ void RECOMCmatchDecayRecoProducer::produce(edm::Event& iEvent, const edm::EventS
           p4st_mu.Boost(-1*p4_B.BoostVector());
           (*outputNtuplizer)["Est_mu_RECO"] = p4st_mu.E();
 
-          (*outputNtuplizer)["ip_mu_RECO"] = vtxu::computeDCA(iSetup, matchedPart["mu"], Dstvtx);
+          auto dCA = vtxu::computeDCA(iSetup, matchedPart["mu"], Dstvtx);
+          (*outputNtuplizer)["ip_mu_RECO"] = dCA.first;
         }
       }
     }
