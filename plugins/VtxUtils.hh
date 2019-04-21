@@ -14,6 +14,7 @@ namespace vtxu {
   RefCountedKinematicTree FitD0(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool, int);
   RefCountedKinematicTree FitDst(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, pat::PackedCandidate, bool, int);
   std::pair<double,double> computeDCA(const edm::EventSetup&, pat::PackedCandidate, GlobalPoint);
+  std::pair<double,double> computeDCA(reco::TransientTrack, GlobalPoint);
   TLorentzVector getTLVfromKinPart(ReferenceCountingPointer<KinematicParticle>);
   TLorentzVector getTLVfromTrack(reco::Track, double);
   TLorentzVector getTLVfromCand(pat::PackedCandidate, double);

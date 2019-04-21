@@ -25,7 +25,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(50)
+    # input = cms.untracked.int32(50)
     # input = cms.untracked.int32(-1)
 )
 
@@ -86,7 +86,7 @@ process.R2MmatchFilter = cms.EDFilter("RECOMCmatchDecayRecoFilter",
 
 process.B2DstMuDT = cms.EDProducer("B2DstMuDecayTreeProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.outA = cms.EDAnalyzer("FlatTreeWriter",

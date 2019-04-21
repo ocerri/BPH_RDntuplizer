@@ -80,19 +80,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     // Output collection
     unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
     unique_ptr<map<string, vector<float>>> outputVecNtuplizer(new map<string, vector<float>>);
-    // unique_ptr<vector<pat::PackedCandidate>> RECO_MCmatch( new vector<pat::PackedCandidate> );
-    // unique_ptr<vector<string>> RECO_MCmatchNames( new vector<string> );
 
     auto mu = (*trgMuonsHandle)[0];
-    reco::Vertex PV;
-    int N_PV = 0;
-    for(auto v : *vtxHandle){
-      if(mu.isTightMuon(v)) {
-        PV = v;
-        N_PV++;
-      }
-    }
-    if(N_PV>1 && verbose) {cout << "[Warning]: " << N_PV << " PV reco\n";}
+    // cout << Form("TrgMu vtx: %.2f %.2f %.2f\n", mu.vx(), mu.vy(), mu.vz());
     pat::PackedCandidate trgMu;
     for (auto p : *pfCandHandle) {
       if (fabs(mu.pt() - p.pt())/mu.pt() > 5e-3) continue;
@@ -101,11 +91,37 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       trgMu = p;
       break;
     }
+    // cout << Form("TrgMuPF vtx: %.2f %.2f %.2f\n", trgMu.vx(), trgMu.vy(), trgMu.vz());
+    auto vtxMu = trgMu.vertexRef();
+    GlobalPoint p_vtxMu(vtxMu->x(), vtxMu->y(), vtxMu->z());
+    // auto dca = vtxu::computeDCA(iSetup, trgMu, p_vtxMu);
+    // cout << Form("trgMu dca %.3f +/- %.3f\n", dca.first, dca.second);
+    // cout << Form("TrgMuPF vtxRef: %.2f %.2f %.2f\n", vtxtrgmu->x(), vtxtrgmu->y(), vtxtrgmu->z());
+
+    // reco::Vertex PV;
+    // double DCA_trgMuPV = -1;
+    // int N_PV = 0;
+    // for(auto v : *vtxHandle){
+    //   if(mu.isTightMuon(v)) {
+    //     PV = v;
+    //     N_PV++;
+    //     cout << Form("vtx: %.2f %.2f %.2f", v.x(), v.y(), v.z());
+    //     // cout << " PV" << flush;
+    //     GlobalPoint vp(v.x(), v.y(), v.z());
+    //     auto dca = vtxu::computeDCA(iSetup, trgMu, vp);
+    //     cout << Form("  dca %.3f +/- %.3f\n", dca.first, dca.second);
+    //   }
+    //   // cout << endl;
+    // }
+    // if(N_PV>1 && verbose) {cout << "[Warning]: " << N_PV << " PV reco\n";}
+
 
     int n_K = 0;
     vector<float> n_pi = {};
-    vector<float> chi2_kpi = {};
     vector<float> mass_kpi = {};
+    vector<float> dca_kpi_vtxMu = {};
+    vector<float> sigdca_kpi_vtxMu = {};
+    vector<float> cos_kpi_vtxMu = {};
 
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
     // Look for the K+ (321)
@@ -134,40 +150,58 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         if (fabs(pi.dz() - k.dz()) > 1.) continue;
         if (vtxu::dR(pi.phi(), k.phi(), pi.eta(), k.eta()) > 1.) continue;
 
-        n_pi_aux++;
-        if (verbose) {cout << "---> pi number " << n_pi_aux << endl;}
         //Fit the vertex
         auto D0KinTree = vtxu::FitD0(iSetup, pi, k, false, 0);
+        bool accept_pi = false;
         if(D0KinTree->isValid()) {
           D0KinTree->movePointerToTheTop();
-
           auto D0vtx = D0KinTree->currentDecayVertex();
           auto chi2 = D0vtx->chiSquared();
           auto max_chi2 = TMath::ChisquareQuantile(0.95, D0vtx->degreesOfFreedom());
-          if (verbose) {cout << "Chi2: " << chi2 << Form(" (%.1f)", max_chi2) << endl;}
-
-          auto D0_reco = D0KinTree->currentParticle()->currentState();
-          auto mass = D0_reco.mass();
-          if (verbose) {cout << "Mass: " << mass << endl;}
-          // auto mass_err = sqrt(D0_reco.kinematicParametersError().matrix()(6,6));
-
-          chi2_kpi.push_back(chi2);
-          mass_kpi.push_back(mass);
+          if (chi2 < max_chi2) accept_pi = true;
         }
-        else {
-          chi2_kpi.push_back(-1);
-          mass_kpi.push_back(-1);
-        }
+        if(!accept_pi) continue;
 
+        n_pi_aux++;
+        if (verbose) {cout << "---> pi number " << n_pi_aux << endl;}
+        auto D0_reco = D0KinTree->currentParticle();
+        auto D0vtx = D0KinTree->currentDecayVertex();
+
+        auto mass = D0_reco->currentState().mass();
+        // auto mass_err = sqrt(D0_reco.kinematicParametersError().matrix()(6,6));
+        mass_kpi.push_back(mass);
+        auto dca = vtxu::computeDCA(D0_reco->refittedTransientTrack(), p_vtxMu);
+        dca_kpi_vtxMu.push_back(dca.first);
+        sigdca_kpi_vtxMu.push_back(fabs(dca.first)/dca.second);
+
+        TVector3 dvtx(D0vtx->position().x() - vtxMu->x(),
+                      D0vtx->position().y() - vtxMu->y(),
+                      D0vtx->position().z() - vtxMu->z()
+                     );
+        TVector3 pD0(D0_reco->currentState().globalMomentum().x(),
+                     D0_reco->currentState().globalMomentum().y(),
+                     D0_reco->currentState().globalMomentum().z()
+                     );
+        double dalpha = dvtx.Angle(pD0);
+        cos_kpi_vtxMu.push_back(cos(dalpha));
+
+        if (verbose) {
+          cout << "Mass: " << mass << endl;
+          cout << Form("kpi dca %.3f +/- %.3f\n", dca.first, dca.second);
+          cout << Form("dalpha = %.2f (%.2f)\n", dalpha, cos(dalpha));
+        }
       }
+
       n_pi.push_back(n_pi_aux);
     }
 
     (*outputNtuplizer)["n_K"] = n_K;
 
     (*outputVecNtuplizer)["n_pi"] = n_pi;
-    (*outputVecNtuplizer)["chi2_kpi"] = chi2_kpi;
     (*outputVecNtuplizer)["mass_kpi"] = mass_kpi;
+    (*outputVecNtuplizer)["dca_kpi_vtxMu"] = dca_kpi_vtxMu;
+    (*outputVecNtuplizer)["sigdca_kpi_vtxMu"] = sigdca_kpi_vtxMu;
+    (*outputVecNtuplizer)["cos_kpi_vtxMu"] = cos_kpi_vtxMu;
 
     iEvent.put(move(outputNtuplizer), "outputNtuplizer");
     iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");

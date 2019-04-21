@@ -25,15 +25,14 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_Prompt_v13', '')
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100000)
-    # input = cms.untracked.int32(-1)
+    # input = cms.untracked.int32(100000)
+    input = cms.untracked.int32(-1)
 )
 
 from glob import glob
 flist = glob('/eos/cms/store/data/Run2018D/ParkingBPH*/MINIAOD/20Mar*/*/*.root')
 for i in range(len(flist)):
     flist[i] = 'file:' + flist[i]
-# flist =[ 'file:/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_NoPU_10-2-3_v1/jobs_out/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_MINIAODSIM_merged_1-300.root']
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist))
                            )

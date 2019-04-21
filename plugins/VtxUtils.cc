@@ -124,6 +124,18 @@ pair<double,double> vtxu::computeDCA(const edm::EventSetup& iSetup, pat::PackedC
   return make_pair(dCA,EdCA);
 }
 
+pair<double,double> vtxu::computeDCA(reco::TransientTrack tk, GlobalPoint p) {
+  TrajectoryStateClosestToPoint stateCA = tk.trajectoryStateClosestToPoint(p);
+  double dT = stateCA.perigeeParameters().transverseImpactParameter();
+  double dL = stateCA.perigeeParameters().longitudinalImpactParameter();
+  double dCA = hypot(dL, dT);
+
+  double EdT = stateCA.perigeeError().transverseImpactParameterError();
+  double EdL = stateCA.perigeeError().longitudinalImpactParameterError();
+  double EdCA = hypot(dT*EdT, dL*EdL)/dCA;
+  return make_pair(dCA,EdCA);
+}
+
 TLorentzVector vtxu::getTLVfromKinPart(ReferenceCountingPointer<KinematicParticle> p) {
   auto pvec = p->currentState().globalMomentum();
   auto mass = p->currentState().mass();
