@@ -1,5 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 import os
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", "--input_file", type=str, default=None, help="input root files", nargs='+')
+parser.add_argument("-o", "--output_file", type=str, default=None, help="output root file")
+args = parser.parse_args()
 
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
@@ -29,8 +35,11 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
 )
 
-from glob import glob
-flist = glob('/eos/cms/store/data/Run2018D/ParkingBPH*/MINIAOD/20Mar*/*/*.root')
+if args.input_file is None:
+    from glob import glob
+    flist = glob('/eos/cms/store/data/Run2018D/ParkingBPH*/MINIAOD/20Mar*/*/*.root')
+else:
+    flist = args.input_file
 for i in range(len(flist)):
     flist[i] = 'file:' + flist[i]
 process.source = cms.Source("PoolSource",
@@ -41,10 +50,10 @@ process.source = cms.Source("PoolSource",
 '''
 #####################   Output   ###################
 '''
-
-# outname = flist[0].replace('jobs_out/', '')
-# outname = outname.replace('MINIAODSIM', 'BPHRDntuplizer')
-outname = "/eos/user/o/ocerri/BPhysics/data/cmsRD/Run2018D/kpi_candidates.root"
+if args.input_file is None:
+    outname = "/eos/user/o/ocerri/BPhysics/data/cmsRD/Run2018D/kpi_candidates.root"
+else:
+    outname = args.output_file
 
 process.TFileService = cms.Service("TFileService",
       fileName = cms.string(outname),

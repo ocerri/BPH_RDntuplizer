@@ -26,7 +26,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12
 '''
 process.maxEvents = cms.untracked.PSet(
     # input = cms.untracked.int32(50)
-    # input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(-1)
 )
 
 from glob import glob

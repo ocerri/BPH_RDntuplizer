@@ -122,6 +122,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     vector<float> dca_kpi_vtxMu = {};
     vector<float> sigdca_kpi_vtxMu = {};
     vector<float> cos_kpi_vtxMu = {};
+    vector<float> d_vtxkpi_vtxMu = {};
+    vector<float> sigd_vtxkpi_vtxMu = {};
 
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
     // Look for the K+ (321)
@@ -185,10 +187,15 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         double dalpha = dvtx.Angle(pD0);
         cos_kpi_vtxMu.push_back(cos(dalpha));
 
+        auto dvtx_kpiPV = vtxu::vtxsDistance(vtxMu, D0vtx);
+        d_vtxkpi_vtxMu.push_back(dvtx_kpiPV.first);
+        sigd_vtxkpi_vtxMu.push_back(dvtx_kpiPV.second);
+
         if (verbose) {
           cout << "Mass: " << mass << endl;
-          cout << Form("kpi dca %.3f +/- %.3f\n", dca.first, dca.second);
-          cout << Form("dalpha = %.2f (%.2f)\n", dalpha, cos(dalpha));
+          cout << Form("kpiPV dca: %.3f +/- %.3f\n", dca.first, dca.second);
+          cout << Form("dalpha: %.2f (%.2f)\n", dalpha, cos(dalpha));
+          cout << Form("dvtx kpi PV: %.3f +/- %.3f\n", dvtx_kpiPV.first, dvtx_kpiPV.second);
         }
       }
 
@@ -201,7 +208,10 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     (*outputVecNtuplizer)["mass_kpi"] = mass_kpi;
     (*outputVecNtuplizer)["dca_kpi_vtxMu"] = dca_kpi_vtxMu;
     (*outputVecNtuplizer)["sigdca_kpi_vtxMu"] = sigdca_kpi_vtxMu;
+    (*outputVecNtuplizer)["d_vtxkpi_vtxMu"] = d_vtxkpi_vtxMu;
+    (*outputVecNtuplizer)["sigd_vtxkpi_vtxMu"] = sigd_vtxkpi_vtxMu;
     (*outputVecNtuplizer)["cos_kpi_vtxMu"] = cos_kpi_vtxMu;
+
 
     iEvent.put(move(outputNtuplizer), "outputNtuplizer");
     iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");

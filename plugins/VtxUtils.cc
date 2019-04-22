@@ -172,3 +172,24 @@ double vtxu::dPhi(double p1, double p2) {
 double vtxu::dR(double p1, double p2, double e1, double e2) {
   return hypot(dPhi(p1, p2), e1 - e2);
 }
+
+std::pair<double,double> vtxu::vtxsDistance(reco::VertexRef v1, RefCountedKinematicVertex v2){
+  double dx = v2->position().x() - v1->x();
+  double dy = v2->position().y() - v1->y();
+  double dz = v2->position().z() - v1->z();
+
+  double d = sqrt(dx*dx + dy*dy + dz*dz);
+
+  double dd[3] = {dx/d, dy/d, dz/d};
+  auto e1 = v1->covariance();
+  auto e2 = v2->error().matrix();
+
+  double Ed2 = 0;
+  for(uint i=0; i<3; ++i){
+    for(uint j=0; j<3; ++j){
+      Ed2 += dd[i]* ( e1.At(i,j)+e2.At(i,j) ) *dd[j];
+    }
+  }
+
+  return make_pair(d,sqrt(Ed2));
+}
