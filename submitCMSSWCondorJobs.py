@@ -71,9 +71,6 @@ if __name__ == "__main__":
     if not args.output_file:
         print 'No output file provided'
         exit()
-    if not args.output_file.endswith('.root'):
-        print 'Outputfile must end with .root'
-        exit()
     outdir = os.path.dirname(args.output_file)
     if not os.path.exists(outdir):
         os.makedirs(outdir)
@@ -88,6 +85,8 @@ if __name__ == "__main__":
 
     os.makedirs(outdir+'/out/')
     os.makedirs(outdir+'/cfg/')
+
+    outfiletemplate = os.path.basename(args.output_file)
 
 
     '''
@@ -109,31 +108,31 @@ if __name__ == "__main__":
     maxRunTime = int(args.maxtime[:-1]) * time_scale[args.maxtime[-1]]
 
     os.system('chmod +x jobSubmission/CMSSECondorJob.sh')
-    print 'Creating submission scripts\n\n'
+    print 'Creating submission script\n\n'
 
-    for i in range(Njobs):
-        fsub = open('job{}.sub'.format(i), 'w')
-        fsub.write('executable    = {}/jobSubmission/CMSSECondorJob.sh\n'.format(os.environ['PWD']))
-
-        exec_args = os.environ['PWD']+' '+args.config
-        exec_args += ' ' + infilestr[i] + ' ' + args.output_file.replace('.root', '_{}.root'.format(i))
-        fsub.write('arguments     = ' + exec_args)
-        fsub.write('\n')
-        fsub.write('output        = {}/out/job{}.out'.format(outdir, i))
-        fsub.write('\n')
-        fsub.write('error         = {}/out/{}.err'.format(outdir, i))
-        fsub.write('\n')
-        fsub.write('log           = {}/out/{}.log'.format(outdir, i))
-        fsub.write('\n')
-        fsub.write('+MaxRuntime   = '+str(maxRunTime))
-        fsub.write('\n')
-        # fsub.write('+JobBatchName = '+args.process)
-        # fsub.write('\n')
-        fsub.write('x509userproxy = $ENV(X509_USER_PROXY)')
-        fsub.write('\n')
-        fsub.write('queue 1')
-        fsub.write('\n')
-        fsub.close()
-
-        output = processCmd('condor_submit job{}.sub'.format(i))
-        os.rename('job{}.sub'.format(i), outdir+'/cfg/job{}.sub'.format(i))
+    fsub = open('jobs.sub', 'w')
+    exec_base = 'executable    = {}/jobSubmission/CMSSECondorJob.sh\n'.format(os.environ['PWD'])
+    fsub.write(exec_base+'job1023_gen_wPU_v1.sh\n')
+    # exec_args = str(nev)+' '+str(st_seed)+' $(ProcId) '+args.process+' '+version+' '+args.CMSSW_loc
+    # if isinstance(args.PU, int) and args.PU > 0:
+    #     exec_args += ' ' + str(args.PU)
+    # fsub.write('arguments     = ' + exec_args)
+    # fsub.write('\n')
+    # fsub.write('output        = {}/out/{}.$(ClusterId).$(ProcId).out'.format(outdir, args.process))
+    # fsub.write('\n')
+    # fsub.write('error         = {}/out/{}.$(ClusterId).$(ProcId).err'.format(outdir, args.process))
+    # fsub.write('\n')
+    # fsub.write('log           = {}/out/{}.$(ClusterId).$(ProcId).log'.format(outdir, args.process))
+    # fsub.write('\n')
+    # fsub.write('+MaxRuntime   = '+str(maxRunTime))
+    # fsub.write('\n')
+    # fsub.write('+JobBatchName = '+args.process)
+    # fsub.write('\n')
+    # fsub.write('x509userproxy = $ENV(X509_USER_PROXY)')
+    # fsub.write('\n')
+    # fsub.write('queue '+str(njobs))
+    # fsub.write('\n')
+    # fsub.close()
+    #
+    # output = processCmd('condor_submit jobs.sub')
+    # os.rename('jobs.sub', outdir+'/cfg/jobs.sub')
