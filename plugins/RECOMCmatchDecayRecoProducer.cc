@@ -242,7 +242,7 @@ void RECOMCmatchDecayRecoProducer::produce(edm::Event& iEvent, const edm::EventS
         auto p4_pisoft = vtxu::getTLVfromCand(matchedPart["pisoft"], mass_pi);
         (*outputNtuplizer)["Dstprefit_mass"] = (p4_pisoft + p4_pi + p4_K).M();
 
-        auto DstKinTree = vtxu::FitDst(iSetup, matchedPart["pisoft"], matchedPart["pi"], matchedPart["K"], false, 0);
+        auto DstKinTree = vtxu::FitDst_fitD0wMassConstraint(iSetup, matchedPart["pisoft"], matchedPart["pi"], matchedPart["K"], false, 0);
         if(!DstKinTree->isValid()) return;
         DstKinTree->movePointerToTheTop();
         auto Dst_reco = DstKinTree->currentParticle()->currentState();
@@ -251,7 +251,7 @@ void RECOMCmatchDecayRecoProducer::produce(edm::Event& iEvent, const edm::EventS
 
         if (matched_mu) {
           // Refit with D* mass constraint
-          auto DstKinTree = vtxu::FitDst(iSetup, matchedPart["pisoft"], matchedPart["pi"], matchedPart["K"], true, 0);
+          auto DstKinTree = vtxu::FitDst_fitD0wMassConstraint(iSetup, matchedPart["pisoft"], matchedPart["pi"], matchedPart["K"], true, 0);
           if(!DstKinTree->isValid()) return;
           DstKinTree->movePointerToTheTop();
 

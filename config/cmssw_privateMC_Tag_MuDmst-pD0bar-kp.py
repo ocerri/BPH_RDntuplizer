@@ -63,7 +63,7 @@ process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 '''
 
 if args.outputFile == '.root':
-    outname = '/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/test.root'
+    outname = '/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/MuDst_candidates.root'
 else:
     outname = args.outputFile
 
@@ -100,7 +100,7 @@ process.R2MmatchFilter = cms.EDFilter("RECOMCmatchDecayRecoFilter",
         verbose = cms.int32(0)
 )
 
-process.B2DstMuDT = cms.EDProducer("B2DstMuDecayTreeProducer",
+process.MuDstT = cms.EDProducer("MuDstProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
         verbose = cms.int32(0)
 )
@@ -117,7 +117,7 @@ process.p = cms.Path(
                     process.trgF +
                     # process.R2Mmatch +
                     # process.R2MmatchFilter +
-                    process.B2DstMuDT +
+                    process.MuDstT +
                     process.outA
                     )
 

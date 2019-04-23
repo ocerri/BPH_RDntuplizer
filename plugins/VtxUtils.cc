@@ -71,7 +71,7 @@ RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCa
   }
 }
 
-RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedCandidate pisoft, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constrain, int verbose = 0) {
+RefCountedKinematicTree vtxu::FitDst_fitD0wMassConstraint(const edm::EventSetup& iSetup, pat::PackedCandidate pisoft, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constrain, int verbose = 0) {
   // Get the mass constrained D0
   auto D0KinTree = vtxu::FitD0(iSetup, pi, K, true);
   if(!D0KinTree->isValid()) return D0KinTree;
@@ -79,6 +79,35 @@ RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedC
   auto D0_reco = D0KinTree->currentParticle();
 
   // Get transient track builder
+  edm::ESHandle<TransientTrackBuilder> TTBuilder;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+
+  reco::TransientTrack pisoft_tk = TTBuilder->build(pisoft.bestTrack());
+
+  KinematicParticleFactoryFromTransientTrack pFactory;
+
+  std::vector<RefCountedKinematicParticle> parts;
+  double chi = 0, ndf = 0;
+  float mPi = _PiMass_, dmPi = _PiMass_;
+  parts.push_back(D0_reco);
+  parts.push_back(pFactory.particle(pisoft_tk, mPi, chi, ndf, dmPi));
+
+  if (!mass_constrain) {
+    KinematicParticleVertexFitter VtxFitter;
+    RefCountedKinematicTree DstKinTree = VtxFitter.fit(parts);
+    return DstKinTree;
+  }
+  else {
+    ParticleMass Dstmass = _DstMass_;
+    MultiTrackKinematicConstraint * Dstmass_c = new TwoTrackMassKinematicConstraint(Dstmass);
+    KinematicConstrainedVertexFitter kcVtxFitter;
+    RefCountedKinematicTree DstKinTree = kcVtxFitter.fit(parts, Dstmass_c);
+    return DstKinTree;
+  }
+}
+
+RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedCandidate pisoft, ReferenceCountingPointer<KinematicParticle> D0_reco, bool mass_constrain, int verbose = 0) {
+// Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 

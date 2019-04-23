@@ -23,8 +23,7 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input_file", type=str, default=None, help="input root files", nargs='+')
     parser.add_argument("-o", "--output_file", type=str, default=None, help="output root file")
 
-    parser.add_argument ('--version', help='Process version', default='v0')
-    parser.add_argument ('--CMSSW_loc', help='CMSSW src loc', default='/afs/cern.ch/user/o/ocerri/work/CMSSW_10_2_3/src')
+    parser.add_argument ('--CMSSW_loc', help='CMSSW src loc', default='/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/CMSSW_10_2_3/src/')
     parser.add_argument ('--force_production', action='store_true', default=False, help='Proceed even if output file is already existing')
     parser.add_argument ('--maxtime', help='Max wall run time [s=seconds, m=minutes, h=hours, d=days]', default='8h')
 

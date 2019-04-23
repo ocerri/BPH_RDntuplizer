@@ -1,7 +1,5 @@
-import os
 import FWCore.ParameterSet.Config as cms
-import FWCore.ParameterSet.VarParsing as VarParsing
-
+import os, sys
 
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
@@ -19,18 +17,9 @@ process.load('Configuration.StandardSequences.MagneticField_cff')
 # process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
+
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12', '')
-
-'''
-############ Command line args ################
-'''
-
-args = VarParsing.VarParsing('analysis')
-args.register('inputFile', '', args.multiplicity.list, args.varType.string, "Input file or template for glob")
-args.outputFile = ''
-args.parseArguments()
-
 
 '''
 #####################   Input    ###################
@@ -41,14 +30,11 @@ process.maxEvents = cms.untracked.PSet(
 )
 
 from glob import glob
-if args.inputFile:
-    flist = args.inputFile
-else:
-    flist = glob('/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root')
+flist = glob('/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root')
 
 for i in range(len(flist)):
     flist[i] = 'file:' + flist[i]
-
+# flist =[ 'file:/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_NoPU_10-2-3_v1/jobs_out/BPH_Tag-Bm_D0kpmunu_Probe-B0_MuNuDmst-pD0bar-kp-_MINIAODSIM_merged_1-300.root']
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist)),
                             inputCommands=cms.untracked.vstring('keep *',
@@ -62,10 +48,7 @@ process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 #####################   Output   ###################
 '''
 
-if args.outputFile == '.root':
-    outname = '/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/test.root'
-else:
-    outname = args.outputFile
+outname = "/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/kpi_candidates.root"
 
 process.TFileService = cms.Service("TFileService",
       fileName = cms.string(outname),
@@ -100,7 +83,7 @@ process.R2MmatchFilter = cms.EDFilter("RECOMCmatchDecayRecoFilter",
         verbose = cms.int32(0)
 )
 
-process.B2DstMuDT = cms.EDProducer("B2DstMuDecayTreeProducer",
+process.MuD0T = cms.EDProducer("MuD0Producer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
         verbose = cms.int32(0)
 )
@@ -117,7 +100,7 @@ process.p = cms.Path(
                     process.trgF +
                     # process.R2Mmatch +
                     # process.R2MmatchFilter +
-                    process.B2DstMuDT +
+                    process.MuD0T +
                     process.outA
                     )
 

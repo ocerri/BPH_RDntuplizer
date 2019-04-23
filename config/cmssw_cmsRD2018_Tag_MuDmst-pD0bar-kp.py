@@ -1,11 +1,7 @@
-import FWCore.ParameterSet.Config as cms
 import os
-import argparse
+import FWCore.ParameterSet.Config as cms
+import FWCore.ParameterSet.VarParsing as VarParsing
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-i", "--input_file", type=str, default=None, help="input root files", nargs='+')
-parser.add_argument("-o", "--output_file", type=str, default=None, help="output root file")
-args = parser.parse_args()
 
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
@@ -28,6 +24,16 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_Prompt_v13', '')
 
 '''
+############ Command line args ################
+'''
+
+args = VarParsing.VarParsing('analysis')
+args.register('inputFile', '', args.multiplicity.list, args.varType.string, "Input file or template for glob")
+args.outputFile = ''
+args.parseArguments()
+
+
+'''
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
@@ -35,11 +41,12 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
 )
 
-if args.input_file is None:
-    from glob import glob
-    flist = glob('/eos/cms/store/data/Run2018D/ParkingBPH*/MINIAOD/20Mar*/*/*.root')
+from glob import glob
+if args.inputFile:
+    flist = args.inputFile
 else:
-    flist = args.input_file
+    flist = glob('/eos/cms/store/data/Run2018D/ParkingBPH*/MINIAOD/20Mar*/*/*.root')
+
 for i in range(len(flist)):
     flist[i] = 'file:' + flist[i]
 process.source = cms.Source("PoolSource",
@@ -50,10 +57,10 @@ process.source = cms.Source("PoolSource",
 '''
 #####################   Output   ###################
 '''
-if args.input_file is None:
-    outname = "/eos/user/o/ocerri/BPhysics/data/cmsRD/Run2018D/kpi_candidates.root"
+if args.outputFile == '.root':
+    outname = '/eos/user/o/ocerri/BPhysics/data/cmsRD/Run2018D/test.root'
 else:
-    outname = args.output_file
+    outname = args.outputFile
 
 process.TFileService = cms.Service("TFileService",
       fileName = cms.string(outname),
