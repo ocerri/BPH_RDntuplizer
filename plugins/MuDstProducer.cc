@@ -209,8 +209,12 @@ void MuDstProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
           if (vtxu::dR(pis.phi(), trgMu.phi(), pis.eta(), trgMu.eta()) > __dRMax__) continue;
 
           // Fit the Dst vertex
-          //  Note for the moment we are not refitting the D0 with mass constrint but could be a possibility
-          auto DstKinTree = vtxu::FitDst(iSetup, pis, D0_reco, false, 0);
+          //  Refitting the D0 with mass constrint
+          auto DstKinTree = vtxu::FitDst_fitD0wMassConstraint(iSetup, pis, pi, k, false, 0);
+
+          //  Without refitting the D0 with mass constrint
+          // Does not work for unknown reasons
+          // auto DstKinTree = vtxu::FitDst(iSetup, pis, D0KinTree->currentParticle(), false, 0);
 
           bool accept_pis = false;
           double chi2_D0pis;
@@ -252,7 +256,9 @@ void MuDstProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
           bool accept_Dst = cos_D0pis_vtxMu > __cos_D0pis_vtxMu_min__;
           accept_Dst &= fabs(mass_D0pis - mass_kpi) < __dmKpi_D0pis_max__;
 
-          n_Dst++;
+          if (accept_Dst) {
+            n_Dst++;
+          }
 
           (*outputVecNtuplizer)["chi2_kpi"].push_back(chi2_kpi);
           (*outputVecNtuplizer)["mass_kpi"].push_back(mass_kpi);

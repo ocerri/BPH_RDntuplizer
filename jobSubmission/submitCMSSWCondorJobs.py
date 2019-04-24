@@ -14,7 +14,6 @@ def processCmd(cmd, quite = 0):
         print 'Output:\n   ['+output+'] \n'
     return output
 
-
 #_____________________________________________________________________________________________________________
 #example line: python submitCondorJobs.py --nev 30000 --njobs 500 --maxtime 12h --PU 0
 if __name__ == "__main__":
@@ -26,6 +25,7 @@ if __name__ == "__main__":
     parser.add_argument ('-f', '--force_production', action='store_true', default=False, help='Proceed even if output file is already existing')
     parser.add_argument ('-c', '--config', type=str, help='Config file for cmsRUn')
     parser.add_argument ('--maxtime', help='Max wall run time [s=seconds, m=minutes, h=hours, d=days]', default='8h')
+    parser.add_argument ('--name', type=str, default='BPH_RDntuplizer', help='Job batch name')
 
     args = parser.parse_args()
 
@@ -33,40 +33,8 @@ if __name__ == "__main__":
         print 'You have to run from the BPH_RDntuplizer directory'
         exit()
 
-
     '''
-    ################### Prepare input file and division #######################
-    '''
-    if not args.input_file:
-        print 'No input file provided'
-        exit()
-    flist = []
-    if isinstance(args.input_file, basestring) and args.input_file.endswith('.txt'):
-        with open(args.input_file) as f:
-            for l in f.readlines():
-                flist.append(l)
-    elif isinstance(args.input_file, basestring):
-        flist = glob(args.input_file)
-    elif isinstance(args.input_file, list):
-        flist = args.input_file
-
-    rem = len(flist)%args.nFilePerJob
-    Njobs = len(flist)/args.nFilePerJob
-    if rem: Njobs += 1
-
-    infilestr = []
-    for i in range(Njobs):
-        i_start = i*args.nFilePerJob
-        i_end = min((i+1)*args.nFilePerJob, len(flist))
-        aux = ', '.join(flist[i_start:i_end])
-        # print aux
-        infilestr.append(aux)
-
-
-
-
-    '''
-    ######################## Prepare input ####################################
+    ######################## Prepare output ###################################
     '''
     if not args.output_file:
         print 'No output file provided'
@@ -91,6 +59,37 @@ if __name__ == "__main__":
 
 
     '''
+    ################### Prepare input file and division #######################
+    '''
+    if not args.input_file:
+        print 'No input file provided'
+        exit()
+    flist = []
+    if isinstance(args.input_file, basestring) and args.input_file.endswith('.txt'):
+        with open(args.input_file) as f:
+            for l in f.readlines():
+                flist.append(l)
+    elif isinstance(args.input_file, basestring):
+        flist = glob(args.input_file)
+    elif isinstance(args.input_file, list):
+        flist = args.input_file
+
+    rem = len(flist)%args.nFilePerJob
+    Njobs = len(flist)/args.nFilePerJob
+    if rem: Njobs += 1
+
+    print 'Input file provided:', len(flist)
+    print 'Will be divided into', Njobs, 'jobs'
+    for i in range(Njobs):
+        i_start = i*args.nFilePerJob
+        i_end = min((i+1)*args.nFilePerJob, len(flist))
+        aux = '\n'.join(flist[i_start:i_end])
+        with open(outdir + '/cfg/file_list_{}.txt'.format(i), 'w') as f:
+            f.write(aux+'\n')
+
+
+
+    '''
     ###################### Check CMSSW and config ############################
     '''
 
@@ -109,31 +108,37 @@ if __name__ == "__main__":
     maxRunTime = int(args.maxtime[:-1]) * time_scale[args.maxtime[-1]]
 
     os.system('chmod +x jobSubmission/CMSSECondorJob.sh')
-    print 'Creating submission scripts\n\n'
+    print 'Creating submission scripts'
 
-    for i in range(Njobs):
-        fsub = open('job{}.sub'.format(i), 'w')
+    with open('jobs.sub', 'w') as fsub:
         fsub.write('executable    = {}/jobSubmission/CMSSECondorJob.sh\n'.format(os.environ['PWD']))
 
         exec_args = os.environ['PWD']+' '+args.config
-        exec_args += ' ' + infilestr[i] + ' ' + args.output_file.replace('.root', '_{}.root'.format(i))
-        fsub.write('arguments     = ' + exec_args)
+        exec_args += ' ' + outdir + '/cfg/file_list_$(ProcId).txt'
+        exec_args += ' ' + args.output_file.replace('.root', '_$(ProcId).root')
+        fsub.write('arguments      = ' + exec_args)
         fsub.write('\n')
-        fsub.write('output        = {}/out/job{}.out'.format(outdir, i))
+        fsub.write('output         = {}/out/job$(ProcId).out'.format(outdir))
         fsub.write('\n')
-        fsub.write('error         = {}/out/{}.err'.format(outdir, i))
+        fsub.write('error          = {}/out/job$(ProcId).err'.format(outdir))
         fsub.write('\n')
-        fsub.write('log           = {}/out/{}.log'.format(outdir, i))
+        fsub.write('log            = {}/out/job$(ProcId).log'.format(outdir))
         fsub.write('\n')
-        fsub.write('+MaxRuntime   = '+str(maxRunTime))
+        fsub.write('+MaxRuntime    = '+str(maxRunTime))
         fsub.write('\n')
-        # fsub.write('+JobBatchName = '+args.process)
-        # fsub.write('\n')
-        fsub.write('x509userproxy = $ENV(X509_USER_PROXY)')
+        fsub.write('+JobBatchName  = '+args.name)
         fsub.write('\n')
-        fsub.write('queue 1')
+        fsub.write('x509userproxy  = $ENV(X509_USER_PROXY)')
         fsub.write('\n')
-        fsub.close()
+        fsub.write('on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)')
+        fsub.write('\n')
+        fsub.write('max_retries    = 3')
+        fsub.write('\n')
+        fsub.write('requirements   = Machine =!= LastRemoteHost')
+        fsub.write('\n')
+        fsub.write('queue '+str(Njobs))
+        fsub.write('\n')
 
-        output = processCmd('condor_submit job{}.sub'.format(i))
-        os.rename('job{}.sub'.format(i), outdir+'/cfg/job{}.sub'.format(i))
+    print 'Submitting jobs'
+    output = processCmd('condor_submit jobs.sub')
+    os.rename('jobs.sub', outdir+'/cfg/jobs.sub')

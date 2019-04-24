@@ -2,7 +2,6 @@ import os
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 
-
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
 cmssw_version = os.environ['CMSSW_VERSION']
@@ -18,7 +17,6 @@ process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 # process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_Prompt_v13', '')
@@ -44,6 +42,12 @@ process.maxEvents = cms.untracked.PSet(
 from glob import glob
 if args.inputFile:
     flist = args.inputFile
+if args.inputFiles:
+    if len(args.inputFiles) == 1:
+        with open(args.inputFiles[0]) as f:
+            flist = [l for l in f.readlines()]
+    else:
+        flist = args.inputFiles
 else:
     flist = glob('/eos/cms/store/data/Run2018D/ParkingBPH*/MINIAOD/20Mar*/*/*.root')
 
@@ -58,7 +62,7 @@ process.source = cms.Source("PoolSource",
 #####################   Output   ###################
 '''
 if args.outputFile == '.root':
-    outname = '/eos/user/o/ocerri/BPhysics/data/cmsRD/Run2018D/test.root'
+    outname = '/eos/user/o/ocerri/BPhysics/data/cmsRD/Run2018D/MuDst_candidates.root'
 else:
     outname = args.outputFile
 
@@ -95,10 +99,12 @@ process.R2MmatchFilter = cms.EDFilter("RECOMCmatchDecayRecoFilter",
         verbose = cms.int32(0)
 )
 
-process.B2DstMuDT = cms.EDProducer("B2DstMuDecayTreeProducer",
+process.MuDstT = cms.EDProducer("MuDstProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
         verbose = cms.int32(0)
 )
+
+process.MuDstDTFilter = cms.EDFilter("MuDstDecayTreeFilter", verbose = cms.int32(0))
 
 process.outA = cms.EDAnalyzer("FlatTreeWriter",
         cmssw = cms.string(cmssw_version),
@@ -112,7 +118,8 @@ process.p = cms.Path(
                     process.trgF +
                     # process.R2Mmatch +
                     # process.R2MmatchFilter +
-                    process.B2DstMuDT +
+                    process.MuDstT +
+                    process.MuDstDTFilter+
                     process.outA
                     )
 

@@ -120,10 +120,12 @@ RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedC
   float mPi = _PiMass_, dmPi = _PiMass_;
   parts.push_back(D0_reco);
   parts.push_back(pFactory.particle(pisoft_tk, mPi, chi, ndf, dmPi));
-
+  cout << "inside FitDst\n";
   if (!mass_constrain) {
     KinematicParticleVertexFitter VtxFitter;
+    cout << parts.size() << endl;
     RefCountedKinematicTree DstKinTree = VtxFitter.fit(parts);
+    cout << "Ready to return" << endl;
     return DstKinTree;
   }
   else {

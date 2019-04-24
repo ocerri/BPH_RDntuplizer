@@ -2,7 +2,6 @@ import os
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 
-
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
 cmssw_version = os.environ['CMSSW_VERSION']
@@ -43,6 +42,12 @@ process.maxEvents = cms.untracked.PSet(
 from glob import glob
 if args.inputFile:
     flist = args.inputFile
+if args.inputFiles:
+    if len(args.inputFiles) == 1:
+        with open(args.inputFiles[0]) as f:
+            flist = [l for l in f.readlines()]
+    else:
+        flist = args.inputFiles
 else:
     flist = glob('/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root')
 
@@ -54,7 +59,6 @@ process.source = cms.Source("PoolSource",
                             inputCommands=cms.untracked.vstring('keep *',
                                                                 'drop GenLumiInfoHeader_generator__SIM')
                            )
-
 process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
 
@@ -105,6 +109,8 @@ process.MuDstT = cms.EDProducer("MuDstProducer",
         verbose = cms.int32(0)
 )
 
+process.MuDstDTFilter = cms.EDFilter("MuDstDecayTreeFilter", verbose = cms.int32(0))
+
 process.outA = cms.EDAnalyzer("FlatTreeWriter",
         cmssw = cms.string(cmssw_version),
         verbose = cms.int32(0)
@@ -118,6 +124,7 @@ process.p = cms.Path(
                     # process.R2Mmatch +
                     # process.R2MmatchFilter +
                     process.MuDstT +
+                    process.MuDstDTFilter+
                     process.outA
                     )
 

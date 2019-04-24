@@ -8,5 +8,4 @@ outputFile=$4
 
 cd $ntuplizer_loc
 eval `scramv1 runtime -sh`
-echo "cmsRun $config inputFiles=$inputFiles outputFile=$outputFile"
-touch $outputFile
+cmsRun $config inputFiles=$inputFiles outputFile=$outputFile
