@@ -1,2 +1,4 @@
 *.pyc
 *.root
+./*/.sys.v*
+*/.sys*
