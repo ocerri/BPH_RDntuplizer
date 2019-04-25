@@ -33,6 +33,7 @@ class B2DstMuDecayTreeFilter : public edm::stream::EDFilter<> {
 
 B2DstMuDecayTreeFilter::B2DstMuDecayTreeFilter(const edm::ParameterSet& iConfig)
 {
+  verbose = iConfig.getParameter<int>( "verbose" );
   consumesMany<map<string, float>>();
 }
 

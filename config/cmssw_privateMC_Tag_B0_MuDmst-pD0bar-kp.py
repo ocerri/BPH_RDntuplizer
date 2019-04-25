@@ -109,7 +109,7 @@ process.B2MuDstDT = cms.EDProducer("B2DstMuDecayTreeProducer",
         verbose = cms.int32(0)
 )
 
-process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter", verbose = cms.int32(1))
+process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter", verbose = cms.int32(0))
 
 process.outA = cms.EDAnalyzer("FlatTreeWriter",
         cmssw = cms.string(cmssw_version),
