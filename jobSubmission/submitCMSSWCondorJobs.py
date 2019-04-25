@@ -141,4 +141,5 @@ if __name__ == "__main__":
 
     print 'Submitting jobs'
     output = processCmd('condor_submit jobs.sub')
-    os.rename('jobs.sub', outdir+'/cfg/jobs.sub')
+    print 'Job submitted'
+    os.system('mv jobs.sub '+outdir+'/cfg/jobs.sub')
