@@ -6,7 +6,6 @@
 #include <DataFormats/TrackReco/interface/Track.h>
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 
-
 // Pure ROOT import
 #include <TLorentzVector.h>
 #include <utility>
@@ -14,11 +13,12 @@
 namespace vtxu {
   RefCountedKinematicTree FitD0(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool, int);
   RefCountedKinematicTree FitDst_fitD0wMassConstraint(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, pat::PackedCandidate, bool, int);
-  RefCountedKinematicTree FitDst(const edm::EventSetup&, pat::PackedCandidate, ReferenceCountingPointer<KinematicParticle>, bool, int);
+  RefCountedKinematicTree FitDst(const edm::EventSetup&, pat::PackedCandidate, const RefCountedKinematicParticle, bool, int);
+  RefCountedKinematicTree FitVtxMuDst(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, int);
   std::pair<double,double> computeDCA(const edm::EventSetup&, pat::PackedCandidate, GlobalPoint);
   std::pair<double,double> computeDCA(reco::TransientTrack, GlobalPoint);
   std::pair<double,double> vtxsDistance(reco::VertexRef, RefCountedKinematicVertex);
-  TLorentzVector getTLVfromKinPart(ReferenceCountingPointer<KinematicParticle>);
+  TLorentzVector getTLVfromKinPart(const RefCountedKinematicParticle);
   TLorentzVector getTLVfromTrack(reco::Track, double);
   TLorentzVector getTLVfromCand(pat::PackedCandidate, double);
   double dPhi(double, double);

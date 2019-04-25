@@ -31,6 +31,8 @@
 
 using namespace std;
 
+#define _MuMass_ 0.1056583745
+#define _MuMassErr_ 0.0000000024
 #define _KMass_ 0.493677
 #define _KMassErr_ 0.000013
 #define _PiMass_ 0.13957018
@@ -106,26 +108,27 @@ RefCountedKinematicTree vtxu::FitDst_fitD0wMassConstraint(const edm::EventSetup&
   }
 }
 
-RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedCandidate pisoft, ReferenceCountingPointer<KinematicParticle> D0_reco, bool mass_constrain, int verbose = 0) {
+RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedCandidate pisoft, const RefCountedKinematicParticle D0, bool mass_constrain, int verbose = 0) {
 // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
   reco::TransientTrack pisoft_tk = TTBuilder->build(pisoft.bestTrack());
+  reco::TransientTrack D0_tk = D0->refittedTransientTrack();
 
   KinematicParticleFactoryFromTransientTrack pFactory;
 
   std::vector<RefCountedKinematicParticle> parts;
   double chi = 0, ndf = 0;
   float mPi = _PiMass_, dmPi = _PiMass_;
-  parts.push_back(D0_reco);
   parts.push_back(pFactory.particle(pisoft_tk, mPi, chi, ndf, dmPi));
-  cout << "inside FitDst\n";
+  float mD0 = D0->currentState().mass();
+  float dmD0 = sqrt(D0->currentState().kinematicParametersError().matrix()(6,6));
+  parts.push_back(pFactory.particle(D0_tk, mD0, chi, ndf, dmD0));
   if (!mass_constrain) {
     KinematicParticleVertexFitter VtxFitter;
     cout << parts.size() << endl;
     RefCountedKinematicTree DstKinTree = VtxFitter.fit(parts);
-    cout << "Ready to return" << endl;
     return DstKinTree;
   }
   else {
@@ -136,6 +139,29 @@ RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedC
     return DstKinTree;
   }
 }
+
+RefCountedKinematicTree vtxu::FitVtxMuDst(const edm::EventSetup& iSetup, const RefCountedKinematicParticle Dst, pat::PackedCandidate mu, int verbose = 0) {
+  // Get transient track builder
+  edm::ESHandle<TransientTrackBuilder> TTBuilder;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+
+  reco::TransientTrack Mu_tk = TTBuilder->build(mu.bestTrack());
+  reco::TransientTrack Dst_tk = Dst->refittedTransientTrack();
+
+  KinematicParticleFactoryFromTransientTrack pFactory;
+  std::vector<RefCountedKinematicParticle> parts;
+  double chi = 0, ndf = 0;
+  float mMu = _MuMass_, dmMu = _MuMassErr_;
+  parts.push_back(pFactory.particle(Mu_tk, mMu, chi, ndf, dmMu));
+  float mDst = Dst->currentState().mass();
+  float dmDst = sqrt(Dst->currentState().kinematicParametersError().matrix()(6,6));
+  parts.push_back(pFactory.particle(Dst_tk, mDst, chi, ndf, dmDst));
+
+  KinematicParticleVertexFitter VtxFitter;
+  RefCountedKinematicTree BKinTree = VtxFitter.fit(parts);
+  return BKinTree;
+}
+
 
 pair<double,double> vtxu::computeDCA(const edm::EventSetup& iSetup, pat::PackedCandidate cand, GlobalPoint p) {
   // Get transient track builder
@@ -167,7 +193,7 @@ pair<double,double> vtxu::computeDCA(reco::TransientTrack tk, GlobalPoint p) {
   return make_pair(dCA,EdCA);
 }
 
-TLorentzVector vtxu::getTLVfromKinPart(ReferenceCountingPointer<KinematicParticle> p) {
+TLorentzVector vtxu::getTLVfromKinPart(const RefCountedKinematicParticle p) {
   auto pvec = p->currentState().globalMomentum();
   auto mass = p->currentState().mass();
   TLorentzVector out;

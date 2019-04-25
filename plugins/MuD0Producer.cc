@@ -38,13 +38,7 @@ private:
     edm::EDGetTokenT<vector<pat::PackedCandidate>> PFCandSrc_;
     edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
     edm::EDGetTokenT<vector<pat::Muon>> TrgMuonSrc_;
-
-
-    // double mass_B0 = 5.27961;
-    // double mass_mu = 0.1056583745;
-    // double mass_K = 0.493677;
-    // double mass_pi = 0.13957018;
-
+    
     int verbose = 0;
 };
 
