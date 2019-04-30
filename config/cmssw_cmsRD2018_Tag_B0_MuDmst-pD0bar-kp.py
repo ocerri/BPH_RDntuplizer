@@ -9,13 +9,9 @@ cmssw_version = os.environ['CMSSW_VERSION']
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
 
-# Needed for transient track builder
-# process.load('Configuration.StandardSequences.Services_cff')
-# process.load('Configuration.EventContent.EventContent_cff')
 process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
-# process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
@@ -62,7 +58,8 @@ process.source = cms.Source("PoolSource",
 #####################   Output   ###################
 '''
 if args.outputFile == '.root':
-    outname = '/eos/user/o/ocerri/BPhysics/data/cmsRD/Run2018D/B02DstMu_candidates.root'
+    outname = 'B02DstMu_candidates.root'
+    # outname = '/eos/user/o/ocerri/BPhysics/data/cmsRD/Run2018D/B02DstMu_candidates.root'
 else:
     outname = args.outputFile
 
@@ -115,8 +112,6 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 process.p = cms.Path(
                     process.trgBPH +
                     process.trgF +
-                    # process.R2Mmatch +
-                    # process.R2MmatchFilter +
                     process.B2MuDstDT +
                     process.B2MuDstDTFilter+
                     process.outA

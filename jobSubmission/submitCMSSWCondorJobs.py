@@ -15,7 +15,7 @@ def processCmd(cmd, quite = 0):
     return output
 
 #_____________________________________________________________________________________________________________
-#example line: python submitCondorJobs.py --nev 30000 --njobs 500 --maxtime 12h --PU 0
+#example line: python jobSubmission/submitCMSSWCondorJobs.py -i /eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root -o /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/MuDst_candidates/out.root -f -c config/cmssw_privateMC_Tag_MuDmst-pD0bar-kp.py --maxtime 8h -N 5 --name MC
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -107,11 +107,11 @@ if __name__ == "__main__":
     time_scale = {'s':1, 'm':60, 'h':60*60, 'd':60*60*24}
     maxRunTime = int(args.maxtime[:-1]) * time_scale[args.maxtime[-1]]
 
-    os.system('chmod +x jobSubmission/CMSSECondorJob.sh')
+    os.system('chmod +x jobSubmission/CMSSWCondorJob.sh')
     print 'Creating submission scripts'
 
     with open('jobs.sub', 'w') as fsub:
-        fsub.write('executable    = {}/jobSubmission/CMSSECondorJob.sh\n'.format(os.environ['PWD']))
+        fsub.write('executable    = {}/jobSubmission/CMSSWCondorJob.sh\n'.format(os.environ['PWD']))
 
         exec_args = os.environ['PWD']+' '+args.config
         exec_args += ' ' + outdir + '/cfg/file_list_$(ProcId).txt'

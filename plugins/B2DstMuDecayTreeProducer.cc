@@ -21,7 +21,7 @@
 
 #define __ProbChi2VtxCut__ 0.99 // Very loose cut
 #define __dzMax__ 1.0
-#define __dRMax__ 1.0
+#define __dRMax__ 2.0
 #define __cos_kpi_vtxMu_min__ 0.97 // Optimized in D0 fitting
 #define __d_vtxkpi_vtxMu_min__ 0.02 // Optimized in D0 fitting
 #define __dmD0_max__ 0.039 // 3*0.013 GeV(i.e. 3 sigma) form the D0 mass
