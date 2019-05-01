@@ -15,6 +15,8 @@ namespace vtxu {
   RefCountedKinematicTree FitDst_fitD0wMassConstraint(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, pat::PackedCandidate, bool, int);
   RefCountedKinematicTree FitDst(const edm::EventSetup&, pat::PackedCandidate, const RefCountedKinematicParticle, bool, int);
   RefCountedKinematicTree FitVtxMuDst(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, int);
+  RefCountedKinematicTree FitVtxDstPi(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, int);
+  RefCountedKinematicTree FitVtxMuDstPi(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, pat::PackedCandidate, int);
   std::pair<double,double> computeDCA(const edm::EventSetup&, pat::PackedCandidate, GlobalPoint);
   std::pair<double,double> computeDCA(reco::TransientTrack, GlobalPoint);
   std::pair<double,double> vtxsDistance(reco::VertexRef, RefCountedKinematicVertex);

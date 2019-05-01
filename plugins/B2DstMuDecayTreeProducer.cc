@@ -19,15 +19,16 @@
 
 #include "VtxUtils.hh"
 
-#define __ProbChi2VtxCut__ 0.99 // Very loose cut
+#define __PvalChi2Vtx_max__ 0.99 // Very loose cut
 #define __dzMax__ 1.0
 #define __dRMax__ 2.0
 #define __cos_kpi_vtxMu_min__ 0.97 // Optimized in D0 fitting
 #define __d_vtxkpi_vtxMu_min__ 0.02 // Optimized in D0 fitting
 #define __dmD0_max__ 0.039 // 3*0.013 GeV(i.e. 3 sigma) form the D0 mass
 #define __dmD0pis_max__ 0.0024 // 3*0.8 MeV (i.e 3 inflated sigma) from Dst mass
-#define __mDstMu_max__ 10.0 // Some reasonable cut on the mass
-#define __cos_DstMu_vtxMu_min__ 0.0 // Some super loose cut on the pointing of the B
+#define __mDstMu_max__ 7.0 // Some reasonable cut on the mass
+#define __cos_DstMu_vtxMu_min__ 0.1 // Some super loose cut on the pointing of the B
+// #define __PvalChi2FakeVtx_min__ 0.90 // Very loose cut
 
 
 using namespace std;
@@ -92,7 +93,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
     auto mu = (*trgMuonsHandle)[0];
     pat::PackedCandidate trgMu;
-    for (auto p : *pfCandHandle) {
+    uint i_trgMu = 0;
+    for (i_trgMu = 0; i_trgMu < N_pfCand; ++i_trgMu) {
+      const pat::PackedCandidate & p = (*pfCandHandle)[i_trgMu];
       if (fabs(mu.pt() - p.pt())/mu.pt() > 5e-3) continue;
       if (fabs(mu.eta() - p.eta()) > 5e-3) continue;
       if (fabs(vtxu::dPhi(mu.phi(), p.phi())) > 5e-3) continue;
@@ -143,7 +146,10 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
                               Look for the K+ (321)
     ############################################################################
     */
-    for(auto k : *pfCandHandle) {
+    for(uint i_k = 0; i_k < N_pfCand; ++i_k) {
+      if(i_k==i_trgMu) continue;
+
+      const pat::PackedCandidate & k = (*pfCandHandle)[i_k];
       if (!k.hasTrackDetails()) continue;
       //Require a positive charged hadron
       if (k.pdgId() != 211 ) continue;
@@ -151,7 +157,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       if (fabs(k.dz() - trgMu.dz()) > __dzMax__) continue;
       if (vtxu::dR(k.phi(), trgMu.phi(), k.eta(), trgMu.eta()) > __dRMax__) continue;
       // Require significant displacement from PV
-      if (verbose) {cout << "###-### K number " << n_K << endl;}
+      // if (verbose) {cout << "###-### K number " << n_K << endl;}
 
       n_K++;
 
@@ -161,6 +167,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       ############################################################################
       */
       for(uint i_pi = 0; i_pi < N_pfCand; ++i_pi) {
+        if(i_pi==i_trgMu || i_pi==i_k) continue;
+
         const pat::PackedCandidate & pi = (*pfCandHandle)[i_pi];
         if (!pi.hasTrackDetails()) continue;
         //Require a negative charged hadron
@@ -181,8 +189,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           D0KinTree->movePointerToTheTop();
           auto D0vtx = D0KinTree->currentDecayVertex();
           chi2_kpi = D0vtx->chiSquared();
-          auto max_chi2 = TMath::ChisquareQuantile(__ProbChi2VtxCut__, D0vtx->degreesOfFreedom());
-          if (chi2_kpi < max_chi2) accept_pi = true;
+          auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2Vtx_max__, D0vtx->degreesOfFreedom());
+          if (chi2_kpi > 0 && chi2_kpi < max_chi2) accept_pi = true;
         }
         if(!accept_pi) continue;
         n_pi++;
@@ -225,7 +233,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         */
         for(uint i_pis = 0; i_pis < N_pfCand; ++i_pis) {
           // Pion different from the pion from D0
-          if(i_pis==i_pi) continue;
+          if(i_pis==i_trgMu || i_pis==i_k || i_pis==i_pi) continue;
 
           const pat::PackedCandidate & pis = (*pfCandHandle)[i_pis];
           if (!pis.hasTrackDetails()) continue;
@@ -247,8 +255,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             DstKinTree->movePointerToTheTop();
             auto Dstvtx = DstKinTree->currentDecayVertex();
             chi2_D0pis = Dstvtx->chiSquared();
-            auto max_chi2 = TMath::ChisquareQuantile(__ProbChi2VtxCut__, Dstvtx->degreesOfFreedom());
-            if (chi2_D0pis < max_chi2) accept_pis = true;
+            auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2Vtx_max__, Dstvtx->degreesOfFreedom());
+            if (chi2_D0pis > 0 && chi2_D0pis < max_chi2) accept_pis = true;
           }
           if(!accept_pis) continue;
           n_pis++;
@@ -291,13 +299,13 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             BKinTree->movePointerToTheTop();
             auto Bvtx = BKinTree->currentDecayVertex();
             chi2_MuDst = Bvtx->chiSquared();
-            auto max_chi2 = TMath::ChisquareQuantile(__ProbChi2VtxCut__, Bvtx->degreesOfFreedom());
-            if (chi2_MuDst < max_chi2) accept_MuDst = true;
+            auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2Vtx_max__, Bvtx->degreesOfFreedom());
+            if (chi2_MuDst > 0 && chi2_MuDst < max_chi2) accept_MuDst = true;
           }
           if(!accept_MuDst) continue;
 
-          auto MuDst = DstKinTree->currentParticle();
-          auto Bvtx = DstKinTree->currentDecayVertex();
+          auto MuDst = BKinTree->currentParticle();
+          auto Bvtx = BKinTree->currentDecayVertex();
           auto mass_MuDst = MuDst->currentState().mass();
 
           TVector3 dvtxB(Bvtx->position().x() - vtxMu->x(),
@@ -315,6 +323,53 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
           bool accept_B = mass_MuDst < __mDstMu_max__;
           accept_B &= cos_MuDst_vtxMu > __cos_DstMu_vtxMu_min__;
+          if(!accept_B) continue;
+          if (verbose) {cout << "B->D* mu found\n";}
+
+          /*
+          ############################################################################
+                  Veto the presence of additional tracks in the D* mu vertex
+          ############################################################################
+          */
+          // int N_compatible_tk = 0;
+          // for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
+          //   // Pion different from the pion from D0
+          //   if( i_tk==i_trgMu || i_tk==i_k || i_tk==i_pi || i_tk==i_pis) continue;
+          //
+          //   const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
+          //   //Require a charged candidate
+          //   if ( ptk.charge() == 0 ) continue;
+          //   if (!ptk.hasTrackDetails()) continue;
+          //
+          //   // Require to be close to the trigger muon;
+          //   if (fabs(ptk.dz() - trgMu.dz()) > __dzMax__) continue;
+          //   if (vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta()) > __dRMax__) continue;
+          //
+          //   //  Look for the Dst- and trigger muon to make a vertex
+          //   auto VtxKinTree = vtxu::FitVtxDstPi(iSetup, Dst, ptk, 0);
+          //   // auto VtxKinTree = vtxu::FitVtxMuDstPi(iSetup, Dst, trgMu, ptk, 0);
+          //   bool accept_Vtx = false;
+          //   double chi2_vtx;
+          //   if(VtxKinTree->isValid()) {
+          //     VtxKinTree->movePointerToTheTop();
+          //     auto vtx = VtxKinTree->currentDecayVertex();
+          //     chi2_vtx = vtx->chiSquared();
+          //     auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2FakeVtx_min__, vtx->degreesOfFreedom());
+          //     if (chi2_vtx > 0 && chi2_vtx < max_chi2) accept_Vtx = true;
+          //   }
+          //   if(!accept_Vtx) continue;
+          //
+          //   auto particle = VtxKinTree->currentParticle();
+          //   auto mass_particle = particle->currentState().mass();
+          //   if(verbose) {cout << "Vtx Mass: " << mass_particle << endl;}
+          //
+          //   // accept_Vtx &=  mass_particle >
+          //   N_compatible_tk++;
+          // }
+          // if(verbose) {cout << "Compatible tracks: " << N_compatible_tk << endl;}
+
+
+
           if(!accept_B) continue;
           n_B++;
 
