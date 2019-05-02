@@ -290,6 +290,10 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           if (!accept_Dst) continue;
           n_Dst++;
           if (verbose) {cout << "D* found\n";}
+          // Refi the Dst with its mass constraint
+          DstKinTree = vtxu::FitDst_fitD0wMassConstraint(iSetup, pis, pi, k, true, 0);
+          Dst = DstKinTree->currentParticle();
+
 
           //  Look for the Dst- and trigger muon to make a vertex
           auto BKinTree = vtxu::FitVtxMuDst(iSetup, Dst, trgMu, 0);
@@ -391,7 +395,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           TLorentzVector p4_B;
           p4_B.SetVectM(B_vect, mass_B0);
           auto M2_miss = (p4_B - p4_vis).M2();
-          // DEGUB --> Use the refitted tracks instead of the orginal ones!
+
           auto p4_Dst = vtxu::getTLVfromKinPart(refit_Dst);
           auto p4_mu = vtxu::getTLVfromKinPart(refit_Mu);
           auto q2 = (p4_B - p4_Dst).M2();
