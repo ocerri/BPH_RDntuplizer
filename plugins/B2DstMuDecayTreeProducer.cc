@@ -27,7 +27,7 @@
 #define __dmD0_max__ 0.039 // 3*0.013 GeV(i.e. 3 sigma) form the D0 mass
 #define __dmD0pis_max__ 0.0024 // 3*0.8 MeV (i.e 3 inflated sigma) from Dst mass
 #define __mDstMu_max__ 7.0 // Some reasonable cut on the mass
-#define __cos_DstMu_vtxMu_min__ 0.1 // Some super loose cut on the pointing of the B
+#define __cos_DstMu_vtxMu_min__ 0.8 // Some loose cut tuned on MC
 // #define __PvalChi2FakeVtx_min__ 0.90 // Very loose cut
 
 
@@ -306,6 +306,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
           auto MuDst = BKinTree->currentParticle();
           auto Bvtx = BKinTree->currentDecayVertex();
+
+          BKinTree->movePointerToTheFirstChild();
+          auto refit_Mu = BKinTree->currentParticle();
+          BKinTree->movePointerToTheNextChild();
+          auto refit_Dst = BKinTree->currentParticle();
+
           auto mass_MuDst = MuDst->currentState().mass();
 
           TVector3 dvtxB(Bvtx->position().x() - vtxMu->x(),
@@ -379,16 +385,15 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
                                 Compute analysis variables
           ############################################################################
           */
-          auto p4_Dst = vtxu::getTLVfromKinPart(Dst);
-          auto p4_mu = vtxu::getTLVfromCand(trgMu, mass_Mu);
-          //
-          auto p4_vis = p4_Dst + p4_mu;
+          auto p4_vis = vtxu::getTLVfromKinPart(MuDst);
           double pz_B_reco = p4_vis.Pz() * mass_B0/ p4_vis.M();
           auto B_vect = dvtxB * ( pz_B_reco / dvtxB.z() );
           TLorentzVector p4_B;
           p4_B.SetVectM(B_vect, mass_B0);
-
-          auto M2_miss = (p4_B - p4_Dst - p4_mu).M2();
+          auto M2_miss = (p4_B - p4_vis).M2();
+          // DEGUB --> Use the refitted tracks instead of the orginal ones!
+          auto p4_Dst = vtxu::getTLVfromKinPart(refit_Dst);
+          auto p4_mu = vtxu::getTLVfromKinPart(refit_Mu);
           auto q2 = (p4_B - p4_Dst).M2();
 
           TLorentzVector p4st_mu(p4_mu);
