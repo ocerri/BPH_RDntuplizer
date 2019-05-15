@@ -429,6 +429,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           AddTLVToOut(vtxu::getTLVfromCand(pis, mass_Pi), string("pis"), &(*outputVecNtuplizer));
           AddTLVToOut(vtxu::getTLVfromKinPart(D0), string("D0"), &(*outputVecNtuplizer));
           AddTLVToOut(p4_Dst, string("Dst"), &(*outputVecNtuplizer));
+          AddTLVToOut(p4_mu, string("mu"), &(*outputVecNtuplizer));
           AddTLVToOut(p4_B, string("B"), &(*outputVecNtuplizer));
 
           (*outputVecNtuplizer)["M2_miss"].push_back(M2_miss);
@@ -440,6 +441,10 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       }
 
     }
+
+    (*outputNtuplizer)["Run"] = iEvent.run();
+    (*outputNtuplizer)["LumiBlock"] = iEvent.luminosityBlock();
+    (*outputNtuplizer)["eventNumber"] = iEvent.id().event();
 
     (*outputNtuplizer)["n_K"] = n_K;
     (*outputNtuplizer)["n_pi"] = n_pi;
@@ -457,6 +462,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
 void B2DstMuDecayTreeProducer::DeclareTLVToOut(string n, map<string, vector<float>>* outv) {
   (*outv)[n+"_pt"] = {};
+  (*outv)[n+"_pz"] = {};
   (*outv)[n+"_eta"] = {};
   (*outv)[n+"_phi"] = {};
   (*outv)[n+"_P"] = {};
@@ -467,6 +473,7 @@ void B2DstMuDecayTreeProducer::DeclareTLVToOut(string n, map<string, vector<floa
 
 void B2DstMuDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<string, vector<float>>* outv) {
   (*outv)[n+"_pt"].push_back(v.Pt());
+  (*outv)[n+"_pz"].push_back(v.Pz());
   (*outv)[n+"_eta"].push_back(v.Eta());
   (*outv)[n+"_phi"].push_back(v.Phi());
   (*outv)[n+"_P"].push_back(v.P());

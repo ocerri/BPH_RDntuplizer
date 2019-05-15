@@ -97,11 +97,8 @@ process.trgF = cms.EDFilter("BPHTriggerPathFilter",
 )
 
 
-process.R2Mmatch = cms.EDProducer("RECOMCmatchDecayRecoProducer",
-        verbose = cms.int32(0)
-)
-
-process.R2MmatchFilter = cms.EDFilter("RECOMCmatchDecayRecoFilter",
+process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
+        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
         verbose = cms.int32(0)
 )
 
@@ -121,8 +118,7 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 process.p = cms.Path(
                     process.trgBPH +
                     process.trgF +
-                    # process.R2Mmatch +
-                    # process.R2MmatchFilter +
+                    process.MCpart +
                     process.B2MuDstDT +
                     process.B2MuDstDTFilter+
                     process.outA
