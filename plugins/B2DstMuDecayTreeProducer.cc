@@ -56,7 +56,7 @@ private:
     double mass_K   = 0.49367;
     double mass_D0  = 1.86483;
     double mass_Dst = 2.01026;
-    double mass_B0  = 5.27961;
+    double mass_B0  = 5.27963;
 
     int verbose = 0;
 };
@@ -127,7 +127,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
     (*outputVecNtuplizer)["chi2_MuDst"] = {};
     (*outputVecNtuplizer)["mass_MuDst"] = {};
-    (*outputVecNtuplizer)["cos_MuDst_vtxMu"] = {};
+    (*outputVecNtuplizer)["cos_MuDst_vtxBest"] = {};
 
     DeclareTLVToOut("K", &(*outputVecNtuplizer));
     DeclareTLVToOut("pi", &(*outputVecNtuplizer));
@@ -292,7 +292,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           if (verbose) {cout << "D* found\n";}
           // Refi the Dst with its mass constraint
           DstKinTree = vtxu::FitDst_fitD0wMassConstraint(iSetup, pis, pi, k, true, 0);
-          Dst = DstKinTree->currentParticle();
+          if(DstKinTree->isValid()) Dst = DstKinTree->currentParticle();
+          else continue;
 
 
           //  Look for the Dst- and trigger muon to make a vertex
@@ -327,12 +328,32 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
                           MuDst->currentState().globalMomentum().z()
                          );
           double dalphaB = dvtxB.Angle(pMuDst);
-          auto cos_MuDst_vtxMu = cos(dalphaB);
+          auto cos_MuDst_vtxBest = cos(dalphaB);
+
+          // Look for the best vertex
+          if (verbose) {cout << Form("Muon vtx: d = %.2f  cos = %.3e", dvtxB.Mag(), 1-cos_MuDst_vtxBest) << endl;}
+          for(auto v : *vtxHandle) {
+            if ( fabs(vtxMu->z()-v.z()) < 2 ) {
+              TVector3 df(Bvtx->position().x() - v.x(),
+                          Bvtx->position().y() - v.y(),
+                          Bvtx->position().z() - v.z()
+                          );
+
+              double da = df.Angle(pMuDst);
+              auto cosda = cos(da);
+              if (cosda > cos_MuDst_vtxBest) {
+                dvtxB = df;
+                cos_MuDst_vtxBest = cosda;
+              }
+            }
+          }
+
+          if (verbose) {cout << Form("Best vtx: d = %.2f  cos = %.3e", dvtxB.Mag(), 1-cos_MuDst_vtxBest) << endl;}
 
 
 
           bool accept_B = mass_MuDst < __mDstMu_max__;
-          accept_B &= cos_MuDst_vtxMu > __cos_DstMu_vtxMu_min__;
+          accept_B &= cos_MuDst_vtxBest > __cos_DstMu_vtxMu_min__;
           if(!accept_B) continue;
           if (verbose) {cout << "B->D* mu found\n";}
 
@@ -390,14 +411,21 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           ############################################################################
           */
           auto p4_vis = vtxu::getTLVfromKinPart(MuDst);
-          double pz_B_reco = p4_vis.Pz() * mass_B0/ p4_vis.M();
-          auto B_vect = dvtxB * ( pz_B_reco / dvtxB.z() );
-          TLorentzVector p4_B;
-          p4_B.SetVectM(B_vect, mass_B0);
-          auto M2_miss = (p4_B - p4_vis).M2();
-
           auto p4_Dst = vtxu::getTLVfromKinPart(refit_Dst);
           auto p4_mu = vtxu::getTLVfromKinPart(refit_Mu);
+
+          // // ------------- Longitudional Approx ---------------
+          // double pz_B_reco = p4_vis.Pz() * mass_B0/ p4_vis.M();
+          // auto B_vect = dvtxB * ( pz_B_reco / dvtxB.z() );
+          // TLorentzVector p4_B;
+          // p4_B.SetVectM(B_vect, mass_B0);
+          // // ------------- Transverse Approx ------------------
+          double pt_B_reco = p4_vis.Pt() * mass_B0/ p4_vis.M();
+          auto B_vect = dvtxB * ( pt_B_reco / dvtxB.Perp() );
+          TLorentzVector p4_B;
+          p4_B.SetVectM(B_vect, mass_B0);
+
+          auto M2_miss = (p4_B - p4_vis).M2();
           auto q2 = (p4_B - p4_Dst).M2();
 
           TLorentzVector p4st_mu(p4_mu);
@@ -422,7 +450,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
           (*outputVecNtuplizer)["chi2_MuDst"].push_back(chi2_MuDst);
           (*outputVecNtuplizer)["mass_MuDst"].push_back(mass_MuDst);
-          (*outputVecNtuplizer)["cos_MuDst_vtxMu"].push_back(cos_MuDst_vtxMu);
+          (*outputVecNtuplizer)["cos_MuDst_vtxBest"].push_back(cos_MuDst_vtxBest);
 
           AddTLVToOut(vtxu::getTLVfromCand(k, mass_K), string("K"), &(*outputVecNtuplizer));
           AddTLVToOut(vtxu::getTLVfromCand(pi, mass_Pi), string("pi"), &(*outputVecNtuplizer));
