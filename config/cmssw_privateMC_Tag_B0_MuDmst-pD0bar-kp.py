@@ -35,15 +35,18 @@ args.parseArguments()
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    # input = cms.untracked.int32(50)
+    input = cms.untracked.int32(50)
     # input = cms.untracked.int32(2000)
-    input = cms.untracked.int32(-1)
+    # input = cms.untracked.int32(-1)
 )
 
 from glob import glob
 if args.inputFile:
-    flist = args.inputFile
-if args.inputFiles:
+    if len(args.inputFile) == 1 and '*' in args.inputFile[0]:
+        flist = glob(args.inputFile[0])
+    else:
+        flist = args.inputFile
+elif args.inputFiles:
     if len(args.inputFiles) == 1:
         with open(args.inputFiles[0]) as f:
             flist = [l for l in f.readlines()]

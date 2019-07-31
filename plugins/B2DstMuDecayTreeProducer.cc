@@ -28,7 +28,7 @@
 #define __dmD0pis_max__ 0.0024 // 3*0.8 MeV (i.e 3 inflated sigma) from Dst mass
 #define __mDstMu_max__ 7.0 // Some reasonable cut on the mass
 #define __cos_DstMu_vtxMu_min__ 0.8 // Some loose cut tuned on MC
-// #define __PvalChi2FakeVtx_min__ 0.90 // Very loose cut
+#define __PvalChi2FakeVtx_min__ 0.90 // Very loose cut
 
 
 using namespace std;
@@ -362,42 +362,42 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
                   Veto the presence of additional tracks in the D* mu vertex
           ############################################################################
           */
-          // int N_compatible_tk = 0;
-          // for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
-          //   // Pion different from the pion from D0
-          //   if( i_tk==i_trgMu || i_tk==i_k || i_tk==i_pi || i_tk==i_pis) continue;
-          //
-          //   const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
-          //   //Require a charged candidate
-          //   if ( ptk.charge() == 0 ) continue;
-          //   if (!ptk.hasTrackDetails()) continue;
-          //
-          //   // Require to be close to the trigger muon;
-          //   if (fabs(ptk.dz() - trgMu.dz()) > __dzMax__) continue;
-          //   if (vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta()) > __dRMax__) continue;
-          //
-          //   //  Look for the Dst- and trigger muon to make a vertex
-          //   auto VtxKinTree = vtxu::FitVtxDstPi(iSetup, Dst, ptk, 0);
-          //   // auto VtxKinTree = vtxu::FitVtxMuDstPi(iSetup, Dst, trgMu, ptk, 0);
-          //   bool accept_Vtx = false;
-          //   double chi2_vtx;
-          //   if(VtxKinTree->isValid()) {
-          //     VtxKinTree->movePointerToTheTop();
-          //     auto vtx = VtxKinTree->currentDecayVertex();
-          //     chi2_vtx = vtx->chiSquared();
-          //     auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2FakeVtx_min__, vtx->degreesOfFreedom());
-          //     if (chi2_vtx > 0 && chi2_vtx < max_chi2) accept_Vtx = true;
-          //   }
-          //   if(!accept_Vtx) continue;
-          //
-          //   auto particle = VtxKinTree->currentParticle();
-          //   auto mass_particle = particle->currentState().mass();
-          //   if(verbose) {cout << "Vtx Mass: " << mass_particle << endl;}
-          //
-          //   // accept_Vtx &=  mass_particle >
-          //   N_compatible_tk++;
-          // }
-          // if(verbose) {cout << "Compatible tracks: " << N_compatible_tk << endl;}
+          int N_compatible_tk = 0;
+          for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
+            // Pion different from the pion from D0
+            if( i_tk==i_trgMu || i_tk==i_k || i_tk==i_pi || i_tk==i_pis) continue;
+
+            const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
+            //Require a charged candidate
+            if ( ptk.charge() == 0 ) continue;
+            if (!ptk.hasTrackDetails()) continue;
+
+            // Require to be close to the trigger muon;
+            if (fabs(ptk.dz() - trgMu.dz()) > __dzMax__) continue;
+            if (vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta()) > __dRMax__) continue;
+
+            //  Look for the Dst- and trigger muon to make a vertex
+            auto VtxKinTree = vtxu::FitVtxDstPi(iSetup, Dst, ptk, 0);
+            // auto VtxKinTree = vtxu::FitVtxMuDstPi(iSetup, Dst, trgMu, ptk, 0);
+            bool accept_Vtx = false;
+            double chi2_vtx;
+            if(VtxKinTree->isValid()) {
+              VtxKinTree->movePointerToTheTop();
+              auto vtx = VtxKinTree->currentDecayVertex();
+              chi2_vtx = vtx->chiSquared();
+              auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2FakeVtx_min__, vtx->degreesOfFreedom());
+              if (chi2_vtx > 0 && chi2_vtx < max_chi2) accept_Vtx = true;
+            }
+            if(!accept_Vtx) continue;
+
+            auto particle = VtxKinTree->currentParticle();
+            auto mass_particle = particle->currentState().mass();
+            if(verbose) {cout << Form("Tk pt=%.1f eta=%.1f phi=%.1f - Vtx chi2=%.1f Mass=%.3f ", ptk.pt(), ptk.eta(), ptk.phi(), chi2_vtx, mass_particle) << endl;}
+
+            // accept_Vtx &=  mass_particle >
+            N_compatible_tk++;
+          }
+          if(verbose) {cout << "Compatible tracks: " << N_compatible_tk << endl;}
 
 
 

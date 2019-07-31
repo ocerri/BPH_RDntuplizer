@@ -83,7 +83,14 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     if(verbose) {
       uint nb = 0;
       for(auto p : *PrunedGenParticlesHandle) {
-        if (p.pdgId() == 511 && p.numberOfDaughters()>1) {
+        if (abs(p.pdgId()) == 10423) {
+          cout << "Found: " << p.pdgId() << " (-->[" << p.numberOfDaughters() << "]" << flush;
+          for(auto d : p.daughterRefVector()) {
+            cout << " " << d->pdgId() << flush;
+          }
+          cout << ')' << endl;
+        }
+        if ((abs(p.pdgId()) == 511 || abs(p.pdgId()) == 521) && p.numberOfDaughters()>1) {
           nb++;
           cout << "Found: " << p.pdgId() << " (-->" << flush;
           for(auto d : p.daughterRefVector()) {
