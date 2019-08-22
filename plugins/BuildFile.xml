@@ -12,4 +12,5 @@
 <use name="RecoVertex/KinematicFitPrimitives"/>
 <use name="RecoVertex/KinematicFit"/>
 <use name="boost"/>
+<Flags CXXFLAGS="-Wno-unknown-pragmas -fPIC -I$(CMSSW_BASE)/src/ntuplizer/Hammer-0.2.1-build/include -L$(CMSSW_BASE)/src/ntuplizer/Hammer-0.2.1-build/lib -L$(CMSSW_BASE)/src/ntuplizer/Hammer-0.2.1-build/lib64 -lHammerCore -lHammerBase -lHammerTools -lAmplitudes -lRates -lFormFactors -lyaml-cpp"/>
 <flags EDM_PLUGIN="1"/>

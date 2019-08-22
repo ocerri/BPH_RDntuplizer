@@ -15,6 +15,8 @@
 #include <string>
 #include <map>
 
+#include "Hammer/Hammer.hh"
+
 using namespace std;
 
 class HammerWeightsProducer : public edm::EDProducer {
@@ -34,6 +36,8 @@ private:
     edm::EDGetTokenT<vector<reco::GenParticle>> PrunedParticlesSrc_;
     edm::EDGetTokenT<int> indexBmcSrc_;
 
+    Hammer::Hammer hammer;
+
     double mass_B0 = 5.27961;
     double mass_mu = 0.1056583745;
     double mass_K = 0.493677;
@@ -46,9 +50,9 @@ private:
 
 HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
 {
-    verbose = iConfig.getParameter<int>( "verbose" );
     PrunedParticlesSrc_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
     indexBmcSrc_ = consumes<int> (edm::InputTag("MCpart", "indexBmc"));
+    verbose = iConfig.getParameter<int>( "verbose" );
 
     produces<map<string, float>>("outputNtuplizer");
 }
