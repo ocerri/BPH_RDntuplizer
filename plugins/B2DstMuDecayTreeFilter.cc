@@ -25,30 +25,30 @@ class B2DstMuDecayTreeFilter : public edm::stream::EDFilter<> {
       virtual void beginStream(edm::StreamID) override;
       virtual bool filter(edm::Event&, const edm::EventSetup&) override;
       virtual void endStream() override;
-      // ----------member data ---------------------------
 
-      edm::EDGetTokenT<map<string,float>> muonSrc_;
+      // ----------member data ---------------------------
+      edm::EDGetTokenT<map<string, float>> B2DstMuDecayTreeOutSrc_;
+
       int verbose = 0;
 };
 
 B2DstMuDecayTreeFilter::B2DstMuDecayTreeFilter(const edm::ParameterSet& iConfig)
 {
   verbose = iConfig.getParameter<int>( "verbose" );
-  consumesMany<map<string, float>>();
+  B2DstMuDecayTreeOutSrc_ = consumes<map<string, float>>(edm::InputTag("B2MuDstDT", "outputNtuplizer"));
 }
 
 // ------------ method called on each new Event  ------------
 bool B2DstMuDecayTreeFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  vector< edm::Handle<map<string, float>> > outMapHandle;
-  iEvent.getManyByType(outMapHandle);
-  for( auto h : outMapHandle ) {
-    for( auto& kv : *(h.product()) ) {
-      if (kv.first == "n_B") {
-          if(verbose) {cout << Form("Filter found %.0f B candidates\n", kv.second);}
-          if (kv.second > 0) return true;
-          else return false;
-      }
+  edm::Handle<map<string, float>> outMapHandle;
+  iEvent.getByToken(B2DstMuDecayTreeOutSrc_, outMapHandle);
+
+  for( auto const& kv : (*outMapHandle) ) {
+    if (kv.first == "n_B") {
+        if(verbose) {cout << Form("Filter found %.0f B candidates\n", kv.second);}
+        if (kv.second > 0) return true;
+        else return false;
     }
   }
 

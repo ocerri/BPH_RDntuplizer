@@ -99,18 +99,23 @@ process.trgF = cms.EDFilter("BPHTriggerPathFilter",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", "")
 )
 
-
-process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
-        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(0)
-)
-
 process.B2MuDstDT = cms.EDProducer("B2DstMuDecayTreeProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
         verbose = cms.int32(0)
 )
 
-process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter", verbose = cms.int32(0))
+process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
+        verbose = cms.int32(0)
+)
+
+process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
+        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
+        verbose = cms.int32(1)
+)
+
+process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
+        verbose = cms.int32(1)
+)
 
 process.outA = cms.EDAnalyzer("FlatTreeWriter",
         cmssw = cms.string(cmssw_version),
@@ -121,23 +126,24 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 process.p = cms.Path(
                     process.trgBPH +
                     process.trgF +
-                    process.MCpart +
                     process.B2MuDstDT +
                     process.B2MuDstDTFilter+
+                    process.MCpart +
+                    process.HammerWeights +
                     process.outA
                     )
 
 
 # DEBUG -- dump the event content
-# process.output = cms.OutputModule(
-#                 "PoolOutputModule",
-#                       fileName = cms.untracked.string('edm_output.root'),
-#                       )
-# process.output_step = cms.EndPath(process.output)
-#
-# process.schedule = cms.Schedule(
-# 		process.p,
-# 		process.output_step)
+process.output = cms.OutputModule(
+                "PoolOutputModule",
+                      fileName = cms.untracked.string('edm_output.root'),
+                      )
+process.output_step = cms.EndPath(process.output)
+
+process.schedule = cms.Schedule(
+		process.p,
+		process.output_step)
 
 
 '''
