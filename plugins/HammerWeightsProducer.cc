@@ -52,7 +52,17 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
 {
     PrunedParticlesSrc_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
     indexBmcSrc_ = consumes<int> (edm::InputTag("MCpart", "indexBmc"));
+
     verbose = iConfig.getParameter<int>( "verbose" );
+
+    auto decayOfInterest = iConfig.getParameter<vector<string>>( "decayOfInterest" );
+    for(auto s : decayOfInterest) {
+      if(verbose) {cout << "[Hammer] Including decay " << s << endl;}
+      hammer.includeDecay(s);
+    }
+
+    
+
 
     produces<map<string, float>>("outputNtuplizer");
 }
