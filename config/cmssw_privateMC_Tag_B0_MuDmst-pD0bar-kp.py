@@ -115,7 +115,7 @@ process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
 
 process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
         decayOfInterest = cms.vstring('BD*MuNu', 'BD*TauNu'),
-        inputFFScheme = cms.vstring('BD', 'ISGW2',
+        inputFFScheme = cms.vstring(#'BD', 'ISGW2',
                                     'BD*', 'ISGW2'
         ),
         verbose = cms.int32(1)
