@@ -19,7 +19,9 @@ using namespace std;
 class B2DstMuDecayTreeFilter : public edm::stream::EDFilter<> {
    public:
       explicit B2DstMuDecayTreeFilter(const edm::ParameterSet&);
-      ~B2DstMuDecayTreeFilter() {};
+      ~B2DstMuDecayTreeFilter() {
+        cout << Form("B2DstMuDecay filter efficiency: %d/%d = %1.2e", N_passed_events, N_analyzed_events, (double)N_passed_events/N_analyzed_events) << endl;
+      };
 
    private:
       virtual void beginStream(edm::StreamID) override;
@@ -28,7 +30,8 @@ class B2DstMuDecayTreeFilter : public edm::stream::EDFilter<> {
 
       // ----------member data ---------------------------
       edm::EDGetTokenT<map<string, float>> B2DstMuDecayTreeOutSrc_;
-
+      int N_analyzed_events = 0;
+      int N_passed_events = 0;
       int verbose = 0;
 };
 
@@ -41,13 +44,18 @@ B2DstMuDecayTreeFilter::B2DstMuDecayTreeFilter(const edm::ParameterSet& iConfig)
 // ------------ method called on each new Event  ------------
 bool B2DstMuDecayTreeFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  N_analyzed_events++;
+
   edm::Handle<map<string, float>> outMapHandle;
   iEvent.getByToken(B2DstMuDecayTreeOutSrc_, outMapHandle);
 
   for( auto const& kv : (*outMapHandle) ) {
     if (kv.first == "n_B") {
         if(verbose) {cout << Form("Filter found %.0f B candidates\n", kv.second);}
-        if (kv.second > 0) return true;
+        if (kv.second > 0) {
+          N_passed_events++;
+          return true;
+        }
         else return false;
     }
   }

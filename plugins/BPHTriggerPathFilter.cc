@@ -19,7 +19,9 @@ using namespace std;
 class BPHTriggerPathFilter : public edm::stream::EDFilter<> {
    public:
       explicit BPHTriggerPathFilter(const edm::ParameterSet&);
-      ~BPHTriggerPathFilter() {};
+      ~BPHTriggerPathFilter() {
+        cout << Form("BPHTrigger filter efficiency: %d/%d = %1.2e", N_passed_events, N_analyzed_events, (double)N_passed_events/N_analyzed_events) << endl;
+      };
 
    private:
       virtual void beginStream(edm::StreamID) override;
@@ -28,6 +30,8 @@ class BPHTriggerPathFilter : public edm::stream::EDFilter<> {
       // ----------member data ---------------------------
 
       edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
+      int N_analyzed_events = 0;
+      int N_passed_events = 0;
       int verbose = 0;
 };
 
@@ -35,18 +39,22 @@ BPHTriggerPathFilter::BPHTriggerPathFilter(const edm::ParameterSet& iConfig):
   muonSrc_( consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "trgMuons" ) ) )
 {
    //now do what ever initialization is needed
-
 }
 
 // ------------ method called on each new Event  ------------
 bool
 BPHTriggerPathFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  N_analyzed_events++;
+
   edm::Handle<std::vector<pat::Muon>> muonHandle;
   iEvent.getByToken(muonSrc_, muonHandle);
   unsigned int muonNumber = muonHandle->size();
 
-  if(muonNumber > 0) return true;
+  if(muonNumber > 0) {
+    N_passed_events++;
+    return true;
+  }
   else return false;
 }
 

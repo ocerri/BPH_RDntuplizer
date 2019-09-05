@@ -35,7 +35,7 @@ args.parseArguments()
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(50)
+    input = cms.untracked.int32(100)
     # input = cms.untracked.int32(2000)
     # input = cms.untracked.int32(-1)
 )
@@ -110,7 +110,7 @@ process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
 
 process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
@@ -118,7 +118,7 @@ process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
         inputFFScheme = cms.vstring(#'BD', 'ISGW2',
                                     'BD*', 'ISGW2'
         ),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.outA = cms.EDAnalyzer("FlatTreeWriter",
