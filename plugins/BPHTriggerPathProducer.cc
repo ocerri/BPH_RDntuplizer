@@ -95,9 +95,11 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         cout << "\tCollection: " << obj.collection() << endl;
 
         // Print associated trigger paths
-        cout << "\tPaths:"<< endl;
+        cout << "\tBPH Paths:"<< endl;
         for (unsigned h = 0, n = pathNamesLast.size(); h < n; ++h) {
-          cout << "\t\t" << pathNamesLast[h] << endl;
+          if (regex_match(pathNamesLast[h], txt_regex_path)) {
+            cout << "\t\t" << pathNamesLast[h] << endl;
+          }
         }
       }
 
@@ -111,7 +113,13 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     cout << "\n MUONS LIST" << endl;
     for (unsigned int k = 0; k < muonNumber; ++k) {
       const pat::Muon & muon = (*muonHandle)[k];
-      cout << "\t" << " " << muon.pdgId() << "  " << muon.pt() << "  " << muon.eta() << "  " << muon.phi() << endl;
+      bool isTightMuon = false;
+      for (auto vtx : *vtxHandle) {
+        if(muon.isTightMuon(vtx)) isTightMuon = true;
+      }
+      if (isTightMuon) {
+        cout << "\t" << " " << muon.pdgId() << "  " << muon.pt() << "  " << muon.eta() << "  " << muon.phi() << endl;
+      }
     }
   }
 

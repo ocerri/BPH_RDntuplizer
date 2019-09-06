@@ -35,9 +35,9 @@ args.parseArguments()
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(100)
+    # input = cms.untracked.int32(100)
     # input = cms.untracked.int32(2000)
-    # input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(-1)
 )
 
 from glob import glob
@@ -92,7 +92,7 @@ process.trgBPH = cms.EDProducer("BPHTriggerPathProducer",
         triggerObjects = cms.InputTag("slimmedPatTrigger"),
         triggerBits = cms.InputTag("TriggerResults","","HLT"),
         muon_charge = cms.int32(1),
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
 process.trgF = cms.EDFilter("BPHTriggerPathFilter",
@@ -110,7 +110,7 @@ process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
 
 process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
 process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
