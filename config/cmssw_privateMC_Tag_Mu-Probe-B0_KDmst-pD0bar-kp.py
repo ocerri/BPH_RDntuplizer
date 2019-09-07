@@ -91,49 +91,40 @@ process.trgBPH = cms.EDProducer("BPHTriggerPathProducer",
         vertexCollection = cms.InputTag("offlineSlimmedPrimaryVertices","", ""),
         triggerObjects = cms.InputTag("slimmedPatTrigger"),
         triggerBits = cms.InputTag("TriggerResults","","HLT"),
-        muon_charge = cms.int32(1),
-        verbose = cms.int32(0)
+        muon_charge = cms.int32(0),
+        verbose = cms.int32(1)
 )
 
 process.trgF = cms.EDFilter("BPHTriggerPathFilter",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", "")
 )
 
-process.B2MuDstDT = cms.EDProducer("B2DstMuDecayTreeProducer",
+process.B2DstKDT = cms.EDProducer("B2DstKDecayTreeProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
-process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
-        verbose = cms.int32(0)
+process.B2DstKDTFilter = cms.EDFilter("B2DstKDecayTreeFilter",
+        verbose = cms.int32(1)
 )
 
-process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
+process.MCpart = cms.EDProducer("MCTruthB2DstKProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(0)
-)
-
-process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
-        decayOfInterest = cms.vstring('BD*MuNu', 'BD*TauNu'),
-        inputFFScheme = cms.vstring(#'BD', 'ISGW2',
-                                    'BD*', 'ISGW2'
-        ),
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
 process.outA = cms.EDAnalyzer("FlatTreeWriter",
         cmssw = cms.string(cmssw_version),
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
 
 process.p = cms.Path(
                     process.trgBPH +
                     process.trgF +
-                    process.B2MuDstDT +
-                    process.B2MuDstDTFilter+
+                    process.B2DstKDT +
+                    process.B2DstKDTFilter +
                     process.MCpart +
-                    process.HammerWeights +
                     process.outA
                     )
 

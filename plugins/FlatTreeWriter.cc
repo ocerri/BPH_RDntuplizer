@@ -53,6 +53,8 @@ FlatTreeWriter::FlatTreeWriter( const edm::ParameterSet & cfg ) :
 
 void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  cout << "--------------------- Tree Wirter -----------------------" << endl;
+
   vector< edm::Handle<map<string, float>> > outMapHandle;
   iEvent.getManyByType(outMapHandle);
   for( auto h : outMapHandle ) {
@@ -67,7 +69,11 @@ void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   for( auto h : outVMapHandle ) {
     for( auto& kv : *(h.product()) ) {
       outv_map[kv.first] = kv.second;
-      if (verbose) {cout << kv.first.c_str() << ": "<< kv.second.size() << endl;}
+      if (verbose) {
+        cout << kv.first.c_str() << " (" << kv.second.size() << "):";
+        for(float val : kv.second) {cout << Form(" %.2f", val);}
+        cout << endl;
+      }
     }
   }
 
@@ -90,6 +96,13 @@ void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   }
 
   tree->Fill();
+
+  if(verbose) {
+    cout << "--------------------------------------------------------" << endl;
+    cout << "--------------------- Event over -----------------------" << endl;
+    cout << "--------------------------------------------------------" << endl;
+    cout << endl << endl << endl;
+  }
 }
 
 DEFINE_FWK_MODULE(FlatTreeWriter);
