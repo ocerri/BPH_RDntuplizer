@@ -26,8 +26,8 @@
 #define __d_vtxkpi_vtxMu_min__ 0.02 // Optimized in D0 fitting
 #define __dmD0_max__ 0.039 // 3*0.013 GeV(i.e. 3 sigma) form the D0 mass
 #define __dmD0pis_max__ 0.0024 // 3*0.8 MeV (i.e 3 inflated sigma) from Dst mass
-#define __mDstK_max__ 8.0 // Some reasonable cut on the mass
-#define __mDstK_min__ 3.0 // Some reasonable cut on the mass
+#define __mDstK_max__ 6.8 // Some reasonable cut on the mass
+#define __mDstK_min__ 3.8 // Some reasonable cut on the mass
 #define __cos_DstK_vtxMu_min__ 0.8 // Some loose cut tuned on MC
 #define __PvalChi2FakeVtx_min__ 0.90 // Very loose cut
 
@@ -397,7 +397,7 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
             AddTLVToOut(vtxu::getTLVfromKinPart(D0), string("D0"), &(*outputVecNtuplizer));
             AddTLVToOut(vtxu::getTLVfromKinPart(DstK), string("B"), &(*outputVecNtuplizer));
             AddTLVToOut(vtxu::getTLVfromKinPart(refit_Dst), string("Dst"), &(*outputVecNtuplizer));
-            AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("K"), &(*outputVecNtuplizer));
+            AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("Ks"), &(*outputVecNtuplizer));
           }
         }
 

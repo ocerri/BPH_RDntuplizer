@@ -25,6 +25,8 @@ private:
 
   // edm::InputTag src_;
   string cmssw;
+  string cfg_name = "";
+  string commit_hash = "";
   // vector<string> output_soruce_modules;
 
   TTree* tree;
@@ -37,7 +39,9 @@ private:
 };
 
 FlatTreeWriter::FlatTreeWriter( const edm::ParameterSet & cfg ) :
-  cmssw( cfg.getParameter<string>("cmssw") )
+  cmssw( cfg.getParameter<string>("cmssw") ),
+  cfg_name( cfg.getParameter<string>("cfg_name") ),
+  commit_hash( cfg.getParameter<string>("commit_hash") )
   // output_soruce_modules( cfg.getParameter<vector<string>>("output_soruce_modules") )
 {
   verbose = cfg.getParameter<int>( "verbose" );
@@ -45,7 +49,9 @@ FlatTreeWriter::FlatTreeWriter( const edm::ParameterSet & cfg ) :
   edm::Service<TFileService> fs;
   tree = fs->make<TTree>( "Tevts", "Events Tree from BPHRDntuplizer");
 
-  fs->make<TNamed>("cmssw",cmssw.c_str() );
+  fs->make<TNamed>("cmssw", cmssw.c_str() );
+  fs->make<TNamed>("cfgName", cfg_name.c_str() );
+  fs->make<TNamed>("commitHash", commit_hash.c_str() );
 
   consumesMany<map<string, float>>();
   consumesMany<map<string, vector<float>>>();

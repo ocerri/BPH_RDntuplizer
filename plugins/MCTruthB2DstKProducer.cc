@@ -117,7 +117,7 @@ void MCTruthB2DstKProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
 
     map<string, TLorentzVector> p4;
     p4["B"] = TLorentzVector();
-    p4["K"] = TLorentzVector();
+    p4["Ks"] = TLorentzVector();
     p4["Dst"] = TLorentzVector();
     p4["pis"] = TLorentzVector();
     p4["D0"] = TLorentzVector();
@@ -128,7 +128,7 @@ void MCTruthB2DstKProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
 
       for(auto d : p.daughterRefVector()) {
         if(d->pdgId() == 321) {
-          p4["K"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
+          p4["Ks"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
         }
         else if(d->pdgId() == -413) {
           p4["Dst"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
