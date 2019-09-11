@@ -15,7 +15,7 @@ process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_Prompt_v13', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_v11', '')
 
 '''
 ############ Command line args ################
@@ -31,14 +31,14 @@ args.parseArguments()
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    # input = cms.untracked.int32(1000)
+    # input = cms.untracked.int32(2000)
     input = cms.untracked.int32(-1)
 )
 
 from glob import glob
 if args.inputFile:
     flist = args.inputFile
-if args.inputFiles:
+elif args.inputFiles:
     if len(args.inputFiles) == 1:
         with open(args.inputFiles[0]) as f:
             flist = [l for l in f.readlines()]
@@ -46,22 +46,22 @@ if args.inputFiles:
         flist = args.inputFiles
 else:
     flist = glob('/eos/cms/store/data/Run2018C/ParkingBPH1/MINIAOD/05May2019-v1/*/*.root')
+    for i in range(len(flist)):
+        flist[i] = 'file:' + flist[i]
 
-for i in range(len(flist)):
-    flist[i] = 'file:' + flist[i]
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist))
                            )
 
-import FWCore.PythonUtilities.LumiList as LumiList
-process.source.lumisToProcess = LumiList.LumiList(filename = '/afs/cern.ch/user/o/ocerri/work/CMSSW_10_2_3/src/ntuplizer/BPH_RDntuplizer/production/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt').getVLuminosityBlockRange()
+# import FWCore.PythonUtilities.LumiList as LumiList
+# process.source.lumisToProcess = LumiList.LumiList(filename = '/afs/cern.ch/user/o/ocerri/work/CMSSW_10_2_3/src/ntuplizer/BPH_RDntuplizer/production/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt').getVLuminosityBlockRange()
 
 
 '''
 #####################   Output   ###################
 '''
 if args.outputFile == '.root':
-    outname = '/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsRD/Run2018C/test_CAND.root'
+    outname = 'B2DstK_CAND.root'
 else:
     outname = args.outputFile
 
@@ -91,11 +91,11 @@ process.trgF = cms.EDFilter("BPHTriggerPathFilter",
 
 process.B2DstKDT = cms.EDProducer("B2DstKDecayTreeProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.B2DstKDTFilter = cms.EDFilter("B2DstKDecayTreeFilter",
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 cfg_name = os.path.basename(sys.argv[0])

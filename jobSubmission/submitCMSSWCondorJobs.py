@@ -51,7 +51,7 @@ if __name__ == "__main__":
                 os.system('rm -rf '+outdir+'/*')
             else:
                 print 'Output directory not empty'
-                print 'Empty the give directory, change directory or run with -f'
+                print 'Empty the given directory, change directory or run with -f'
                 exit()
 
     os.makedirs(outdir+'/out/')

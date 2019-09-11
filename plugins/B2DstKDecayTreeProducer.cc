@@ -108,7 +108,7 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
     GlobalPoint p_vtxMu(vtxMu->x(), vtxMu->y(), vtxMu->z());
 
 
-    int n_K = 0, n_pi = 0, n_D0 = 0, n_pis = 0, n_Dst = 0, n_B = 0;
+    int n_K = 0, n_pi = 0, n_D0 = 0, n_pis = 0, n_Dst = 0, n_Ks = 0, n_B = 0;
 
     (*outputVecNtuplizer)["chi2_kpi"] = {};
     (*outputVecNtuplizer)["mass_kpi"] = {};
@@ -318,6 +318,7 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
               if (chi2_DstK > 0 && chi2_DstK < max_chi2) accept_DstK = true;
             }
             if(!accept_DstK) continue;
+            n_Ks++;
 
             auto DstK = BKinTree->currentParticle();
             auto Bvtx = BKinTree->currentDecayVertex();
@@ -415,6 +416,7 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
     (*outputNtuplizer)["n_D0"] = n_D0;
     (*outputNtuplizer)["n_pis"] = n_pis;
     (*outputNtuplizer)["n_Dst"] = n_Dst;
+    (*outputNtuplizer)["n_Ks"] = n_Ks;
     (*outputNtuplizer)["n_B"] = n_B;
 
 
