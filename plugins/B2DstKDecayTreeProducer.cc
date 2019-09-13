@@ -26,6 +26,7 @@
 #define __d_vtxkpi_vtxMu_min__ 0.02 // Optimized in D0 fitting
 #define __dmD0_max__ 0.039 // 3*0.013 GeV(i.e. 3 sigma) form the D0 mass
 #define __dmD0pis_max__ 0.0024 // 3*0.8 MeV (i.e 3 inflated sigma) from Dst mass
+#define __pT_Ks_min__ 1.0 // Studied in nb to reduce fake
 #define __mDstK_max__ 6.8 // Some reasonable cut on the mass
 #define __mDstK_min__ 3.8 // Some reasonable cut on the mass
 #define __cos_DstK_vtxMu_min__ 0.8 // Some loose cut tuned on MC
@@ -305,6 +306,8 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
 
             // Require to be close to the trigger muon;
             if (fabs(Ks.dz() - trgMu.dz()) > __dzMax__) continue;
+
+            if (Ks.pt() < __pT_Ks_min__ ) continue;
 
             // Fit the B vertex
             auto BKinTree = vtxu::FitVtxDstK(iSetup, Dst, Ks, 0);

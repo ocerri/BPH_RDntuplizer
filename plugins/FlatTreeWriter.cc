@@ -59,7 +59,7 @@ FlatTreeWriter::FlatTreeWriter( const edm::ParameterSet & cfg ) :
 
 void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  cout << "--------------------- Tree Wirter -----------------------" << endl;
+  if(verbose){cout << "--------------------- Tree Wirter -----------------------" << endl;}
 
   vector< edm::Handle<map<string, float>> > outMapHandle;
   iEvent.getManyByType(outMapHandle);

@@ -64,13 +64,14 @@ if __name__ == "__main__":
     if not args.input_file:
         print 'No input file provided'
         exit()
+
     flist = []
-    if isinstance(args.input_file, basestring) and args.input_file.endswith('.txt'):
-        with open(args.input_file) as f:
+    if len(args.input_file) == 1 and args.input_file[0].endswith('.txt'):
+        with open(args.input_file[0]) as f:
             for l in f.readlines():
-                flist.append(l)
-    elif isinstance(args.input_file, basestring):
-        flist = glob(args.input_file)
+                flist.append(l[:-1])
+    elif len(args.input_file) == 1:
+        flist = glob(args.input_file[0])
     elif isinstance(args.input_file, list):
         flist = args.input_file
 

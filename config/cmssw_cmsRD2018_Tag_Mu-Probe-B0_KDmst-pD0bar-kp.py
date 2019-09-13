@@ -105,7 +105,7 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
         cmssw = cms.string(os.environ['CMSSW_VERSION']),
         cfg_name = cms.string(cfg_name),
         commit_hash = cms.string(commit_hash),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 

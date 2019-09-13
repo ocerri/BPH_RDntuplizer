@@ -4,7 +4,7 @@ import datetime
 
 # tag = 'B2DstMu'
 tag = 'B2DstK'
-maxRunTime = 240
+maxRunTime = 480
 
 cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
        'B2DstK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py'}
@@ -75,7 +75,7 @@ if not os.path.isdir('tmp'):
 
 for k, d in prod_samples['samples'].iteritems():
     if 'data_Run2018A' in k:
-        for i in [1]:#d['parts']:
+        for i in d['parts']:
             dataset = d['dataset'].format(i)
             print '\n########## {} ##########\n'.format(dataset)
 
