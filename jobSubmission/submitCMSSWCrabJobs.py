@@ -4,7 +4,6 @@ import datetime
 
 # tag = 'B2DstMu'
 tag = 'B2DstK'
-maxRunTime = 480
 
 cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
        'B2DstK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py'}
@@ -38,7 +37,7 @@ config.General.transferLogs = True
     fout.write('\n')
     fout.write("config.JobType.outputFiles = ['{}_CAND.root']".format(tag))
     fout.write('\n')
-    fout.write("config.JobType.maxJobRuntimeMin = {}".format(maxRunTime))
+    fout.write("config.JobType.maxJobRuntimeMin = {}".format(60*int(setting['maxRunTime'])))
     fout.write('\n')
     fout.write("config.JobType.maxMemoryMB = 2500")
     fout.write('\n')
