@@ -2,8 +2,8 @@ import yaml
 import os
 import datetime
 
-# tag = 'B2DstMu'
-tag = 'B2DstK'
+tag = 'B2DstMu'
+# tag = 'B2DstK'
 
 cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
        'B2DstK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py'}
@@ -13,7 +13,7 @@ date_str = '{}{:02}{:02}'.format(date.year%100, date.month, date.day)
 
 prod_samples = yaml.load(open('../production/samples.yml'))
 
-def dumpCrabConfig(dataset, settings):
+def dumpCrabConfig(k, dataset, settings):
     ds_list = dataset.split('/')
     fname = 'cfg' + dataset.replace('/', '_') + '.py'
     fout = open('tmp/' + fname, 'w')
@@ -37,7 +37,7 @@ config.General.transferLogs = True
     fout.write('\n')
     fout.write("config.JobType.outputFiles = ['{}_CAND.root']".format(tag))
     fout.write('\n')
-    fout.write("config.JobType.maxJobRuntimeMin = {}".format(60*int(setting['maxRunTime'])))
+    fout.write("config.JobType.maxJobRuntimeMin = {}".format(60*int(settings['samples'][k]['maxRunTime'])))
     fout.write('\n')
     fout.write("config.JobType.maxMemoryMB = 2500")
     fout.write('\n')
@@ -47,11 +47,11 @@ config.General.transferLogs = True
     fout.write('\n')
     fout.write("config.Data.inputDataset = '{}'".format(dataset))
     fout.write('\n')
-    fout.write("config.Data.lumiMask = '{}'".format(settings['lumimask']))
+    fout.write("config.Data.lumiMask = '{}'".format(settings['common']['data']['lumimask']))
     fout.write('\n')
     fout.write("config.Data.publication = False")
     fout.write('\n')
-    fout.write("config.Data.unitsPerJob = {}".format(settings['splitting']))
+    fout.write("config.Data.unitsPerJob = {}".format(settings['samples'][k]['splitting']))
     fout.write('\n')
     fout.write("config.Data.publishDBS = 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter/'")
     fout.write('\n')
@@ -61,9 +61,15 @@ config.General.transferLogs = True
     fout.write('\n')
     fout.write("config.Data.outputDatasetTag = '{}'".format(dataset_tag))
     fout.write('\n')
+    fout.write("config.Data.ignoreLocality = True") # requires a whitelist
+    fout.write('\n')
+    fout.write("config.Data.allowNonValidInputDataset = True")
+    fout.write('\n')
     fout.write("config.section_('Site')")
     fout.write('\n')
     fout.write("config.Site.storageSite = 'T2_US_Caltech'")
+    fout.write('\n')
+    fout.write("config.Site.whitelist = ['T2_US_*']")
     fout.write('\n')
     fout.close()
 
@@ -73,12 +79,12 @@ if not os.path.isdir('tmp'):
     os.system('mkdir tmp')
 
 for k, d in prod_samples['samples'].iteritems():
-    if 'data_Run2018A' in k:
+    if 'data_Run2018D' in k:
         for i in d['parts']:
             dataset = d['dataset'].format(i)
             print '\n########## {} ##########\n'.format(dataset)
 
-            fname, dset_tag = dumpCrabConfig(dataset, prod_samples['common']['data'])
+            fname, dset_tag = dumpCrabConfig(k, dataset, prod_samples)
             if os.path.isdir('tmp/crab_' + dset_tag):
                 os.system('rm -rf tmp/crab_' + dset_tag)
             print '---> Config dump'

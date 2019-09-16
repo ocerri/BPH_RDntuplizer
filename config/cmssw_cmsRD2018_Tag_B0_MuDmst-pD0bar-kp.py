@@ -1,4 +1,4 @@
-import os
+import os, sys
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 
@@ -31,8 +31,8 @@ args.parseArguments()
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    # input = cms.untracked.int32(100000)
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(10000)
+    # input = cms.untracked.int32(-1)
 )
 
 from glob import glob
@@ -46,9 +46,9 @@ if args.inputFiles:
         flist = args.inputFiles
 else:
     flist = glob('/eos/cms/store/data/Run2018D/ParkingBPH*/MINIAOD/20Mar*/*/*.root')
+    for i in range(len(flist)):
+        flist[i] = 'file:' + flist[i]
 
-for i in range(len(flist)):
-    flist[i] = 'file:' + flist[i]
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist))
                            )
@@ -101,10 +101,17 @@ process.B2MuDstDT = cms.EDProducer("B2DstMuDecayTreeProducer",
         verbose = cms.int32(0)
 )
 
-process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter", verbose = cms.int32(0))
+process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
+        verbose = cms.int32(0)
+)
 
+cfg_name = os.path.basename(sys.argv[0])
+f = open(os.environ['CMSSW_BASE']+'/src/ntuplizer/BPH_RDntuplizer/.git/logs/HEAD')
+commit_hash = f.readlines()[-1][:-1].split(' ')[1]
 process.outA = cms.EDAnalyzer("FlatTreeWriter",
-        cmssw = cms.string(cmssw_version),
+        cmssw = cms.string(os.environ['CMSSW_VERSION']),
+        cfg_name = cms.string(cfg_name),
+        commit_hash = cms.string(commit_hash),
         verbose = cms.int32(0)
 )
 

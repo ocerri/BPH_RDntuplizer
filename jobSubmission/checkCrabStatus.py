@@ -1,7 +1,12 @@
 import os
+import argparse
 from glob import glob
 
-for dir in glob('tmp/crab_*'):
+parser = argparse.ArgumentParser()
+parser.add_argument ('inputDir', type=str, default='tmp/crab_*', help='Input dir template for glob')
+args = parser.parse_args()
+
+for dir in glob(args.inputDir):
     if os.path.isdir(dir):
         print 20*'#' + 50*'-' + 20*'#'
         cmd = 'source /cvmfs/cms.cern.ch/crab3/crab.sh; '
