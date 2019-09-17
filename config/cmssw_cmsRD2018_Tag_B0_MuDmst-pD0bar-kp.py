@@ -31,7 +31,7 @@ args.parseArguments()
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10000)
+    input = cms.untracked.int32(100000)
     # input = cms.untracked.int32(-1)
 )
 
@@ -58,8 +58,7 @@ process.source = cms.Source("PoolSource",
 #####################   Output   ###################
 '''
 if args.outputFile == '.root':
-    outname = 'B02DstMu_candidates.root'
-    # outname = '/eos/user/o/ocerri/BPhysics/data/cmsRD/Run2018D/B02DstMu_candidates.root'
+    outname = 'B2DstMu_CAND.root'
 else:
     outname = args.outputFile
 

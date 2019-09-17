@@ -130,12 +130,9 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputNtuplizer)["trgMu_eta"] = m.eta();
     (*outputNtuplizer)["trgMu_phi"] = m.phi();
     (*outputNtuplizer)["trgMu_charge"] = m.charge();
-  }
-  else {
-    (*outputNtuplizer)["trgMu_pt"] = -1;
-    (*outputNtuplizer)["trgMu_eta"] = 0;
-    (*outputNtuplizer)["trgMu_phi"] = 0;
-    (*outputNtuplizer)["trgMu_charge"] = 0;
+    auto tk = m.bestTrack();
+    (*outputNtuplizer)["trgMu_d"] = tk->d0();
+    (*outputNtuplizer)["trgMu_sigd"] = fabs(tk->d0())/tk->d0Error();
   }
 
   iEvent.put(move(trgMuonsMatched), "trgMuonsMatched");

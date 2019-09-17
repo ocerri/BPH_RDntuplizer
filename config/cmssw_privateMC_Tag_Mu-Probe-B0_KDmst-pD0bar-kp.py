@@ -35,8 +35,8 @@ args.parseArguments()
 '''
 process.maxEvents = cms.untracked.PSet(
     # input = cms.untracked.int32(100)
-    # input = cms.untracked.int32(2000)
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(2000)
+    # input = cms.untracked.int32(-1)
 )
 
 from glob import glob
@@ -52,7 +52,7 @@ elif args.inputFiles:
     else:
         flist = args.inputFiles
 else:
-    flist = glob('/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root')
+    flist = glob('/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-Mu_Probe-B0_KDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVS_PU0_10-2-3/*MINIAODSIM*.root')
 
 for i in range(len(flist)):
     flist[i] = 'file:' + flist[i]
@@ -70,7 +70,7 @@ process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 '''
 
 if args.outputFile == '.root':
-    outname = '/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/B02DstMu_candidates.root'
+    outname = 'B2DstK_CAND.root'
 else:
     outname = args.outputFile
 
@@ -100,16 +100,16 @@ process.trgF = cms.EDFilter("BPHTriggerPathFilter",
 
 process.B2DstKDT = cms.EDProducer("B2DstKDecayTreeProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.B2DstKDTFilter = cms.EDFilter("B2DstKDecayTreeFilter",
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.MCpart = cms.EDProducer("MCTruthB2DstKProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 cfg_name = os.path.basename(sys.argv[0])
@@ -119,7 +119,7 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
         cmssw = cms.string(os.environ['CMSSW_VERSION']),
         cfg_name = cms.string(cfg_name),
         commit_hash = cms.string(commit_hash),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 

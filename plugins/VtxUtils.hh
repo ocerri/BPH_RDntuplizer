@@ -21,6 +21,7 @@ namespace vtxu {
   std::pair<double,double> computeDCA(const edm::EventSetup&, pat::PackedCandidate, GlobalPoint);
   std::pair<double,double> computeDCA(reco::TransientTrack, GlobalPoint);
   std::pair<double,double> vtxsDistance(reco::VertexRef, RefCountedKinematicVertex);
+  std::pair<double,double> vtxsDistance(reco::Vertex, RefCountedKinematicVertex);
   TLorentzVector getTLVfromKinPart(const RefCountedKinematicParticle);
   TLorentzVector getTLVfromTrack(reco::Track, double);
   TLorentzVector getTLVfromCand(pat::PackedCandidate, double);

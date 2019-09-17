@@ -79,7 +79,7 @@ if not os.path.isdir('tmp'):
     os.system('mkdir tmp')
 
 for k, d in prod_samples['samples'].iteritems():
-    if 'data_Run2018D' in k:
+    if 'data_Run2018A' in k:
         for i in d['parts']:
             dataset = d['dataset'].format(i)
             print '\n########## {} ##########\n'.format(dataset)

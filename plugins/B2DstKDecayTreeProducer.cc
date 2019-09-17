@@ -22,15 +22,14 @@
 #define __PvalChi2Vtx_max__ 0.99 // Very loose cut
 #define __dzMax__ 1.0
 #define __dRMax__ 2.0
-#define __cos_kpi_vtxMu_min__ 0.97 // Optimized in D0 fitting
-#define __d_vtxkpi_vtxMu_min__ 0.02 // Optimized in D0 fitting
+#define __cos_Kpi_vtxMu_min__ 0.97 // Optimized in D0 fitting
+#define __d_vtxKpi_vtxMu_min__ 0.02 // Optimized in D0 fitting
 #define __dmD0_max__ 0.039 // 3*0.013 GeV(i.e. 3 sigma) form the D0 mass
 #define __dmD0pis_max__ 0.0024 // 3*0.8 MeV (i.e 3 inflated sigma) from Dst mass
-#define __pT_Ks_min__ 1.0 // Studied in nb to reduce fake
+#define __pT_Ks_min__ 0.3 // Studied in nb to reduce fake
 #define __mDstK_max__ 6.8 // Some reasonable cut on the mass
 #define __mDstK_min__ 3.8 // Some reasonable cut on the mass
 #define __cos_DstK_vtxMu_min__ 0.8 // Some loose cut tuned on MC
-#define __PvalChi2FakeVtx_min__ 0.90 // Very loose cut
 
 
 using namespace std;
@@ -111,13 +110,13 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
 
     int n_K = 0, n_pi = 0, n_D0 = 0, n_pis = 0, n_Dst = 0, n_Ks = 0, n_B = 0;
 
-    (*outputVecNtuplizer)["chi2_kpi"] = {};
-    (*outputVecNtuplizer)["mass_kpi"] = {};
-    (*outputVecNtuplizer)["dca_kpi_vtxMu"] = {};
-    (*outputVecNtuplizer)["sigdca_kpi_vtxMu"] = {};
-    (*outputVecNtuplizer)["cos_kpi_vtxMu"] = {};
-    (*outputVecNtuplizer)["d_vtxkpi_vtxMu"] = {};
-    (*outputVecNtuplizer)["sigd_vtxkpi_vtxMu"] = {};
+    (*outputVecNtuplizer)["chi2_Kpi"] = {};
+    (*outputVecNtuplizer)["mass_Kpi"] = {};
+    (*outputVecNtuplizer)["dca_Kpi_vtxMu"] = {};
+    (*outputVecNtuplizer)["sigdca_Kpi_vtxMu"] = {};
+    (*outputVecNtuplizer)["cos_Kpi_vtxMu"] = {};
+    (*outputVecNtuplizer)["d_vtxKpi_vtxMu"] = {};
+    (*outputVecNtuplizer)["sigd_vtxKpi_vtxMu"] = {};
 
     (*outputVecNtuplizer)["chi2_D0pis"] = {};
     (*outputVecNtuplizer)["mass_D0pis"] = {};
@@ -127,9 +126,13 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
     (*outputVecNtuplizer)["d_vtxD0pis_vtxMu"] = {};
     (*outputVecNtuplizer)["sigd_vtxD0pis_vtxMu"] = {};
 
+    (*outputVecNtuplizer)["d_Ks_PV"] = {};
+    (*outputVecNtuplizer)["sigd_Ks_PV"] = {};
     (*outputVecNtuplizer)["chi2_DstK"] = {};
     (*outputVecNtuplizer)["mass_DstK"] = {};
     (*outputVecNtuplizer)["cos_DstK_vtxBest"] = {};
+    (*outputVecNtuplizer)["d_vtxDstK_vtxBest"] = {};
+    (*outputVecNtuplizer)["sigd_vtxDstK_vtxBest"] = {};
 
     DeclareTLVToOut("B", &(*outputVecNtuplizer));
     DeclareTLVToOut("Ks", &(*outputVecNtuplizer));
@@ -181,13 +184,13 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
         //Fit the vertex
         auto D0KinTree = vtxu::FitD0(iSetup, pi, k, false, 0);
         bool accept_pi = false;
-        double chi2_kpi;
+        double chi2_Kpi;
         if(D0KinTree->isValid()) {
           D0KinTree->movePointerToTheTop();
           auto D0vtx = D0KinTree->currentDecayVertex();
-          chi2_kpi = D0vtx->chiSquared();
+          chi2_Kpi = D0vtx->chiSquared();
           auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2Vtx_max__, D0vtx->degreesOfFreedom());
-          if (chi2_kpi > 0 && chi2_kpi < max_chi2) accept_pi = true;
+          if (chi2_Kpi > 0 && chi2_Kpi < max_chi2) accept_pi = true;
         }
         if(!accept_pi) continue;
         n_pi++;
@@ -195,11 +198,11 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
         auto D0 = D0KinTree->currentParticle();
         auto D0vtx = D0KinTree->currentDecayVertex();
 
-        auto mass_kpi = D0->currentState().mass();
+        auto mass_Kpi = D0->currentState().mass();
 
         auto dca = vtxu::computeDCA(D0->refittedTransientTrack(), p_vtxMu);
-        auto dca_kpi_vtxMu = dca.first;
-        auto sigdca_kpi_vtxMu = fabs(dca.first)/dca.second;
+        auto dca_Kpi_vtxMu = dca.first;
+        auto sigdca_Kpi_vtxMu = fabs(dca.first)/dca.second;
 
         TVector3 dvtx(D0vtx->position().x() - vtxMu->x(),
                       D0vtx->position().y() - vtxMu->y(),
@@ -210,16 +213,16 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
                      D0->currentState().globalMomentum().z()
                      );
         double dalpha = dvtx.Angle(pD0);
-        auto cos_kpi_vtxMu = cos(dalpha);
+        auto cos_Kpi_vtxMu = cos(dalpha);
 
-        auto dvtx_kpiPV = vtxu::vtxsDistance(vtxMu, D0vtx);
-        auto d_vtxkpi_vtxMu = dvtx_kpiPV.first;
-        auto sigd_vtxkpi_vtxMu = d_vtxkpi_vtxMu/dvtx_kpiPV.second;
+        auto dvtx_KpiPV = vtxu::vtxsDistance(vtxMu, D0vtx);
+        auto d_vtxKpi_vtxMu = dvtx_KpiPV.first;
+        auto sigd_vtxKpi_vtxMu = fabs(d_vtxKpi_vtxMu/dvtx_KpiPV.second);
 
         // Make selection cut to get good D0
-        bool accept_D0 = cos_kpi_vtxMu > __cos_kpi_vtxMu_min__;
-        accept_D0 &= d_vtxkpi_vtxMu > __d_vtxkpi_vtxMu_min__;
-        accept_D0 &= fabs(mass_kpi - mass_D0) < __dmD0_max__;
+        bool accept_D0 = cos_Kpi_vtxMu > __cos_Kpi_vtxMu_min__;
+        accept_D0 &= d_vtxKpi_vtxMu > __d_vtxKpi_vtxMu_min__;
+        accept_D0 &= fabs(mass_Kpi - mass_D0) < __dmD0_max__;
         if(!accept_D0) continue;
         n_D0++;
 
@@ -279,7 +282,7 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
 
           auto dvtx_D0pisPV = vtxu::vtxsDistance(vtxMu, Dstvtx);
           auto d_vtxD0pis_vtxMu = dvtx_D0pisPV.first;
-          auto sigd_vtxD0pis_vtxMu = d_vtxD0pis_vtxMu/dvtx_D0pisPV.second;
+          auto sigd_vtxD0pis_vtxMu = fabs(d_vtxD0pis_vtxMu/dvtx_D0pisPV.second);
 
           // Make selection cut to get good Dst
           bool accept_Dst = fabs(mass_D0pis - mass_Dst) < __dmD0pis_max__;
@@ -308,6 +311,12 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
             if (fabs(Ks.dz() - trgMu.dz()) > __dzMax__) continue;
 
             if (Ks.pt() < __pT_Ks_min__ ) continue;
+
+            auto d_Ks_PV = Ks.dxy();
+            auto sigd_Ks_PV = fabs(d_Ks_PV/Ks.dxyError());
+            auto Ks_tk = Ks.bestTrack();
+            auto Ks_norm_chi2 = Ks_tk->normalizedChi2();
+            auto Ks_N_valid_hits = Ks_tk->numberOfValidHits();
 
             // Fit the B vertex
             auto BKinTree = vtxu::FitVtxDstK(iSetup, Dst, Ks, 0);
@@ -343,6 +352,7 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
                           );
             double dalphaB = dvtxB.Angle(pDstK);
             auto cos_DstK_vtxBest = cos(dalphaB);
+            auto dvtx_DstK_vtxBest = vtxu::vtxsDistance(vtxMu, Bvtx);
 
             // Look for the best vertex
             if (verbose) {cout << Form("Muon vtx: d = %.2f  cos = %.3e", dvtxB.Mag(), 1-cos_DstK_vtxBest) << endl;}
@@ -358,10 +368,13 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
                 if (cosda > cos_DstK_vtxBest) {
                   dvtxB = df;
                   cos_DstK_vtxBest = cosda;
+                  dvtx_DstK_vtxBest = vtxu::vtxsDistance(v, Bvtx);
                 }
               }
             }
             if (verbose) {cout << Form("Best vtx: d = %.2f  cos = %.3e", dvtxB.Mag(), 1-cos_DstK_vtxBest) << endl;}
+            auto d_vtxDstK_vtxBest = dvtx_DstK_vtxBest.first;
+            auto sigd_vtxDstK_vtxBest = fabs(d_vtxDstK_vtxBest/dvtx_DstK_vtxBest.second);
 
 
             bool accept_B = mass_DstK < __mDstK_max__ && mass_DstK > __mDstK_min__;
@@ -375,13 +388,13 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
                                   Compute analysis variables
             ############################################################################
             */
-            (*outputVecNtuplizer)["chi2_kpi"].push_back(chi2_kpi);
-            (*outputVecNtuplizer)["mass_kpi"].push_back(mass_kpi);
-            (*outputVecNtuplizer)["dca_kpi_vtxMu"].push_back(dca_kpi_vtxMu);
-            (*outputVecNtuplizer)["sigdca_kpi_vtxMu"].push_back(sigdca_kpi_vtxMu);
-            (*outputVecNtuplizer)["cos_kpi_vtxMu"].push_back(cos_kpi_vtxMu);
-            (*outputVecNtuplizer)["d_vtxkpi_vtxMu"].push_back(d_vtxkpi_vtxMu);
-            (*outputVecNtuplizer)["sigd_vtxkpi_vtxMu"].push_back(sigd_vtxkpi_vtxMu);
+            (*outputVecNtuplizer)["chi2_Kpi"].push_back(chi2_Kpi);
+            (*outputVecNtuplizer)["mass_Kpi"].push_back(mass_Kpi);
+            (*outputVecNtuplizer)["dca_Kpi_vtxMu"].push_back(dca_Kpi_vtxMu);
+            (*outputVecNtuplizer)["sigdca_Kpi_vtxMu"].push_back(sigdca_Kpi_vtxMu);
+            (*outputVecNtuplizer)["cos_Kpi_vtxMu"].push_back(cos_Kpi_vtxMu);
+            (*outputVecNtuplizer)["d_vtxKpi_vtxMu"].push_back(d_vtxKpi_vtxMu);
+            (*outputVecNtuplizer)["sigd_vtxKpi_vtxMu"].push_back(sigd_vtxKpi_vtxMu);
 
             (*outputVecNtuplizer)["chi2_D0pis"].push_back(chi2_D0pis);
             (*outputVecNtuplizer)["mass_D0pis"].push_back(mass_D0pis);
@@ -391,9 +404,15 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
             (*outputVecNtuplizer)["d_vtxD0pis_vtxMu"].push_back(d_vtxD0pis_vtxMu);
             (*outputVecNtuplizer)["sigd_vtxD0pis_vtxMu"].push_back(sigd_vtxD0pis_vtxMu);
 
-            (*outputVecNtuplizer)["chi2_DstK"].push_back(chi2_DstK);
-            (*outputVecNtuplizer)["mass_DstK"].push_back(mass_DstK);
-            (*outputVecNtuplizer)["cos_DstK_vtxBest"].push_back(cos_DstK_vtxBest);
+            (*outputVecNtuplizer)["d_Ks_PV"].push_back(d_Ks_PV);
+            (*outputVecNtuplizer)["sigd_Ks_PV"].push_back(sigd_Ks_PV);
+            (*outputVecNtuplizer)["Ks_norm_chi2"].push_back(Ks_norm_chi2);
+            (*outputVecNtuplizer)["Ks_N_valid_hits"].push_back(Ks_N_valid_hits);
+            (*outputVecNtuplizer)["chi2_DstKs"].push_back(chi2_DstK);
+            (*outputVecNtuplizer)["mass_DstKs"].push_back(mass_DstK);
+            (*outputVecNtuplizer)["cos_DstKs_vtxBest"].push_back(cos_DstK_vtxBest);
+            (*outputVecNtuplizer)["d_vtxDstK_vtxBest"].push_back(d_vtxDstK_vtxBest);
+            (*outputVecNtuplizer)["sigd_vtxDstK_vtxBest"].push_back(sigd_vtxDstK_vtxBest);
 
             AddTLVToOut(vtxu::getTLVfromCand(k, mass_K), string("K"), &(*outputVecNtuplizer));
             AddTLVToOut(vtxu::getTLVfromCand(pi, mass_Pi), string("pi"), &(*outputVecNtuplizer));
