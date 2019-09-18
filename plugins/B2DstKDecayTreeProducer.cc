@@ -243,6 +243,12 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
           // Require to be close to the trigger muon;
           if (fabs(pis.dz() - trgMu.dz()) > __dzMax__) continue;
 
+          auto d_pis_PV = pis.dxy();
+          auto sigd_pis_PV = fabs(d_pis_PV/pis.dxyError());
+          auto pis_tk = pis.bestTrack();
+          auto pis_norm_chi2 = pis_tk->normalizedChi2();
+          auto pis_N_valid_hits = pis_tk->numberOfValidHits();
+
           // Fit the Dst vertex
           //  Refitting the D0 with mass constrint
           auto DstKinTree = vtxu::FitDst_fitD0wMassConstraint(iSetup, pis, pi, k, false, 0);
@@ -396,6 +402,10 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
             (*outputVecNtuplizer)["d_vtxKpi_vtxMu"].push_back(d_vtxKpi_vtxMu);
             (*outputVecNtuplizer)["sigd_vtxKpi_vtxMu"].push_back(sigd_vtxKpi_vtxMu);
 
+            (*outputVecNtuplizer)["d_pis_PV"].push_back(d_pis_PV);
+            (*outputVecNtuplizer)["sigd_pis_PV"].push_back(sigd_pis_PV);
+            (*outputVecNtuplizer)["pis_norm_chi2"].push_back(pis_norm_chi2);
+            (*outputVecNtuplizer)["pis_N_valid_hits"].push_back(pis_N_valid_hits);
             (*outputVecNtuplizer)["chi2_D0pis"].push_back(chi2_D0pis);
             (*outputVecNtuplizer)["mass_D0pis"].push_back(mass_D0pis);
             (*outputVecNtuplizer)["dca_D0pis_vtxMu"].push_back(dca_D0pis_vtxMu);
