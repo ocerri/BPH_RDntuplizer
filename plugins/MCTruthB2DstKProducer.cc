@@ -65,13 +65,6 @@ void MCTruthB2DstKProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     iEvent.getByToken(PrunedParticlesSrc_, PrunedGenParticlesHandle);
     unsigned int N_PrunedGenParticles = PrunedGenParticlesHandle->size();
 
-    // edm::Handle<vector<pat::Muon>> trgMuonsHandle;
-    // iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
-    // auto trgMu = (*trgMuonsHandle)[0];
-    // TLorentzVector trgMu_TLV;
-    // trgMu_TLV.SetPtEtaPhiM(trgMu.pt(), trgMu.eta(), trgMu.phi(), mass_mu);
-
-
     // Output collection
     unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
     unique_ptr<int> indexBmc(new int);
@@ -100,6 +93,8 @@ void MCTruthB2DstKProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     }
 
     // Looking for the B0 -> D*-K+
+    map<string, TLorentzVector> p4;
+    p4["mu"] = TLorentzVector();
     int i_B = -1;
     for(unsigned int i = 0; i < N_PrunedGenParticles; i++) {
       auto p = (*PrunedGenParticlesHandle)[i];
@@ -112,10 +107,19 @@ void MCTruthB2DstKProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
         }
         if(Dst_found && K_found) i_B = i;
       }
+
+      bool semilepDecay = p.pdgId() == -511 || abs(p.pdgId()) == 521 || abs(p.pdgId()) == 531;
+      if (semilepDecay && p.numberOfDaughters()>1) {
+        for(auto d : p.daughterRefVector()) {
+          if(abs(d->pdgId()) == 13) {
+            if(verbose) {cout << Form("Muon found in B decay: %.2f %.2f %.2f", d->pt(), d->eta(), d->phi()) << endl;}
+            p4["mu"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
+          }
+        }
+      }
     }
     (*indexBmc) = i_B;
 
-    map<string, TLorentzVector> p4;
     p4["B"] = TLorentzVector();
     p4["Ks"] = TLorentzVector();
     p4["Dst"] = TLorentzVector();

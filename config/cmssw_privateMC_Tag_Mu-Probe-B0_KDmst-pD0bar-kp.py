@@ -29,14 +29,11 @@ args.register('inputFile', '', args.multiplicity.list, args.varType.string, "Inp
 args.outputFile = ''
 args.parseArguments()
 
-
 '''
 #####################   Input    ###################
 '''
 process.maxEvents = cms.untracked.PSet(
-    # input = cms.untracked.int32(100)
-    input = cms.untracked.int32(2000)
-    # input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(args.maxEvents)
 )
 
 from glob import glob
