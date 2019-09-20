@@ -50,7 +50,7 @@ MCTruthB2DstKProducer::MCTruthB2DstKProducer(const edm::ParameterSet &iConfig)
 {
     verbose = iConfig.getParameter<int>( "verbose" );
     PrunedParticlesSrc_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
-    // TrgMuonSrc_ = consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "trgMuons" ) );
+    TrgMuonSrc_ = consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "trgMuons" ) );
 
     produces<map<string, float>>("outputNtuplizer");
     produces<int>("indexBmc");
@@ -64,6 +64,11 @@ void MCTruthB2DstKProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     edm::Handle<std::vector<reco::GenParticle>> PrunedGenParticlesHandle;
     iEvent.getByToken(PrunedParticlesSrc_, PrunedGenParticlesHandle);
     unsigned int N_PrunedGenParticles = PrunedGenParticlesHandle->size();
+
+    // Get trigger muon
+    edm::Handle<vector<pat::Muon>> trgMuonsHandle;
+    iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
+    auto trgMu = (*trgMuonsHandle)[0];
 
     // Output collection
     unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
@@ -95,9 +100,16 @@ void MCTruthB2DstKProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     // Looking for the B0 -> D*-K+
     map<string, TLorentzVector> p4;
     p4["mu"] = TLorentzVector();
+    double mu_impactParam = -1;
     int i_B = -1;
+    reco::Candidate::Point interactionPoint(-9999999999, -999, -999);
     for(unsigned int i = 0; i < N_PrunedGenParticles; i++) {
       auto p = (*PrunedGenParticlesHandle)[i];
+      if(p.isHardProcess() && interactionPoint.x() == -9999999999) {
+        interactionPoint = p.vertex();
+        if(verbose) {cout << "[Hard process] " << p.pdgId() << ": " << p.vx() << ", " << p.vy() << endl;}
+      }
+
       if (p.pdgId() == 511 && p.numberOfDaughters()>1) {
         bool Dst_found = false;
         bool K_found = false;
@@ -112,8 +124,20 @@ void MCTruthB2DstKProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       if (semilepDecay && p.numberOfDaughters()>1) {
         for(auto d : p.daughterRefVector()) {
           if(abs(d->pdgId()) == 13) {
-            if(verbose) {cout << Form("Muon found in B decay: %.2f %.2f %.2f", d->pt(), d->eta(), d->phi()) << endl;}
-            p4["mu"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
+            double dR = vtxu::dR(trgMu.phi(), d->phi(), trgMu.eta(), d->eta());
+            double dPt_rel_mu = fabs(trgMu.pt() - d->pt())/trgMu.pt();
+            if (fabs(dR) < 0.05 && fabs(dPt_rel_mu) < 0.1 ) {
+              p4["mu"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
+              mu_impactParam = vtxu::computeIP(interactionPoint, d->vertex(), d->momentum(), true);
+              if(verbose) {
+                cout << Form("Muon found in B decay: %.2f %.2f %.2f", d->pt(), d->eta(), d->phi()) << endl;
+                auto vtx = p.vertex();
+                cout << Form("B vertex: %.2f %.2f %.2f", vtx.x(), vtx.y(), vtx.z()) << endl;
+                auto muVtx = d->vertex();
+                cout << Form("Muon vertex: %.2f %.2f %.2f", muVtx.x(), muVtx.y(), muVtx.z()) << endl;
+                cout << "IP: " << mu_impactParam << endl;
+              }
+            }
           }
         }
       }
@@ -161,6 +185,7 @@ void MCTruthB2DstKProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
         cout << kv.first << Form(": %.2f %.2f %.2f", kv.second.Pt(), kv.second.Eta(), kv.second.Phi()) << endl;
       }
     }
+    (*outputNtuplizer)["MC_mu_IP"] = mu_impactParam;
 
 
 

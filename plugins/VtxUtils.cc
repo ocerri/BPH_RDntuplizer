@@ -340,3 +340,21 @@ std::pair<double,double> vtxu::vtxsDistance(reco::Vertex v1, RefCountedKinematic
 
   return make_pair(d,sqrt(Ed2));
 }
+
+double vtxu::computeIP(reco::Candidate::Point axis, reco::Candidate::Point trajPoint, reco::Candidate::Vector trajVector, bool linearApprox){
+  if(linearApprox) {
+    double nx = trajVector.x() / hypot(trajVector.x(), trajVector.y());
+    double ny = trajVector.y() / hypot(trajVector.x(), trajVector.y());
+
+    double amp_x = axis.x() - trajPoint.x();
+    double amp_y = axis.y() - trajPoint.y();
+    double dx = amp_x - nx * (amp_x * nx + amp_y * ny);
+    double dy = amp_y - ny * (amp_x * nx + amp_y * ny);
+
+    return hypot(dx, dy);
+  }
+  else {
+    cout << "Not yet implemented" << endl;
+    return -1;
+  }
+}

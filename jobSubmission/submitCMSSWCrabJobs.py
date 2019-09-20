@@ -2,8 +2,8 @@ import yaml
 import os
 import datetime
 
-tag = 'B2DstMu'
-# tag = 'B2DstK'
+# tag = 'B2DstMu'
+tag = 'B2DstK'
 
 cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
        'B2DstK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py'}

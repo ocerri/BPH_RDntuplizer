@@ -15,6 +15,12 @@
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 
+// Needed for Transient Tracks
+#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
+#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+#include "TrackingTools/Records/interface/TransientTrackRecord.h"
+#include "MagneticField/Engine/interface/MagneticField.h"
+
 #include <iostream>
 #include <string>
 #include <regex>
@@ -91,6 +97,8 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       if (verbose) {
         cout << "\t\t" << obj.charge() << endl;
         cout << "\tTriggered mu" << obj.charge() << ":  pt " << obj.pt() << ", eta " << obj.eta() << ", phi " << obj.phi() << endl;
+        // auto tk = obj.bestTrack();
+        // cout << Form("\tImpact Parameter: %.4f +/- %.4f (sig = %.1f)", tk->d0(), tk->d0Error(), fabs(tk->d0())/tk->d0Error()) << endl;
         // Print trigger object collection and type
         cout << "\tCollection: " << obj.collection() << endl;
 
@@ -131,8 +139,12 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputNtuplizer)["trgMu_phi"] = m.phi();
     (*outputNtuplizer)["trgMu_charge"] = m.charge();
     auto tk = m.bestTrack();
-    (*outputNtuplizer)["trgMu_d"] = tk->d0();
+    (*outputNtuplizer)["trgMu_d"] = tk->d0(); //Same as using the transient track
     (*outputNtuplizer)["trgMu_sigd"] = fabs(tk->d0())/tk->d0Error();
+
+    if(verbose) {
+      cout << Form("\tMuon IP (d0): %.4f +/- %.4f (sig = %.1f)", tk->d0(), tk->d0Error(), fabs(tk->d0())/tk->d0Error()) << endl;
+    }
   }
 
   iEvent.put(move(trgMuonsMatched), "trgMuonsMatched");

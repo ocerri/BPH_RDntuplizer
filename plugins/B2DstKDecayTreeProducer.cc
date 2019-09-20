@@ -129,7 +129,7 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
     (*outputVecNtuplizer)["d_Ks_PV"] = {};
     (*outputVecNtuplizer)["sigd_Ks_PV"] = {};
     (*outputVecNtuplizer)["chi2_DstK"] = {};
-    (*outputVecNtuplizer)["mass_DstK"] = {};
+    (*outputVecNtuplizer)["mass_DstKs"] = {};
     (*outputVecNtuplizer)["cos_DstK_vtxBest"] = {};
     (*outputVecNtuplizer)["d_vtxDstK_vtxBest"] = {};
     (*outputVecNtuplizer)["sigd_vtxDstK_vtxBest"] = {};
