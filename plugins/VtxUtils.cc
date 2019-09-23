@@ -37,10 +37,16 @@ using namespace std;
 #define _KMassErr_ 0.000013
 #define _PiMass_ 0.13957018
 #define _PiMassErr_ 0.00000035
+#define _KstMass_ 0.89166
+#define _KstMassErr_ 0.00011
 #define _D0Mass_ 1.86484
 #define _D0MassErr_ 0.00017
 #define _DstMass_ 2.01027
 #define _DstMassErr_ 0.00017
+#define _JpsiMass_ 3.09691
+#define _JpsiMassErr_ 0.00001
+#define _B0Mass_ 5.27955
+#define _B0MassErr_ 0.00026
 
 RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constrain, int verbose = 0) {
   // Get transient track builder
@@ -54,8 +60,8 @@ RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCa
 
   std::vector<RefCountedKinematicParticle> parts;
   double chi = 0, ndf = 0;
-  float mK = _KMass_, dmK = _KMass_;
-  float mPi = _PiMass_, dmPi = _PiMass_;
+  float mK = _KMass_, dmK = _KMassErr_;
+  float mPi = _PiMass_, dmPi = _PiMassErr_;
   parts.push_back(pFactory.particle(K_tk, mK, chi, ndf, dmK));
   parts.push_back(pFactory.particle(pi_tk, mPi, chi, ndf, dmPi));
 
@@ -72,6 +78,39 @@ RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCa
     return D0KinTree;
   }
 }
+
+
+RefCountedKinematicTree vtxu::FitKst_piK(const edm::EventSetup& iSetup, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constrain) {
+  // Get transient track builder
+  edm::ESHandle<TransientTrackBuilder> TTBuilder;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+
+  reco::TransientTrack pi_tk = TTBuilder->build(pi.bestTrack());
+  reco::TransientTrack K_tk = TTBuilder->build(K.bestTrack());
+
+  KinematicParticleFactoryFromTransientTrack pFactory;
+
+  std::vector<RefCountedKinematicParticle> parts;
+  double chi = 0, ndf = 0;
+  float mK = _KMass_, dmK = _KMassErr_;
+  float mPi = _PiMass_, dmPi = _PiMassErr_;
+  parts.push_back(pFactory.particle(K_tk, mK, chi, ndf, dmK));
+  parts.push_back(pFactory.particle(pi_tk, mPi, chi, ndf, dmPi));
+
+  if (!mass_constrain) {
+    KinematicParticleVertexFitter VtxFitter;
+    RefCountedKinematicTree kinTree = VtxFitter.fit(parts);
+    return kinTree;
+  }
+  else {
+    ParticleMass mass = _KstMass_;
+    MultiTrackKinematicConstraint * mass_c = new TwoTrackMassKinematicConstraint(mass);
+    KinematicConstrainedVertexFitter kcVtxFitter;
+    RefCountedKinematicTree kinTree = kcVtxFitter.fit(parts, mass_c);
+    return kinTree;
+  }
+}
+
 
 RefCountedKinematicTree vtxu::FitDst_fitD0wMassConstraint(const edm::EventSetup& iSetup, pat::PackedCandidate pisoft, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constrain, int verbose = 0) {
   // Get the mass constrained D0
@@ -90,7 +129,7 @@ RefCountedKinematicTree vtxu::FitDst_fitD0wMassConstraint(const edm::EventSetup&
 
   std::vector<RefCountedKinematicParticle> parts;
   double chi = 0, ndf = 0;
-  float mPi = _PiMass_, dmPi = _PiMass_;
+  float mPi = _PiMass_, dmPi = _PiMassErr_;
   parts.push_back(D0_reco);
   parts.push_back(pFactory.particle(pisoft_tk, mPi, chi, ndf, dmPi));
 
@@ -108,6 +147,35 @@ RefCountedKinematicTree vtxu::FitDst_fitD0wMassConstraint(const edm::EventSetup&
   }
 }
 
+RefCountedKinematicTree vtxu::FitJpsi_mumu(const edm::EventSetup& iSetup, pat::Muon m1, pat::Muon m2, bool mass_constrain) {
+  // Get transient track builder
+  edm::ESHandle<TransientTrackBuilder> TTBuilder;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+
+  reco::TransientTrack m1_tk = TTBuilder->build(m1.bestTrack());
+  reco::TransientTrack m2_tk = TTBuilder->build(m2.bestTrack());
+
+  std::vector<RefCountedKinematicParticle> parts;
+  KinematicParticleFactoryFromTransientTrack pFactory;
+  double chi = 0, ndf = 0;
+  float mMu = _MuMass_, dmMu = _MuMassErr_;
+  parts.push_back(pFactory.particle(m1_tk, mMu, chi, ndf, dmMu));
+  parts.push_back(pFactory.particle(m2_tk, mMu, chi, ndf, dmMu));
+
+  if (!mass_constrain) {
+    KinematicParticleVertexFitter VtxFitter;
+    RefCountedKinematicTree KinTree = VtxFitter.fit(parts);
+    return KinTree;
+  }
+  else {
+    ParticleMass mass = _JpsiMass_;
+    MultiTrackKinematicConstraint * mass_c = new TwoTrackMassKinematicConstraint(mass);
+    KinematicConstrainedVertexFitter kcVtxFitter;
+    RefCountedKinematicTree KinTree = kcVtxFitter.fit(parts, mass_c);
+    return KinTree;
+  }
+}
+
 RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedCandidate pisoft, const RefCountedKinematicParticle D0, bool mass_constrain, int verbose = 0) {
 // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
@@ -120,7 +188,7 @@ RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedC
 
   std::vector<RefCountedKinematicParticle> parts;
   double chi = 0, ndf = 0;
-  float mPi = _PiMass_, dmPi = _PiMass_;
+  float mPi = _PiMass_, dmPi = _PiMassErr_;
   parts.push_back(pFactory.particle(pisoft_tk, mPi, chi, ndf, dmPi));
   float mD0 = D0->currentState().mass();
   float dmD0 = sqrt(D0->currentState().kinematicParametersError().matrix()(6,6));
@@ -160,6 +228,32 @@ RefCountedKinematicTree vtxu::FitVtxMuDst(const edm::EventSetup& iSetup, const R
   KinematicParticleVertexFitter VtxFitter;
   RefCountedKinematicTree BKinTree = VtxFitter.fit(parts);
   return BKinTree;
+}
+
+RefCountedKinematicTree vtxu::FitVtxJpsiKst(const edm::EventSetup& iSetup, const RefCountedKinematicParticle Jpsi, const RefCountedKinematicParticle Kst, bool mass_constrain) {
+  // reco::TransientTrack Jpsi_tk = Jpsi->refittedTransientTrack();
+  // reco::TransientTrack Kst_tk = Kst->refittedTransientTrack();
+
+  std::vector<RefCountedKinematicParticle> parts = {Jpsi, Kst};
+  // double chi = 0, ndf = 0;
+  // float mMu = _MuMass_, dmMu = _MuMassErr_;
+  // parts.push_back(pFactory.particle(Mu_tk, mMu, chi, ndf, dmMu));
+  // float mDst = Dst->currentState().mass();
+  // float dmDst = sqrt(Dst->currentState().kinematicParametersError().matrix()(6,6));
+  // parts.push_back(pFactory.particle(Dst_tk, mDst, chi, ndf, dmDst));
+
+  if (!mass_constrain) {
+    KinematicParticleVertexFitter VtxFitter;
+    RefCountedKinematicTree KinTree = VtxFitter.fit(parts);
+    return KinTree;
+  }
+  else {
+    ParticleMass mass = _B0Mass_;
+    MultiTrackKinematicConstraint * mass_c = new TwoTrackMassKinematicConstraint(mass);
+    KinematicConstrainedVertexFitter kcVtxFitter;
+    RefCountedKinematicTree KinTree = kcVtxFitter.fit(parts, mass_c);
+    return KinTree;
+  }
 }
 
 RefCountedKinematicTree vtxu::FitVtxDstK(const edm::EventSetup& iSetup, const RefCountedKinematicParticle Dst, pat::PackedCandidate K, int verbose = 0) {
