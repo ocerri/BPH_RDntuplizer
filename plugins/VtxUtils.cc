@@ -231,16 +231,18 @@ RefCountedKinematicTree vtxu::FitVtxMuDst(const edm::EventSetup& iSetup, const R
 }
 
 RefCountedKinematicTree vtxu::FitVtxJpsiKst(const edm::EventSetup& iSetup, const RefCountedKinematicParticle Jpsi, const RefCountedKinematicParticle Kst, bool mass_constrain) {
-  // reco::TransientTrack Jpsi_tk = Jpsi->refittedTransientTrack();
-  // reco::TransientTrack Kst_tk = Kst->refittedTransientTrack();
+  reco::TransientTrack Jpsi_tk = Jpsi->refittedTransientTrack();
+  reco::TransientTrack Kst_tk = Kst->refittedTransientTrack();
 
-  std::vector<RefCountedKinematicParticle> parts = {Jpsi, Kst};
-  // double chi = 0, ndf = 0;
-  // float mMu = _MuMass_, dmMu = _MuMassErr_;
-  // parts.push_back(pFactory.particle(Mu_tk, mMu, chi, ndf, dmMu));
-  // float mDst = Dst->currentState().mass();
-  // float dmDst = sqrt(Dst->currentState().kinematicParametersError().matrix()(6,6));
-  // parts.push_back(pFactory.particle(Dst_tk, mDst, chi, ndf, dmDst));
+  std::vector<RefCountedKinematicParticle> parts;// = {Jpsi, Kst};
+  KinematicParticleFactoryFromTransientTrack pFactory;
+  double chi = 0, ndf = 0;
+  float mJpsi = Jpsi->currentState().mass();
+  float dmJpsi = sqrt(Jpsi->currentState().kinematicParametersError().matrix()(6,6));
+  parts.push_back(pFactory.particle(Jpsi_tk, mJpsi, chi, ndf, dmJpsi));
+  float mKst = Kst->currentState().mass();
+  float dmKst = sqrt(Kst->currentState().kinematicParametersError().matrix()(6,6));
+  parts.push_back(pFactory.particle(Kst_tk, mKst, chi, ndf, dmKst));
 
   if (!mass_constrain) {
     KinematicParticleVertexFitter VtxFitter;

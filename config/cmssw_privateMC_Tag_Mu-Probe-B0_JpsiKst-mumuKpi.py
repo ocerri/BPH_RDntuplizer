@@ -8,13 +8,17 @@ process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
 
+# Needed for transient track builder
+# process.load('Configuration.StandardSequences.Services_cff')
+# process.load('Configuration.EventContent.EventContent_cff')
 process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
+# process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_v11', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12', '')
 
 '''
 ############ Command line args ################
@@ -25,7 +29,6 @@ args.register('inputFile', '', args.multiplicity.list, args.varType.string, "Inp
 args.outputFile = ''
 args.parseArguments()
 
-
 '''
 #####################   Input    ###################
 '''
@@ -35,7 +38,10 @@ process.maxEvents = cms.untracked.PSet(
 
 from glob import glob
 if args.inputFile:
-    flist = args.inputFile
+    if len(args.inputFile) == 1 and '*' in args.inputFile[0]:
+        flist = glob(args.inputFile[0])
+    else:
+        flist = args.inputFile
 elif args.inputFiles:
     if len(args.inputFiles) == 1:
         with open(args.inputFiles[0]) as f:
@@ -43,21 +49,23 @@ elif args.inputFiles:
     else:
         flist = args.inputFiles
 else:
-    flist = glob('/eos/cms/store/data/Run2018C/ParkingBPH1/MINIAOD/05May2019-v1/*/*.root')
-    for i in range(len(flist)):
-        flist[i] = 'file:' + flist[i]
+    flist = glob('/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-Mu_Probe-B0_KDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVS_PU0_10-2-3/*MINIAODSIM*.root')
+
+for i in range(len(flist)):
+    flist[i] = 'file:' + flist[i]
 
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring(tuple(flist))
+                            fileNames = cms.untracked.vstring(tuple(flist)),
+                            inputCommands=cms.untracked.vstring('keep *',
+                                                                'drop GenLumiInfoHeader_generator__SIM')
                            )
-
-# import FWCore.PythonUtilities.LumiList as LumiList
-# process.source.lumisToProcess = LumiList.LumiList(filename = '/afs/cern.ch/user/o/ocerri/work/CMSSW_10_2_3/src/ntuplizer/BPH_RDntuplizer/production/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt').getVLuminosityBlockRange()
+process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
 
 '''
 #####################   Output   ###################
 '''
+
 if args.outputFile == '.root':
     outname = 'B2JpsiKst_CAND.root'
 else:
@@ -93,7 +101,12 @@ process.B2JpsiKstDT = cms.EDProducer("B2JpsiKstDecayTreeProducer",
 )
 
 process.B2JpsiKstDTFilter = cms.EDFilter("B2JpsiKstDecayTreeFilter",
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
+)
+
+process.MCpart = cms.EDProducer("MCTruthB2JpsiKstProducer",
+        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
+        verbose = cms.int32(1)
 )
 
 cfg_name = os.path.basename(sys.argv[0])
@@ -103,7 +116,7 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
         cmssw = cms.string(os.environ['CMSSW_VERSION']),
         cfg_name = cms.string(cfg_name),
         commit_hash = cms.string(commit_hash),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 
@@ -111,9 +124,11 @@ process.p = cms.Path(
                     process.trgBPH +
                     process.trgF +
                     process.B2JpsiKstDT +
-                    process.B2JpsiKstDTFilter +
+                    # process.B2JpsiKstDTFilter +
+                    process.MCpart +
                     process.outA
                     )
+
 
 # DEBUG -- dump the event content
 # process.output = cms.OutputModule(

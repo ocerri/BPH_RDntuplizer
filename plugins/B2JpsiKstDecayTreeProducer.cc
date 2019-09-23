@@ -21,13 +21,14 @@
 
 #define __PvalChi2Vtx_max__ 0.99 // Very loose cut
 #define __dzMax__ 1.0
-#define __dmJpsi_max__ 0.5 // loose cut
-#define __sigIPpfCand_min__ 1.0 // loose cut
+#define __dmJpsi_max__ 1.0 // loose cut
+#define __sigIPpfCand_min__ 1.5 // loose cut
 #define __dRMax__ 3.0
 #define __cos_Kpi_vtxMu_min__ 0.97
 #define __d_vtxKpi_vtxMu_min__ 0.02
 #define __dmKst_max__ 0.5 // loose cut
 #define __dmB0_max__ 0.5 // loose cut
+#define __cos_JpsiKst_vtxMu_min__ 0.95 // loose cut
 
 using namespace std;
 
@@ -119,31 +120,36 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
         if (!m2.isLooseMuon()) continue;
         if (fabs(m2.muonBestTrack()->dz() - trgMu.muonBestTrack()->dz()) > __dzMax__) continue;
         if(trgMu.pt()==m2.pt() && trgMu.phi()==m2.phi() && trgMu.eta()==m2.eta()) continue;
+        if(m1.charge() * m2.charge() != -1) continue;
 
-        auto kinTree = vtxu::FitJpsi_mumu(iSetup, m1, m2, false);
+        auto mup = m1;
+        auto mum = m2;
+        if(m1.charge() < 0) {
+          mum = m1;
+          mup = m2;
+        }
+        auto kinTree = vtxu::FitJpsi_mumu(iSetup, mup, mum, false);
         bool accept = false;
         double chi2;
         if(kinTree->isValid()) {
           kinTree->movePointerToTheTop();
           auto vtx = kinTree->currentDecayVertex();
           chi2 = vtx->chiSquared();
-          auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2Vtx_max__, vtx->degreesOfFreedom());
-          accept = chi2 > 0 && chi2 < max_chi2;
+          accept = chi2 > 0 && chi2 < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, vtx->degreesOfFreedom());
         }
         if(!accept) continue;
         auto massMuPair = kinTree->currentParticle()->currentState().mass();
         accept &= fabs(massMuPair - mass_Jpsi) < __dmJpsi_max__;
         if(!accept) continue;
 
-        kinTree = vtxu::FitJpsi_mumu(iSetup, m1, m2, true);
+        kinTree = vtxu::FitJpsi_mumu(iSetup, mup, mum, true);
         accept = false;
         double chi2_mass;
         if(kinTree->isValid()) {
           kinTree->movePointerToTheTop();
           auto vtx = kinTree->currentDecayVertex();
           chi2_mass = vtx->chiSquared();
-          auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2Vtx_max__, vtx->degreesOfFreedom());
-          accept = chi2_mass > 0 && chi2_mass < max_chi2;
+          accept = chi2_mass > 0 && chi2_mass < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, vtx->degreesOfFreedom());
         }
         if(!accept) continue;
         auto muPair = kinTree->currentParticle();
@@ -195,27 +201,23 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
 
     // (*outputVecNtuplizer)["chi2_Kpi"] = {};
     // (*outputVecNtuplizer)["mass_Kpi"] = {};
-    // (*outputVecNtuplizer)["dca_Kpi_vtxMu"] = {};
-    // (*outputVecNtuplizer)["sigdca_Kpi_vtxMu"] = {};
     // (*outputVecNtuplizer)["cos_Kpi_vtxMu"] = {};
     // (*outputVecNtuplizer)["d_vtxKpi_vtxMu"] = {};
     // (*outputVecNtuplizer)["sigd_vtxKpi_vtxMu"] = {};
     //
     // (*outputVecNtuplizer)["chi2_D0pis"] = {};
     // (*outputVecNtuplizer)["mass_D0pis"] = {};
-    // (*outputVecNtuplizer)["dca_D0pis_vtxMu"] = {};
-    // (*outputVecNtuplizer)["sigdca_D0pis_vtxMu"] = {};
     // (*outputVecNtuplizer)["cos_D0pis_vtxMu"] = {};
     // (*outputVecNtuplizer)["d_vtxD0pis_vtxMu"] = {};
     // (*outputVecNtuplizer)["sigd_vtxD0pis_vtxMu"] = {};
     //
     // (*outputVecNtuplizer)["d_Ks_PV"] = {};
     // (*outputVecNtuplizer)["sigd_Ks_PV"] = {};
-    // (*outputVecNtuplizer)["chi2_DstK"] = {};
-    // (*outputVecNtuplizer)["mass_DstKs"] = {};
-    // (*outputVecNtuplizer)["cos_DstK_vtxBest"] = {};
-    // (*outputVecNtuplizer)["d_vtxDstK_vtxBest"] = {};
-    // (*outputVecNtuplizer)["sigd_vtxDstK_vtxBest"] = {};
+    // (*outputVecNtuplizer)["chi2_JpsiKst"] = {};
+    // (*outputVecNtuplizer)["mass_JpsiKsts"] = {};
+    // (*outputVecNtuplizer)["cos_JpsiKst_vtxBest"] = {};
+    // (*outputVecNtuplizer)["d_vtxJpsiKst_vtxBest"] = {};
+    // (*outputVecNtuplizer)["sigd_vtxJpsiKst_vtxBest"] = {};
     //
     // DeclareTLVToOut("B", &(*outputVecNtuplizer));
     // DeclareTLVToOut("Ks", &(*outputVecNtuplizer));
@@ -231,14 +233,19 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
     ############################################################################
     */
     for(uint i_k = 0; i_k < N_pfCand; ++i_k) {
-      const pat::PackedCandidate & k = (*pfCandHandle)[i_k];
-      if (!k.hasTrackDetails()) continue;
+      const pat::PackedCandidate & K = (*pfCandHandle)[i_k];
+      if (!K.hasTrackDetails()) continue;
       //Require a positive charged hadron
-      if (k.pdgId() != 211 ) continue;
+      if (K.pdgId() != 211 ) continue;
       // Require to be close to the trigger muon;
-      if (fabs(k.bestTrack()->dz() - trgMu.muonBestTrack()->dz()) > __dzMax__) continue;
+      if (fabs(K.bestTrack()->dz() - trgMu.muonBestTrack()->dz()) > __dzMax__) continue;
       // Require significant impact parameter
-      // TODO: Add HERE!
+      auto sigd_K_PV = fabs(K.dxy()/K.dxyError());
+      auto K_tk = K.bestTrack();
+      auto K_norm_chi2 = K_tk->normalizedChi2();
+      auto K_N_valid_hits = K_tk->numberOfValidHits();
+      if (sigd_K_PV < __sigIPpfCand_min__) continue;
+
       n_K++;
 
       /*
@@ -254,22 +261,26 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
         // Require to be close to the trigger muon;
         if (fabs(pi.bestTrack()->dz() - trgMu.muonBestTrack()->dz()) > __dzMax__) continue;
         // Require to be close to the K;
-        if (fabs(pi.bestTrack()->dz() - k.bestTrack()->dz()) > __dzMax__) continue;
-        if (vtxu::dR(pi.phi(), k.phi(), pi.eta(), k.eta()) > __dRMax__) continue;
+        if (fabs(pi.bestTrack()->dz() - K.bestTrack()->dz()) > __dzMax__) continue;
+        if (vtxu::dR(pi.phi(), K.phi(), pi.eta(), K.eta()) > __dRMax__) continue;
         // Require significant impact parameter
-        // TODO: Add HERE!
+        auto sigd_pi_PV = fabs(pi.dxy()/pi.dxyError());
+        auto pi_tk = pi.bestTrack();
+        auto pi_norm_chi2 = pi_tk->normalizedChi2();
+        auto pi_N_valid_hits = pi_tk->numberOfValidHits();
+        if (sigd_pi_PV < __sigIPpfCand_min__) continue;
+
         n_pi++;
 
         //Fit the vertex w/o mass constraint
-        auto KstKinTree = vtxu::FitKst_piK(iSetup, pi, k, false);
+        auto KstKinTree = vtxu::FitKst_piK(iSetup, pi, K, false);
         bool accept = false;
         double chi2_Kpi;
         if(KstKinTree->isValid()) {
           KstKinTree->movePointerToTheTop();
           auto Kstvtx = KstKinTree->currentDecayVertex();
           chi2_Kpi = Kstvtx->chiSquared();
-          auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2Vtx_max__, Kstvtx->degreesOfFreedom());
-          if (chi2_Kpi > 0 && chi2_Kpi < max_chi2) accept = true;
+          accept = chi2_Kpi > 0 && chi2_Kpi < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, Kstvtx->degreesOfFreedom());
         }
         if(!accept) continue;
         auto Kst = KstKinTree->currentParticle();
@@ -278,25 +289,18 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
         if(!accept_Kst) continue;
 
         //Fit the vertex WITH mass constraint
-        KstKinTree = vtxu::FitKst_piK(iSetup, pi, k, true);
+        KstKinTree = vtxu::FitKst_piK(iSetup, pi, K, true);
         accept = false;
         double chi2_KpiMass;
         if(KstKinTree->isValid()) {
           KstKinTree->movePointerToTheTop();
           auto Kstvtx = KstKinTree->currentDecayVertex();
           chi2_KpiMass = Kstvtx->chiSquared();
-          auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2Vtx_max__, Kstvtx->degreesOfFreedom());
-          if (chi2_KpiMass > 0 && chi2_KpiMass < max_chi2) accept = true;
+          accept = chi2_KpiMass > 0 && chi2_KpiMass < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, Kstvtx->degreesOfFreedom());
         }
         if(!accept) continue;
         Kst = KstKinTree->currentParticle();
         auto Kstvtx = KstKinTree->currentDecayVertex();
-
-        auto ip_Kst = Kst->refittedTransientTrack().stateAtBeamLine().transverseImpactParameter();
-
-        auto dca = vtxu::computeDCA(Kst->refittedTransientTrack(), p_vtxMu);
-        auto dca_Kpi_vtxMu = dca.first;
-        auto sigdca_Kpi_vtxMu = fabs(dca.first)/dca.second;
 
         TVector3 dvtx(Kstvtx->position().x() - vtxMu->x(),
                       Kstvtx->position().y() - vtxMu->y(),
@@ -326,29 +330,43 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
         ############################################################################
         */
         for(uint i_J = 0; i_J < vecJpsiKinTree.size(); ++i_J) {
-          cout << "Retrieving J/psi..." << flush;
           auto JpsiKinTree = vecJpsiKinTree[i_J];
           JpsiKinTree->movePointerToTheTop();
           auto Jpsi = JpsiKinTree->currentParticle();
-          cout << " done" << endl;
+          auto Jpsivtx = JpsiKinTree->currentDecayVertex();
+          TVector3 dvtx(Jpsivtx->position().x() - vtxMu->x(),
+                        Jpsivtx->position().y() - vtxMu->y(),
+                        Jpsivtx->position().z() - vtxMu->z()
+                       );
+          TVector3 pJpsi(Jpsi->currentState().globalMomentum().x(),
+                       Jpsi->currentState().globalMomentum().y(),
+                       Jpsi->currentState().globalMomentum().z()
+                       );
+          double dalpha = dvtx.Angle(pJpsi);
+          auto cos_mumu_vtxMu = cos(dalpha);
+
+          auto dvtx_mumuPV = vtxu::vtxsDistance(vtxMu, Jpsivtx);
+          auto d_vtxmumu_vtxMu = dvtx_mumuPV.first;
+          auto sigd_vtxmumu_vtxMu = fabs(d_vtxmumu_vtxMu/dvtx_mumuPV.second);
 
           // Fit the B vertex
-          auto BKinTree = vtxu::FitVtxJpsiKst(iSetup, Jpsi, Kst, false);
+          RefCountedKinematicTree BKinTree;
+          try{BKinTree = vtxu::FitVtxJpsiKst(iSetup, Jpsi, Kst, false);}
+          catch(...) {cout << "Fitting B -> J/psi K* failed" << endl; continue;}
           bool accept = false;
           double chi2_JpsiKst;
           if(BKinTree->isValid()) {
             BKinTree->movePointerToTheTop();
             auto Bvtx = BKinTree->currentDecayVertex();
             chi2_JpsiKst = Bvtx->chiSquared();
-            auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2Vtx_max__, Bvtx->degreesOfFreedom());
-            accept = chi2_JpsiKst > 0 && chi2_JpsiKst < max_chi2;
+            accept = chi2_JpsiKst > 0 && chi2_JpsiKst < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, Bvtx->degreesOfFreedom());
           }
           if(!accept) continue;
           auto pairJpsiKst = BKinTree->currentParticle();
           auto mass_JpsiKst = pairJpsiKst->currentState().mass();
           accept = fabs(mass_JpsiKst - mass_B0) < __dmB0_max__;
           if(!accept) continue;
-          else if (verbose) {
+          else if(verbose) {
             cout << Form("Candidate B0 mass (%.2f GeV) check passed", mass_JpsiKst) << endl;
           }
 
@@ -359,61 +377,48 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
             BKinTree->movePointerToTheTop();
             auto Bvtx = BKinTree->currentDecayVertex();
             chi2_B = Bvtx->chiSquared();
-            auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2Vtx_max__, Bvtx->degreesOfFreedom());
-            accept = chi2_B > 0 && chi2_B < max_chi2;
+            accept = chi2_B > 0 && chi2_B < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, Bvtx->degreesOfFreedom());
           }
           if(!accept) continue;
           auto B = BKinTree->currentParticle();
+          auto Bvtx = BKinTree->currentDecayVertex();
 
-          /*
-          // auto Bvtx = BKinTree->currentDecayVertex();
-          //
-          // BKinTree->movePointerToTheFirstChild();
-          // auto refit_K = BKinTree->currentParticle();
-          // BKinTree->movePointerToTheNextChild();
-          // auto refit_Dst = BKinTree->currentParticle();
-          //
-          // auto mass_DstK = DstK->currentState().mass();
-          //
-          // TVector3 dvtxB(Bvtx->position().x() - vtxMu->x(),
-          //                    Bvtx->position().y() - vtxMu->y(),
-          //                    Bvtx->position().z() - vtxMu->z()
-          //                   );
-          // TVector3 pDstK(DstK->currentState().globalMomentum().x(),
-          //                DstK->currentState().globalMomentum().y(),
-          //                DstK->currentState().globalMomentum().z()
-          //               );
-          // double dalphaB = dvtxB.Angle(pDstK);
-          // auto cos_DstK_vtxBest = cos(dalphaB);
-          // auto dvtx_DstK_vtxBest = vtxu::vtxsDistance(vtxMu, Bvtx);
-          //
-          // // Look for the best vertex
-          // if (verbose) {cout << Form("Muon vtx: d = %.2f  cos = %.3e", dvtxB.Mag(), 1-cos_DstK_vtxBest) << endl;}
-          // for(auto v : *vtxHandle) {
-          //   if ( fabs(vtxMu->z()-v.z()) < 2 ) {
-          //     TVector3 df(Bvtx->position().x() - v.x(),
-          //                 Bvtx->position().y() - v.y(),
-          //                 Bvtx->position().z() - v.z()
-          //                 );
-          //
-          //     double da = df.Angle(pDstK);
-          //     auto cosda = cos(da);
-          //     if (cosda > cos_DstK_vtxBest) {
-          //       dvtxB = df;
-          //       cos_DstK_vtxBest = cosda;
-          //       dvtx_DstK_vtxBest = vtxu::vtxsDistance(v, Bvtx);
-          //     }
-          //   }
-          // }
-          // if (verbose) {cout << Form("Best vtx: d = %.2f  cos = %.3e", dvtxB.Mag(), 1-cos_DstK_vtxBest) << endl;}
-          // auto d_vtxDstK_vtxBest = dvtx_DstK_vtxBest.first;
-          // auto sigd_vtxDstK_vtxBest = fabs(d_vtxDstK_vtxBest/dvtx_DstK_vtxBest.second);
-          //
-          //
-          // bool accept_B = mass_DstK < __mDstK_max__ && mass_DstK > __mDstK_min__;
-          // accept_B &= cos_DstK_vtxBest > __cos_DstK_vtxMu_min__;
-          // if(!accept_B) continue;
-          */
+          TVector3 dvtxB(Bvtx->position().x() - vtxMu->x(),
+                             Bvtx->position().y() - vtxMu->y(),
+                             Bvtx->position().z() - vtxMu->z()
+                            );
+          TVector3 pB(B->currentState().globalMomentum().x(),
+                         B->currentState().globalMomentum().y(),
+                         B->currentState().globalMomentum().z()
+                        );
+          double dalphaB = dvtxB.Angle(pB);
+          auto cos_JpsiKst_vtxBest = cos(dalphaB);
+          auto dvtx_JpsiKst_vtxBest = vtxu::vtxsDistance(vtxMu, Bvtx);
+
+          // Look for the best vertex
+          if (verbose) {cout << Form("Muon vtx: d = %.2f  cos = %.3e", dvtxB.Mag(), 1-cos_JpsiKst_vtxBest) << endl;}
+          for(auto v : *vtxHandle) {
+            if ( fabs(vtxMu->z()-v.z()) < 2 ) {
+              TVector3 df(Bvtx->position().x() - v.x(),
+                          Bvtx->position().y() - v.y(),
+                          Bvtx->position().z() - v.z()
+                          );
+
+              double da = df.Angle(pB);
+              auto cosda = cos(da);
+              if (cosda > cos_JpsiKst_vtxBest) {
+                dvtxB = df;
+                cos_JpsiKst_vtxBest = cosda;
+                dvtx_JpsiKst_vtxBest = vtxu::vtxsDistance(v, Bvtx);
+              }
+            }
+          }
+          if (verbose) {cout << Form("Best vtx: d = %.2f  cos = %.3e", dvtxB.Mag(), 1-cos_JpsiKst_vtxBest) << endl;}
+          auto d_vtxJpsiKst_vtxBest = dvtx_JpsiKst_vtxBest.first;
+          auto sigd_vtxJpsiKst_vtxBest = fabs(d_vtxJpsiKst_vtxBest/dvtx_JpsiKst_vtxBest.second);
+
+          accept &= cos_JpsiKst_vtxBest > __cos_JpsiKst_vtxMu_min__;
+          if(!accept) continue;
 
           if (verbose) {cout << "B0 -> J/psi K* found\n";}
           n_B++;
@@ -423,51 +428,55 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
                                 Compute analysis variables
           ############################################################################
           */
+          KstKinTree->movePointerToTheFirstChild();
+          auto refit_pi = KstKinTree->currentParticle();
+          AddTLVToOut(vtxu::getTLVfromKinPart(refit_pi), string("pi"), &(*outputVecNtuplizer));
+          (*outputVecNtuplizer)["sigd_pi_PV"].push_back(sigd_pi_PV);
+          (*outputVecNtuplizer)["pi_norm_chi2"].push_back(pi_norm_chi2);
+          (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
+          KstKinTree->movePointerToTheNextChild();
+          auto refit_K = KstKinTree->currentParticle();
+          AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("K"), &(*outputVecNtuplizer));
+          (*outputVecNtuplizer)["sigd_K_PV"].push_back(sigd_K_PV);
+          (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
+          (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
           (*outputVecNtuplizer)["chi2_Kpi"].push_back(chi2_Kpi);
           (*outputVecNtuplizer)["mass_Kpi"].push_back(mass_Kpi);
           (*outputVecNtuplizer)["chi2_Kst"].push_back(chi2_KpiMass);
-          (*outputVecNtuplizer)["dca_Kpi_vtxMu"].push_back(dca_Kpi_vtxMu);
-          (*outputVecNtuplizer)["sigdca_Kpi_vtxMu"].push_back(sigdca_Kpi_vtxMu);
           (*outputVecNtuplizer)["cos_Kpi_vtxMu"].push_back(cos_Kpi_vtxMu);
           (*outputVecNtuplizer)["d_vtxKpi_vtxMu"].push_back(d_vtxKpi_vtxMu);
           (*outputVecNtuplizer)["sigd_vtxKpi_vtxMu"].push_back(sigd_vtxKpi_vtxMu);
 
+
+          JpsiKinTree->movePointerToTheFirstChild();
+          auto refit_Mu1 = JpsiKinTree->currentParticle();
+          JpsiKinTree->movePointerToTheNextChild();
+          auto refit_Mu2 = JpsiKinTree->currentParticle();
+          AddTLVToOut(vtxu::getTLVfromKinPart(refit_Mu1), string("mup"), &(*outputVecNtuplizer));
+          AddTLVToOut(vtxu::getTLVfromKinPart(refit_Mu2), string("mum"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["chi2_mumu"].push_back(vecMassMuMu[i_J]);
           (*outputVecNtuplizer)["mass_mumu"].push_back(vecChi2MuMu[i_J]);
           auto vtxJpsi = JpsiKinTree->currentDecayVertex();
           auto chi2_JpsiMass = vtxJpsi->chiSquared();
           (*outputVecNtuplizer)["chi2_Jpsi"].push_back(chi2_JpsiMass);
+          (*outputVecNtuplizer)["cos_mumu_vtxMu"].push_back(cos_mumu_vtxMu);
+          (*outputVecNtuplizer)["d_vtxmumu_vtxMu"].push_back(d_vtxmumu_vtxMu);
+          (*outputVecNtuplizer)["sigd_vtxmumu_vtxMu"].push_back(sigd_vtxmumu_vtxMu);
 
-          // (*outputVecNtuplizer)["d_pis_PV"].push_back(d_pis_PV);
-          // (*outputVecNtuplizer)["sigd_pis_PV"].push_back(sigd_pis_PV);
-          // (*outputVecNtuplizer)["pis_norm_chi2"].push_back(pis_norm_chi2);
-          // (*outputVecNtuplizer)["pis_N_valid_hits"].push_back(pis_N_valid_hits);
-          // (*outputVecNtuplizer)["chi2_D0pis"].push_back(chi2_D0pis);
-          // (*outputVecNtuplizer)["mass_D0pis"].push_back(mass_D0pis);
-          // (*outputVecNtuplizer)["dca_D0pis_vtxMu"].push_back(dca_D0pis_vtxMu);
-          // (*outputVecNtuplizer)["sigdca_D0pis_vtxMu"].push_back(sigdca_D0pis_vtxMu);
-          // (*outputVecNtuplizer)["cos_D0pis_vtxMu"].push_back(cos_D0pis_vtxMu);
-          // (*outputVecNtuplizer)["d_vtxD0pis_vtxMu"].push_back(d_vtxD0pis_vtxMu);
-          // (*outputVecNtuplizer)["sigd_vtxD0pis_vtxMu"].push_back(sigd_vtxD0pis_vtxMu);
-
-          // (*outputVecNtuplizer)["d_Ks_PV"].push_back(d_Ks_PV);
-          // (*outputVecNtuplizer)["sigd_Ks_PV"].push_back(sigd_Ks_PV);
-          // (*outputVecNtuplizer)["Ks_norm_chi2"].push_back(Ks_norm_chi2);
-          // (*outputVecNtuplizer)["Ks_N_valid_hits"].push_back(Ks_N_valid_hits);
           (*outputVecNtuplizer)["chi2_JpsiKst"].push_back(chi2_JpsiKst);
           (*outputVecNtuplizer)["mass_JpsiKst"].push_back(mass_JpsiKst);
           (*outputVecNtuplizer)["chi2_B"].push_back(chi2_B);
-          // (*outputVecNtuplizer)["cos_DstKs_vtxBest"].push_back(cos_DstK_vtxBest);
-          // (*outputVecNtuplizer)["d_vtxDstK_vtxBest"].push_back(d_vtxDstK_vtxBest);
-          // (*outputVecNtuplizer)["sigd_vtxDstK_vtxBest"].push_back(sigd_vtxDstK_vtxBest);
+          (*outputVecNtuplizer)["cos_JpsiKsts_vtxBest"].push_back(cos_JpsiKst_vtxBest);
+          (*outputVecNtuplizer)["d_vtxJpsiKst_vtxBest"].push_back(d_vtxJpsiKst_vtxBest);
+          (*outputVecNtuplizer)["sigd_vtxJpsiKst_vtxBest"].push_back(sigd_vtxJpsiKst_vtxBest);
 
-          // AddTLVToOut(vtxu::getTLVfromCand(k, mass_K), string("K"), &(*outputVecNtuplizer));
-          // AddTLVToOut(vtxu::getTLVfromCand(pi, mass_Pi), string("pi"), &(*outputVecNtuplizer));
-          // AddTLVToOut(vtxu::getTLVfromCand(pis, mass_Pi), string("pis"), &(*outputVecNtuplizer));
-          // AddTLVToOut(vtxu::getTLVfromKinPart(D0), string("D0"), &(*outputVecNtuplizer));
           AddTLVToOut(vtxu::getTLVfromKinPart(B), string("B"), &(*outputVecNtuplizer));
-          // AddTLVToOut(vtxu::getTLVfromKinPart(refit_Dst), string("Dst"), &(*outputVecNtuplizer));
-          // AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("Ks"), &(*outputVecNtuplizer));
+          BKinTree->movePointerToTheFirstChild();
+          auto refit_Jpsi = BKinTree->currentParticle();
+          AddTLVToOut(vtxu::getTLVfromKinPart(refit_Jpsi), string("Jpsi"), &(*outputVecNtuplizer));
+          BKinTree->movePointerToTheNextChild();
+          auto refit_Kst = BKinTree->currentParticle();
+          AddTLVToOut(vtxu::getTLVfromKinPart(refit_Kst), string("Kst"), &(*outputVecNtuplizer));
         }
       }
     }
