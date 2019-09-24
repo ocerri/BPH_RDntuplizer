@@ -152,8 +152,8 @@ RefCountedKinematicTree vtxu::FitJpsi_mumu(const edm::EventSetup& iSetup, pat::M
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack m1_tk = TTBuilder->build(m1.bestTrack());
-  reco::TransientTrack m2_tk = TTBuilder->build(m2.bestTrack());
+  reco::TransientTrack m1_tk = TTBuilder->build(m1.muonBestTrack());
+  reco::TransientTrack m2_tk = TTBuilder->build(m2.muonBestTrack());
 
   std::vector<RefCountedKinematicParticle> parts;
   KinematicParticleFactoryFromTransientTrack pFactory;
@@ -435,6 +435,21 @@ std::pair<double,double> vtxu::vtxsDistance(reco::Vertex v1, RefCountedKinematic
   }
 
   return make_pair(d,sqrt(Ed2));
+}
+
+double vtxu::computePointingCos(reco::Vertex vtxP, const RefCountedKinematicVertex vtxKinPartDecay, const RefCountedKinematicParticle p) {
+  TVector3 dvtx(vtxKinPartDecay->position().x() - vtxP.position().x(),
+                vtxKinPartDecay->position().y() - vtxP.position().y(),
+                vtxKinPartDecay->position().z() - vtxP.position().z()
+               );
+
+  TVector3 p3(p->currentState().globalMomentum().x(),
+              p->currentState().globalMomentum().y(),
+              p->currentState().globalMomentum().z()
+            );
+
+  double dalpha = dvtx.Angle(p3);
+  return cos(dalpha);
 }
 
 double vtxu::computeIP(reco::Candidate::Point axis, reco::Candidate::Point trajPoint, reco::Candidate::Vector trajVector, bool linearApprox){

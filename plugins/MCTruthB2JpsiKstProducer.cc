@@ -10,6 +10,7 @@
 
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 
 #include <iostream>
@@ -34,7 +35,10 @@ private:
 
     // ----------member data ---------------------------
     edm::EDGetTokenT<vector<reco::GenParticle>> PrunedParticlesSrc_;
+    edm::EDGetTokenT<vector<pat::PackedGenParticle>> PackedParticlesSrc_;
     edm::EDGetTokenT<vector<pat::Muon>> TrgMuonSrc_;
+
+    edm::EDGetTokenT<vector<pat::PackedCandidate>> PFCandSrc_;
 
     int verbose = 0;
 };
@@ -45,7 +49,10 @@ MCTruthB2JpsiKstProducer::MCTruthB2JpsiKstProducer(const edm::ParameterSet &iCon
 {
     verbose = iConfig.getParameter<int>( "verbose" );
     PrunedParticlesSrc_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
+    PackedParticlesSrc_ = consumes<vector<pat::PackedGenParticle>>(edm::InputTag("packedGenParticles"));
     TrgMuonSrc_ = consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "trgMuons" ) );
+
+    PFCandSrc_ = consumes<vector<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"));
 
     produces<map<string, float>>("outputNtuplizer");
     produces<int>("indexBmc");
@@ -60,10 +67,19 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
     iEvent.getByToken(PrunedParticlesSrc_, PrunedGenParticlesHandle);
     unsigned int N_PrunedGenParticles = PrunedGenParticlesHandle->size();
 
+    // Get packedGenParticles
+    edm::Handle<std::vector<pat::PackedGenParticle>> PackedGenParticlesHandle;
+    iEvent.getByToken(PackedParticlesSrc_, PackedGenParticlesHandle);
+    // unsigned int N_packedGenParticles = PackedGenParticlesHandle->size();
+
     // Get trigger muon
     edm::Handle<vector<pat::Muon>> trgMuonsHandle;
     iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
     auto trgMu = (*trgMuonsHandle)[0];
+
+    // Get PF cand
+    edm::Handle<vector<pat::PackedCandidate>> pfCandHandle;
+    iEvent.getByToken(PFCandSrc_, pfCandHandle);
 
     // Output collection
     unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
@@ -119,19 +135,10 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
       if (semilepDecay && p.numberOfDaughters()>1) {
         for(auto d : p.daughterRefVector()) {
           if(abs(d->pdgId()) == 13) {
-            double dR = vtxu::dR(trgMu.phi(), d->phi(), trgMu.eta(), d->eta());
-            double dPt_rel_mu = fabs(trgMu.pt() - d->pt())/trgMu.pt();
-            if (fabs(dR) < 0.05 && fabs(dPt_rel_mu) < 0.1 ) {
-              p4["mu"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
-              mu_impactParam = vtxu::computeIP(interactionPoint, d->vertex(), d->momentum(), true);
-              if(verbose) {
-                cout << Form("Muon found in B decay: %.2f %.2f %.2f", d->pt(), d->eta(), d->phi()) << endl;
-                auto vtx = p.vertex();
-                cout << Form("B vertex: %.2f %.2f %.2f", vtx.x(), vtx.y(), vtx.z()) << endl;
-                auto muVtx = d->vertex();
-                cout << Form("Muon vertex: %.2f %.2f %.2f", muVtx.x(), muVtx.y(), muVtx.z()) << endl;
-                cout << "IP: " << mu_impactParam << endl;
-              }
+            p4["mu"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
+            mu_impactParam = vtxu::computeIP(interactionPoint, d->vertex(), d->momentum(), true);
+            if(verbose) {
+              cout << "Muon from " << p.pdgId() << Form(" found (pt: %.1f, eta: %.1f, phi: %.1f, ip: %f)", d->pt(), d->eta(), d->phi(), mu_impactParam) << endl;
             }
           }
         }
@@ -151,17 +158,20 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
       auto p = (*PrunedGenParticlesHandle)[i_B];
       p4["B"].SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
       for(auto d : p.daughterRefVector()) {
-        cout << "B0 dau: " << d->pdgId() << endl;
         if(d->pdgId() == 313) {
           p4["Kst"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
-          cout << "N dau: " << d->daughterRefVector().size() << endl;
-          for(auto dd : d->daughterRefVector()) {
-            cout << "K* dau: " << dd->pdgId() << endl;
-            if(dd->pdgId() == -211) {
-              p4["pi"].SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
-            }
-            else if(dd->pdgId() == 321) {
-              p4["K"].SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
+          for (auto dd : (*PackedGenParticlesHandle)) {
+            if (dd.numberOfMothers() == 0) continue;
+            auto m = dd.mother(0);
+            if(m->pdgId() == 313) {
+              bool match = d->pt()==m->pt() && d->eta()==m->eta() && d->phi()==m->phi();
+              if (!match) continue;
+              if(dd.pdgId() == -211) {
+                p4["pi"].SetPtEtaPhiM(dd.pt(), dd.eta(), dd.phi(), dd.mass());
+              }
+              else if(dd.pdgId() == 321) {
+                p4["K"].SetPtEtaPhiM(dd.pt(), dd.eta(), dd.phi(), dd.mass());
+              }
             }
           }
         }
@@ -182,7 +192,30 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
     for(auto kv : p4) {
       AddTLVToOut(kv.second, "MC_"+kv.first, &(*outputNtuplizer));
       if(verbose) {
-        cout << kv.first << Form(": %.2f %.2f %.2f", kv.second.Pt(), kv.second.Eta(), kv.second.Phi()) << endl;
+        bool matched = false;
+        size_t i_c = -1;
+        if (kv.first=="K" || kv.first=="pi") {
+          for (size_t ip=0; ip < pfCandHandle->size(); ip++) {
+            auto p = (*pfCandHandle)[ip];
+            matched = fabs(p.pt() - kv.second.Pt())/p.pt() < 0.2;
+            matched &= vtxu::dR(p.phi(), kv.second.Phi(), p.eta(), kv.second.Eta()) < 0.2;
+            if(matched) {
+              i_c = ip;
+              break;
+            }
+          }
+        }
+        cout << kv.first << Form(": %.2f %.2f %.2f", kv.second.Pt(), kv.second.Eta(), kv.second.Phi());
+        if (kv.first=="K" || kv.first=="pi") {
+          cout << " (" << matched << ")";
+          if (matched) {
+            auto p = (*pfCandHandle)[i_c];
+            cout << endl << "\t" << i_c << Form(": %.2f %.2f %.2f", p.pt(), p.eta(), p.phi()) << endl;
+            bool antiMuID = !p.isTrackerMuon() && !p.isStandAloneMuon();
+            cout << "\t   hasTrack: " << p.hasTrackDetails() << " antiMuID:" << antiMuID << " charge:" << p.charge();
+          }
+        }
+        cout << endl;
       }
     }
     (*outputNtuplizer)["MC_mu_IP"] = mu_impactParam;

@@ -29,15 +29,15 @@
 
 using namespace std;
 
-class B2JpsiKstDecayTreeProducer : public edm::EDProducer {
+class MuJpsiDecayTreeProducer : public edm::EDProducer {
 
 public:
 
-    explicit B2JpsiKstDecayTreeProducer(const edm::ParameterSet &iConfig);
+    explicit MuJpsiDecayTreeProducer(const edm::ParameterSet &iConfig);
     void AddTLVToOut(TLorentzVector, string, map<string, vector<float>>*);
     bool isMuonFromJpsiID(pat::Muon, reco::Vertex, pat::Muon);
 
-    ~B2JpsiKstDecayTreeProducer() override {};
+    ~MuJpsiDecayTreeProducer() override {};
 
 private:
     virtual void produce(edm::Event&, const edm::EventSetup&);
@@ -60,7 +60,7 @@ private:
 
 
 
-B2JpsiKstDecayTreeProducer::B2JpsiKstDecayTreeProducer(const edm::ParameterSet &iConfig)
+MuJpsiDecayTreeProducer::MuJpsiDecayTreeProducer(const edm::ParameterSet &iConfig)
 {
     verbose = iConfig.getParameter<int>( "verbose" );
     PFCandSrc_ = consumes<vector<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"));
@@ -73,7 +73,7 @@ B2JpsiKstDecayTreeProducer::B2JpsiKstDecayTreeProducer(const edm::ParameterSet &
 }
 
 
-void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void MuJpsiDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
 
     // Output collection
@@ -398,7 +398,7 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
 }
 
 
-void B2JpsiKstDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<string, vector<float>>* outv) {
+void MuJpsiDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<string, vector<float>>* outv) {
   (*outv)[n+"_pt"].push_back(v.Pt());
   (*outv)[n+"_pz"].push_back(v.Pz());
   (*outv)[n+"_eta"].push_back(v.Eta());
@@ -409,7 +409,7 @@ void B2JpsiKstDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<str
 }
 
 
-bool B2JpsiKstDecayTreeProducer::isMuonFromJpsiID(pat::Muon m, reco::Vertex pVtx, pat::Muon trgMu) {
+bool MuJpsiDecayTreeProducer::isMuonFromJpsiID(pat::Muon m, reco::Vertex pVtx, pat::Muon trgMu) {
   if(m.innerTrack().isNull()) return false;
   if (fabs(m.innerTrack()->dz(pVtx.position()) - trgMu.innerTrack()->dz(pVtx.position())) > __dzMax__) return false;
   if(trgMu.pt()==m.pt() && trgMu.phi()==m.phi() && trgMu.eta()==m.eta()) return false;
@@ -419,4 +419,4 @@ bool B2JpsiKstDecayTreeProducer::isMuonFromJpsiID(pat::Muon m, reco::Vertex pVtx
   return true;
 }
 
-DEFINE_FWK_MODULE(B2JpsiKstDecayTreeProducer);
+DEFINE_FWK_MODULE(MuJpsiDecayTreeProducer);

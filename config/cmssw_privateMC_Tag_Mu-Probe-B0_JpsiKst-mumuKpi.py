@@ -123,9 +123,9 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 process.p = cms.Path(
                     process.trgBPH +
                     process.trgF +
-                    process.B2JpsiKstDT +
-                    # process.B2JpsiKstDTFilter +
                     process.MCpart +
+                    process.B2JpsiKstDT +
+                    process.B2JpsiKstDTFilter +
                     process.outA
                     )
 

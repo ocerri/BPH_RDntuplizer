@@ -60,6 +60,8 @@ process.source = cms.Source("PoolSource",
 '''
 if args.outputFile == '.root':
     outname = 'B2JpsiKst_CAND.root'
+elif args.outputFile.startswith('_numEvent'):
+    outname = 'B2JpsiKst_CAND' + args.outputFile
 else:
     outname = args.outputFile
 
@@ -89,7 +91,7 @@ process.trgF = cms.EDFilter("BPHTriggerPathFilter",
 
 process.B2JpsiKstDT = cms.EDProducer("B2JpsiKstDecayTreeProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.B2JpsiKstDTFilter = cms.EDFilter("B2JpsiKstDecayTreeFilter",
@@ -103,7 +105,7 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
         cmssw = cms.string(os.environ['CMSSW_VERSION']),
         cfg_name = cms.string(cfg_name),
         commit_hash = cms.string(commit_hash),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 

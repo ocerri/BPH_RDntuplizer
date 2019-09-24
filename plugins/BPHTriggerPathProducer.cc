@@ -21,6 +21,8 @@
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "MagneticField/Engine/interface/MagneticField.h"
 
+#include "VtxUtils.hh"
+
 #include <iostream>
 #include <string>
 #include <regex>
@@ -36,7 +38,7 @@ class BPHTriggerPathProducer : public edm::EDProducer {
       void beginJob(const edm::EventSetup&) {};
       void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) override;
 
-      vector<pat::Muon> TriggerObj_matching(edm::Handle<vector<pat::Muon>>, pat::TriggerObjectStandAlone, edm::Handle<std::vector<reco::Vertex>>, int);
+      vector<pat::Muon> TriggerObj_matching(edm::Handle<vector<pat::Muon>>, pat::TriggerObjectStandAlone, reco::Vertex, int);
 
 
       // ----------member data ---------------------------
@@ -70,10 +72,10 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
 
   edm::Handle<std::vector<pat::Muon>> muonHandle;
   iEvent.getByToken(muonSrc_, muonHandle);
-  unsigned int muonNumber = muonHandle->size();
 
   edm::Handle<std::vector<reco::Vertex>> vtxHandle;
   iEvent.getByToken(vtxSrc_, vtxHandle);
+  auto primaryVtx = (*vtxHandle)[0];
 
   // Output collection
   unique_ptr<vector<pat::Muon>> trgMuonsMatched( new vector<pat::Muon> );
@@ -97,8 +99,6 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       if (verbose) {
         cout << "\t\t" << obj.charge() << endl;
         cout << "\tTriggered mu" << obj.charge() << ":  pt " << obj.pt() << ", eta " << obj.eta() << ", phi " << obj.phi() << endl;
-        // auto tk = obj.bestTrack();
-        // cout << Form("\tImpact Parameter: %.4f +/- %.4f (sig = %.1f)", tk->d0(), tk->d0Error(), fabs(tk->d0())/tk->d0Error()) << endl;
         // Print trigger object collection and type
         cout << "\tCollection: " << obj.collection() << endl;
 
@@ -111,7 +111,7 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         }
       }
 
-      auto matching_muons = TriggerObj_matching(muonHandle, obj, vtxHandle, muonCharge_);
+      auto matching_muons = TriggerObj_matching(muonHandle, obj, primaryVtx, muonCharge_);
       if (matching_muons.size()>0) trgMuonsMatched->push_back(matching_muons[0]);
 
     }
@@ -119,15 +119,8 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
 
   if (verbose) {
     cout << "\n MUONS LIST" << endl;
-    for (unsigned int k = 0; k < muonNumber; ++k) {
-      const pat::Muon & muon = (*muonHandle)[k];
-      bool isTightMuon = false;
-      for (auto vtx : *vtxHandle) {
-        if(muon.isTightMuon(vtx)) isTightMuon = true;
-      }
-      if (isTightMuon) {
-        cout << "\t" << " " << muon.pdgId() << "  " << muon.pt() << "  " << muon.eta() << "  " << muon.phi() << endl;
-      }
+    for (auto muon : (*muonHandle)) {
+      cout << "\t" << Form("id:%d  pt:%.1f  eta:%.1f  phi:%.1f softID:%d", muon.pdgId(), muon.pt(), muon.eta(), muon.phi(), muon.isSoftMuon(primaryVtx)) << endl;
     }
   }
 
@@ -138,12 +131,16 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputNtuplizer)["trgMu_eta"] = m.eta();
     (*outputNtuplizer)["trgMu_phi"] = m.phi();
     (*outputNtuplizer)["trgMu_charge"] = m.charge();
-    auto tk = m.bestTrack();
-    (*outputNtuplizer)["trgMu_d"] = tk->d0(); //Same as using the transient track
-    (*outputNtuplizer)["trgMu_sigd"] = fabs(tk->d0())/tk->d0Error();
+    auto tk = m.innerTrack();
+    auto dxy = tk->dxy(primaryVtx.position());
+    (*outputNtuplizer)["trgMu_dz"] = tk->dz(primaryVtx.position());
+    (*outputNtuplizer)["trgMu_dxy"] = dxy;
+    (*outputNtuplizer)["trgMu_sigdxy"] = fabs(dxy)/tk->dxyError();
 
     if(verbose) {
-      cout << Form("\tMuon IP (d0): %.4f +/- %.4f (sig = %.1f)", tk->d0(), tk->d0Error(), fabs(tk->d0())/tk->d0Error()) << endl;
+      cout << "\nTriggered muons: " << trgMuonsMatched->size() << endl;
+      cout << Form("Muon dxy: %.4f +/- %.4f (sig = %.1f)", dxy, tk->dxyError(), fabs(dxy)/tk->dxyError());
+      cout << Form(", dz: %.3f", tk->dz(primaryVtx.position())) << endl;
     }
   }
 
@@ -158,11 +155,11 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
 
 vector<pat::Muon> BPHTriggerPathProducer::TriggerObj_matching(edm::Handle<vector<pat::Muon>> muon_list,
                                                               pat::TriggerObjectStandAlone obj,
-                                                              edm::Handle<std::vector<reco::Vertex>> vtx_list,
+                                                              reco::Vertex vtx,
                                                               int mu_charge=0)
 {
-  double max_DeltaR = 0.005;
-  double max_Delta_pt_rel = 0.01;
+  double max_DeltaR = 0.01;
+  double max_Delta_pt_rel = 0.05;
 
   double bestM_DeltaR = max_DeltaR;
 
@@ -170,35 +167,20 @@ vector<pat::Muon> BPHTriggerPathProducer::TriggerObj_matching(edm::Handle<vector
 
   for( auto muon : *muon_list) {
     if(mu_charge && mu_charge!=muon.charge()) continue;
+    if(muon.innerTrack().isNull()) continue;
+    if (!muon.isSoftMuon(vtx)) continue;
 
-    double dEta = muon.eta() - obj.eta();
-    double dPhi = muon.phi() - obj.phi();
-    double pi = 3.14159265358979323846;
-    while (fabs(dPhi) > pi) {
-      int sgn = dPhi > 0? 1 : -1;
-      dPhi -= sgn*2*pi;
-    }
-
-    double deltaR = sqrt(dEta*dEta + dPhi*dPhi);
-
+    double deltaR = vtxu::dR(muon.phi(), obj.phi(), muon.eta(), obj.eta());
     double dpt_rel = abs(muon.pt() - obj.pt())/obj.pt();
-
     if (dpt_rel < max_Delta_pt_rel && deltaR < max_DeltaR) {
-      bool isTightMuon = false;
-      for (auto vtx : *vtx_list) {
-        if(muon.isTightMuon(vtx)) isTightMuon = true;
+      if(verbose) {cout << "\t\tMuon matched with deltaR=" << deltaR << " and dpt_rel=" << dpt_rel << endl;}
+      if (deltaR <= bestM_DeltaR) {
+        bestM_DeltaR = deltaR;
+        out.insert(out.begin(), muon);
       }
-      if (isTightMuon) {
-        if(verbose) {cout << "\t\tMuon matched with deltaR=" << deltaR << " and dpt_rel=" << dpt_rel << endl;}
-        if (deltaR <= bestM_DeltaR) {
-          bestM_DeltaR = deltaR;
-          out.insert(out.begin(), muon);
-        }
-        else out.push_back(muon);
-      }
+      else out.push_back(muon);
     }
   }
-
   return out;
 }
 
