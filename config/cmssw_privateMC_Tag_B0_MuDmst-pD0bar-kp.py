@@ -1,10 +1,9 @@
-import os
+import os, sys
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
-cmssw_version = os.environ['CMSSW_VERSION']
 # import of standard configurations
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
@@ -69,7 +68,7 @@ process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 '''
 
 if args.outputFile == '.root':
-    outname = '/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/B02DstMu_candidates.root'
+    outname = 'B02DstMu_CAND.root'
 else:
     outname = args.outputFile
 
@@ -119,8 +118,13 @@ process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
         verbose = cms.int32(0)
 )
 
+cfg_name = os.path.basename(sys.argv[0])
+f = open(os.environ['CMSSW_BASE']+'/src/ntuplizer/BPH_RDntuplizer/.git/logs/HEAD')
+commit_hash = f.readlines()[-1][:-1].split(' ')[1]
 process.outA = cms.EDAnalyzer("FlatTreeWriter",
-        cmssw = cms.string(cmssw_version),
+        cmssw = cms.string(os.environ['CMSSW_VERSION']),
+        cfg_name = cms.string(cfg_name),
+        commit_hash = cms.string(commit_hash),
         verbose = cms.int32(0)
 )
 

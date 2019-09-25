@@ -1,16 +1,17 @@
 ---------- Monte Carlo ------------
-python jobSubmission/submitCMSSWCondorJobs.py -i /eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root -o /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/B02DstMu_candidates/out.root -c config/cmssw_privateMC_Tag_B0_MuDmst-pD0bar-kp.py --maxtime 1h -N 20 --name MCmuPU -f
+dir=-/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3
+dir=/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3
 
-python jobSubmission/submitCMSSWCondorJobs.py -i /eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_NoPU_10-2-3_v0/jobs_out/*MINIAODSIM*.root -o /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_NoPU_10-2-3_v0/B02DstMu_candidates/out.root -c config/cmssw_privateMC_Tag_B0_MuDmst-pD0bar-kp.py --maxtime 1h -N 15 --name MC -f
+python jobSubmission/submitCMSSWCondorJobs.py -i $dir/jobs_out/*MINIAODSIM*.root -o $dir/job_B02DstMu/out_CAND.root -c config/cmssw_privateMC_Tag_B0_MuDmst-pD0bar-kp.py --maxtime 1h -N 20 -f
 
-python jobSubmission/submitCMSSWCondorJobs.py -i /eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root -o /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/B02DstMu_candidates/out.root -c config/cmssw_privateMC_Tag_B0_MuDmst-pD0bar-kp.py --maxtime 1h -N 20 --name MCtauPU -f
-
-python jobSubmission/submitCMSSWCondorJobs.py -i /eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_NoCuts_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root -o /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_NoCuts_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/B02DstMu_candidates/out.root -c config/cmssw_privateMC_Tag_B0_MuDmst-pD0bar-kp.py --maxtime 1h -N 20 --name MCmuPUnoCuts -f
 
 dir=/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-Mu_Probe-B0_KDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVS_PU0_10-2-3
 dir=/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-Mu_Probe-B0_KDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVS_PU20_10-2-3
+
 python jobSubmission/submitCMSSWCondorJobs.py -i $dir/jobs_out/*MINIAODSIM*.root -o $dir/jobs_B2DstK/out_CAND.root -c config/cmssw_privateMC_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py --maxtime 1h -N 10 --name MCmuPUnoCuts -f
 
 
 ----------------------------------- DATA -------------------------------------------
 python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH1_Run2018A-05May2019-v1_MINIAOD.txt -o /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsRD/Run2018A/ParkingBPH1/jobs_B2DstK/out_CAND.root -c config/cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py --maxtime 12h -N 5 -f
+
+python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH1_Run2018A-05May2019-v1_MINIAOD.txt -o /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsRD/Run2018A/ParkingBPH1/jobs_Run2018A-05May2019-v1_B2JpsiKst/out_CAND.root -c config/cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py --maxtime 4h -N 30 -f
