@@ -89,7 +89,8 @@ process.trgF = cms.EDFilter("BPHTriggerPathFilter",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", "")
 )
 
-process.B2JpsiKstDT = cms.EDProducer("B2JpsiKstDecayTreeProducer",
+# process.B2JpsiKstDT = cms.EDProducer("B2JpsiKstDecayTreeProducer",
+process.B2JpsiKstDT = cms.EDProducer("MuJpsiDecayTreeProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
         verbose = cms.int32(0)
 )

@@ -107,9 +107,7 @@ void MuJpsiDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
     iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
     auto trgMu = (*trgMuonsHandle)[0];
 
-    vector<RefCountedKinematicTree> vecJpsiKinTree;
-    vector<double> vecMassMuMu;
-    vector<double> vecChi2MuMu;
+    int n_Jpsi = 0;
     for(uint i1 = 0; i1 < nMu -1; i1++){
       auto m1 = (*muonHandle)[i1];
       if (!isMuonFromJpsiID(m1, primaryVtx, trgMu)) continue;
@@ -154,242 +152,39 @@ void MuJpsiDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
         }
         if(!accept) continue;
 
-        if(accept) {
-          vecJpsiKinTree.push_back(kinTree);
-          vecMassMuMu.push_back(massMuPair);
-          vecChi2MuMu.push_back(chi2);
-        }
+        kinTree->movePointerToTheTop();
+        auto Jpsi = kinTree->currentParticle();
+        auto vtxJpsi = kinTree->currentDecayVertex();
+
+        auto cos_Jpsi_vtxMu = vtxu::computePointingCos(primaryVtx, vtxJpsi, Jpsi);
+        auto d_vtxJpsi_PV = vtxu::vtxsDistance(primaryVtx, vtxJpsi);
+        auto sigd_vtxJpsi_PV = fabs(d_vtxJpsi_PV.first/d_vtxJpsi_PV.second);
+
+        // Save variables in the output
+        n_Jpsi++;
+        kinTree->movePointerToTheFirstChild();
+        auto refit_MuPlus = kinTree->currentParticle();
+        kinTree->movePointerToTheNextChild();
+        auto refit_MuMinus = kinTree->currentParticle();
+        AddTLVToOut(vtxu::getTLVfromKinPart(refit_MuPlus), string("mup"), &(*outputVecNtuplizer));
+        AddTLVToOut(vtxu::getTLVfromKinPart(refit_MuMinus), string("mum"), &(*outputVecNtuplizer));
+        (*outputVecNtuplizer)["chi2_mumu"].push_back(chi2);
+        (*outputVecNtuplizer)["mass_mumu"].push_back(massMuPair);
+        (*outputVecNtuplizer)["chi2_Jpsi"].push_back(chi2_mass);
+        (*outputVecNtuplizer)["cos_Jpsi_vtxMu"].push_back(cos_Jpsi_vtxMu);
+        (*outputVecNtuplizer)["d_vtxJpsi_PV"].push_back(d_vtxJpsi_PV.first);
+        (*outputVecNtuplizer)["sigd_vtxJpsi_PV"].push_back(sigd_vtxJpsi_PV);
+        AddTLVToOut(vtxu::getTLVfromKinPart(Jpsi), string("Jpsi"), &(*outputVecNtuplizer));
+
       }
     }
 
-    if(vecJpsiKinTree.size() < 1) {
-      iEvent.put(move(outputNtuplizer), "outputNtuplizer");
-      iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");
-      return;
-    }
-    else if(verbose) {cout << vecJpsiKinTree.size() << " Jpsi candidate found" << endl;}
-
-    edm::Handle<vector<pat::PackedCandidate>> pfCandHandle;
-    iEvent.getByToken(PFCandSrc_, pfCandHandle);
-    unsigned int N_pfCand = pfCandHandle->size();
-
-    int n_K = 0, n_pi = 0, n_Kst = 0, n_B = 0;
-
-    /*
-    ############################################################################
-                              Look for the K+ (321)
-    ############################################################################
-    */
-    for(uint i_k = 0; i_k < N_pfCand; ++i_k) {
-      const pat::PackedCandidate & K = (*pfCandHandle)[i_k];
-      if (!K.hasTrackDetails()) continue;
-      //Require a positive charged hadron
-      if (K.isTrackerMuon() || K.isStandAloneMuon()) continue;
-      if (K.charge() < 0) continue;
-      //Require a minimum pt
-      if(K.pt() < __pThad_min__) continue;
-      // Require to be close to the trigger muon;
-      auto K_tk = K.bestTrack();
-      if (fabs(K_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
-      // Require significant impact parameter
-      auto dxy = K_tk->dxy(primaryVtx.position());
-      auto sigd_K_PV = fabs(dxy)/K_tk->dxyError();
-      auto K_norm_chi2 = K_tk->normalizedChi2();
-      auto K_N_valid_hits = K_tk->numberOfValidHits();
-      if (sigd_K_PV < __sigIPpfCand_min__) continue;
-
-      n_K++;
-      if(verbose){cout << Form("K cand found i:%d, pt:%.2f, eta:%.2f, phi:%.2f ", i_k, K.pt(), K.eta(), K.phi()) << endl;}
-      /*
-      ############################################################################
-                               Look for the pi- (-211)
-      ############################################################################
-      */
-      for(uint i_pi = 0; i_pi < N_pfCand; ++i_pi) {
-        const pat::PackedCandidate & pi = (*pfCandHandle)[i_pi];
-        if (!pi.hasTrackDetails()) continue;
-        //Require a negative charged hadron
-        if (pi.isTrackerMuon() || pi.isStandAloneMuon()) continue;
-        if (pi.charge() > 0) continue;
-        //Require a minimum pt
-        if(pi.pt() < __pThad_min__) continue;
-        // Require to be close to the trigger muon;
-        auto pi_tk = pi.bestTrack();
-        if (fabs(pi_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
-        // Require significant impact parameter
-        auto dxy = pi_tk->dxy(primaryVtx.position());
-        auto sigd_pi_PV = fabs(dxy)/pi.dxyError();
-        auto pi_norm_chi2 = pi_tk->normalizedChi2();
-        auto pi_N_valid_hits = pi_tk->numberOfValidHits();
-        if (sigd_pi_PV < __sigIPpfCand_min__) continue;
-
-        n_pi++;
-        if(verbose){cout << Form("pi cand found i:%d, pt:%.2f, eta:%.2f, phi:%.2f ", i_pi, pi.pt(), pi.eta(), pi.phi()) << endl;}
-
-        //Fit the vertex w/o mass constraint
-        auto KstKinTree = vtxu::FitKst_piK(iSetup, pi, K, false);
-        bool accept = false;
-        double chi2_Kpi;
-        if(KstKinTree->isValid()) {
-          KstKinTree->movePointerToTheTop();
-          auto vtxKst = KstKinTree->currentDecayVertex();
-          chi2_Kpi = vtxKst->chiSquared();
-          if(verbose){cout << "chi2 geom: " << chi2_Kpi << endl;}
-          accept = chi2_Kpi > 0 && chi2_Kpi < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, vtxKst->degreesOfFreedom());
-        }
-        if(!accept) continue;
-        auto Kst = KstKinTree->currentParticle();
-        auto mass_Kpi = Kst->currentState().mass();
-        bool accept_Kst = fabs(mass_Kpi - mass_Kst) < __dmKst_max__;
-        if(!accept_Kst) continue;
-
-        //Fit the vertex WITH mass constraint
-        KstKinTree = vtxu::FitKst_piK(iSetup, pi, K, true);
-        accept = false;
-        double chi2_KpiMass;
-        if(KstKinTree->isValid()) {
-          KstKinTree->movePointerToTheTop();
-          auto vtxKst = KstKinTree->currentDecayVertex();
-          chi2_KpiMass = vtxKst->chiSquared();
-          if(verbose){cout << "chi2 mass: " << chi2_KpiMass << endl;}
-          // accept = chi2_KpiMass > 0 && chi2_KpiMass < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, vtxKst->degreesOfFreedom());
-          accept = true;
-        }
-        if(!accept) continue;
-        Kst = KstKinTree->currentParticle();
-        auto vtxKst = KstKinTree->currentDecayVertex();
-
-        auto cos_Kst_PV = vtxu::computePointingCos(primaryVtx, vtxKst, Kst);
-        auto d_vtxKst_PV = vtxu::vtxsDistance(primaryVtx, vtxKst);
-        auto sigd_vtxKst_PV = d_vtxKst_PV.first/d_vtxKst_PV.second;
-
-        if (verbose) {cout << "K*_0 -> K+ pi- found\n";}
-        n_Kst++;
-
-        /*
-        ############################################################################
-                  Make a B0 -> J/psi K* using the candidates found above
-        ############################################################################
-        */
-        for(uint i_J = 0; i_J < vecJpsiKinTree.size(); ++i_J) {
-          auto JpsiKinTree = vecJpsiKinTree[i_J];
-          JpsiKinTree->movePointerToTheTop();
-          auto Jpsi = JpsiKinTree->currentParticle();
-          auto vtxJpsi = JpsiKinTree->currentDecayVertex();
-
-          auto cos_Jpsi_vtxMu = vtxu::computePointingCos(primaryVtx, vtxJpsi, Jpsi);
-          auto d_vtxJpsi_PV = vtxu::vtxsDistance(primaryVtx, vtxJpsi);
-          auto sigd_vtxJpsi_PV = fabs(d_vtxJpsi_PV.first/d_vtxJpsi_PV.second);
-
-          // Fit the B vertex
-          RefCountedKinematicTree BKinTree;
-          try{BKinTree = vtxu::FitVtxJpsiKst(iSetup, Jpsi, Kst, false);}
-          catch(...) {cout << "Fitting B -> J/psi K* failed" << endl; continue;}
-          bool accept = false;
-          double chi2_JpsiKst;
-          if(BKinTree->isValid()) {
-            BKinTree->movePointerToTheTop();
-            auto vtxB = BKinTree->currentDecayVertex();
-            chi2_JpsiKst = vtxB->chiSquared();
-            accept = chi2_JpsiKst > 0 && chi2_JpsiKst < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, vtxB->degreesOfFreedom());
-          }
-          if(!accept) continue;
-          auto pairJpsiKst = BKinTree->currentParticle();
-          auto mass_JpsiKst = pairJpsiKst->currentState().mass();
-          accept = fabs(mass_JpsiKst - mass_B0) < __dmB0_max__;
-          if(!accept) continue;
-          else if(verbose) {
-            cout << Form("Candidate B0 mass (%.2f GeV) check passed", mass_JpsiKst) << endl;
-          }
-
-          BKinTree = vtxu::FitVtxJpsiKst(iSetup, Jpsi, Kst, true);
-          accept = false;
-          double chi2_B;
-          if(BKinTree->isValid()) {
-            BKinTree->movePointerToTheTop();
-            auto vtxB = BKinTree->currentDecayVertex();
-            chi2_B = vtxB->chiSquared();
-            // accept = chi2_B > 0 && chi2_B < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, vtxB->degreesOfFreedom());
-            accept = true;
-          }
-          if(!accept) continue;
-          auto B = BKinTree->currentParticle();
-          auto vtxB = BKinTree->currentDecayVertex();
-
-          double cos_B_PV = vtxu::computePointingCos(primaryVtx, vtxB, B);
-          auto d_vtxB_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
-          double sigd_vtxB_PV = d_vtxB_PV.first/d_vtxB_PV.second;
-          if (verbose) {
-            cout << Form("PV: sigd = %.2f  cos = %.3e", sigd_vtxB_PV, 1-cos_B_PV) << endl;
-            cout << "B0 -> J/psi K* found\n";
-          }
-          n_B++;
-
-          /*
-          ############################################################################
-                                Compute analysis variables
-          ############################################################################
-          */
-          KstKinTree->movePointerToTheFirstChild();
-          auto refit_pi = KstKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_pi), string("pi"), &(*outputVecNtuplizer));
-          (*outputVecNtuplizer)["sigd_pi_PV"].push_back(sigd_pi_PV);
-          (*outputVecNtuplizer)["pi_norm_chi2"].push_back(pi_norm_chi2);
-          (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
-          KstKinTree->movePointerToTheNextChild();
-          auto refit_K = KstKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("K"), &(*outputVecNtuplizer));
-          (*outputVecNtuplizer)["sigd_K_PV"].push_back(sigd_K_PV);
-          (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
-          (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
-          (*outputVecNtuplizer)["chi2_Kpi"].push_back(chi2_Kpi);
-          (*outputVecNtuplizer)["mass_Kpi"].push_back(mass_Kpi);
-          (*outputVecNtuplizer)["chi2_Kst"].push_back(chi2_KpiMass);
-          (*outputVecNtuplizer)["cos_Kst_PV"].push_back(cos_Kst_PV);
-          (*outputVecNtuplizer)["d_vtxKst_PV"].push_back(d_vtxKst_PV.first);
-          (*outputVecNtuplizer)["sigd_vtxKst_PV"].push_back(sigd_vtxKst_PV);
-
-
-          JpsiKinTree->movePointerToTheFirstChild();
-          auto refit_Mu1 = JpsiKinTree->currentParticle();
-          JpsiKinTree->movePointerToTheNextChild();
-          auto refit_Mu2 = JpsiKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_Mu1), string("mup"), &(*outputVecNtuplizer));
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_Mu2), string("mum"), &(*outputVecNtuplizer));
-          (*outputVecNtuplizer)["chi2_mumu"].push_back(vecChi2MuMu[i_J]);
-          (*outputVecNtuplizer)["mass_mumu"].push_back(vecMassMuMu[i_J]);
-          (*outputVecNtuplizer)["chi2_Jpsi"].push_back(vtxJpsi->chiSquared());
-          (*outputVecNtuplizer)["cos_Jpsi_vtxMu"].push_back(cos_Jpsi_vtxMu);
-          (*outputVecNtuplizer)["d_vtxJpsi_PV"].push_back(d_vtxJpsi_PV.first);
-          (*outputVecNtuplizer)["sigd_vtxJpsi_PV"].push_back(sigd_vtxJpsi_PV);
-
-          (*outputVecNtuplizer)["chi2_JpsiKst"].push_back(chi2_JpsiKst);
-          (*outputVecNtuplizer)["mass_JpsiKst"].push_back(mass_JpsiKst);
-          (*outputVecNtuplizer)["chi2_B"].push_back(chi2_B);
-          (*outputVecNtuplizer)["cos_B_PV"].push_back(cos_B_PV);
-          (*outputVecNtuplizer)["d_vtxB_PV"].push_back(d_vtxB_PV.first);
-          (*outputVecNtuplizer)["sigd_vtxB_PV"].push_back(sigd_vtxB_PV);
-
-          AddTLVToOut(vtxu::getTLVfromKinPart(B), string("B"), &(*outputVecNtuplizer));
-          BKinTree->movePointerToTheFirstChild();
-          auto refit_Jpsi = BKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_Jpsi), string("Jpsi"), &(*outputVecNtuplizer));
-          BKinTree->movePointerToTheNextChild();
-          auto refit_Kst = BKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_Kst), string("Kst"), &(*outputVecNtuplizer));
-        }
-      }
-    }
+    if(verbose) {cout << n_Jpsi << " Jpsi candidate found" << endl;}
 
     (*outputNtuplizer)["Run"] = iEvent.run();
     (*outputNtuplizer)["LumiBlock"] = iEvent.luminosityBlock();
     (*outputNtuplizer)["eventNumber"] = iEvent.id().event();
-
-    (*outputNtuplizer)["n_K"] = n_K;
-    (*outputNtuplizer)["n_pi"] = n_pi;
-    (*outputNtuplizer)["n_Kst"] = n_Kst;
-    (*outputNtuplizer)["n_Jpsi"] = vecJpsiKinTree.size();
-    (*outputNtuplizer)["n_B"] = n_B;
+    (*outputNtuplizer)["n_B"] = n_Jpsi;
 
 
     iEvent.put(move(outputNtuplizer), "outputNtuplizer");
