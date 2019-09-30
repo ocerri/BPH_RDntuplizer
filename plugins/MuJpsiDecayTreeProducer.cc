@@ -20,7 +20,7 @@
 #include "VtxUtils.hh"
 
 #define __PvalChi2Vtx_max__ 0.95 // Very loose cut
-#define __dzMax__ 2.0
+#define __dzMax__ 3.0
 #define __dmJpsi_max__ 1.0 // loose cut
 #define __sigIPpfCand_min__ 2. // loose cut
 #define __pThad_min__ 0.5 // loose cut
@@ -166,8 +166,21 @@ void MuJpsiDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
         auto refit_MuPlus = kinTree->currentParticle();
         kinTree->movePointerToTheNextChild();
         auto refit_MuMinus = kinTree->currentParticle();
+
         AddTLVToOut(vtxu::getTLVfromKinPart(refit_MuPlus), string("mup"), &(*outputVecNtuplizer));
+        auto dxy_mup = mup.innerTrack()->dxy(primaryVtx.position());
+        (*outputVecNtuplizer)["mup_dxy"].push_back(dxy_mup);
+        (*outputVecNtuplizer)["mup_sigdxy"].push_back(fabs(dxy_mup)/mup.innerTrack()->dxyError());
+        float mup_isTrg = trgMu.pt()==mup.pt() && trgMu.phi()==mup.phi() && trgMu.eta()==mup.eta();
+        (*outputVecNtuplizer)["mup_isTrg"].push_back(mup_isTrg);
+
         AddTLVToOut(vtxu::getTLVfromKinPart(refit_MuMinus), string("mum"), &(*outputVecNtuplizer));
+        auto dxy_mum = mum.innerTrack()->dxy(primaryVtx.position());
+        (*outputVecNtuplizer)["mum_dxy"].push_back(dxy_mum);
+        (*outputVecNtuplizer)["mum_sigdxy"].push_back(fabs(dxy_mum)/mum.innerTrack()->dxyError());
+        float mum_isTrg = trgMu.pt()==mum.pt() && trgMu.phi()==mum.phi() && trgMu.eta()==mum.eta();
+        (*outputVecNtuplizer)["mum_isTrg"].push_back(mum_isTrg);
+
         (*outputVecNtuplizer)["chi2_mumu"].push_back(chi2);
         (*outputVecNtuplizer)["mass_mumu"].push_back(massMuPair);
         (*outputVecNtuplizer)["chi2_Jpsi"].push_back(chi2_mass);
@@ -198,8 +211,6 @@ void MuJpsiDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<string
   (*outv)[n+"_pz"].push_back(v.Pz());
   (*outv)[n+"_eta"].push_back(v.Eta());
   (*outv)[n+"_phi"].push_back(v.Phi());
-  (*outv)[n+"_P"].push_back(v.P());
-  (*outv)[n+"_E"].push_back(v.E());
   return;
 }
 
@@ -207,9 +218,11 @@ void MuJpsiDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<string
 bool MuJpsiDecayTreeProducer::isMuonFromJpsiID(pat::Muon m, reco::Vertex pVtx, pat::Muon trgMu) {
   if(m.innerTrack().isNull()) return false;
   if (fabs(m.innerTrack()->dz(pVtx.position()) - trgMu.innerTrack()->dz(pVtx.position())) > __dzMax__) return false;
-  if(trgMu.pt()==m.pt() && trgMu.phi()==m.phi() && trgMu.eta()==m.eta()) return false;
-  if (!m.isSoftMuon(pVtx)) return false;
+  // if(trgMu.pt()==m.pt() && trgMu.phi()==m.phi() && trgMu.eta()==m.eta()) return false;
+  // if(!m.isSoftMuon(pVtx)) return false;
   if(m.innerTrack()->hitPattern().pixelLayersWithMeasurement() < 2) return false;
+  if(!m.innerTrack()->quality(reco::TrackBase::highPurity)) return false;
+  if(!m.isGood("TMOneStationTight")) return false;
   if(m.innerTrack()->normalizedChi2() > 1.8) return false;
   return true;
 }
