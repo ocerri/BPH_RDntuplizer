@@ -38,7 +38,7 @@ private:
     edm::EDGetTokenT<vector<pat::PackedCandidate>> PFCandSrc_;
     edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
     edm::EDGetTokenT<vector<pat::Muon>> TrgMuonSrc_;
-    
+
     int verbose = 0;
 };
 
@@ -147,7 +147,7 @@ void MuD0Producer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
         if (vtxu::dR(pi.phi(), k.phi(), pi.eta(), k.eta()) > 1.) continue;
 
         //Fit the vertex
-        auto D0KinTree = vtxu::FitD0(iSetup, pi, k, false, 0);
+        auto D0KinTree = vtxu::FitD0(iSetup, pi, k, false);
         bool accept_pi = false;
         if(D0KinTree->isValid()) {
           D0KinTree->movePointerToTheTop();

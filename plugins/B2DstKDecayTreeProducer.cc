@@ -182,7 +182,7 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
         if (vtxu::dR(pi.phi(), k.phi(), pi.eta(), k.eta()) > __dRMax__) continue;
 
         //Fit the vertex
-        auto D0KinTree = vtxu::FitD0(iSetup, pi, k, false, 0);
+        auto D0KinTree = vtxu::FitD0(iSetup, pi, k, false);
         bool accept_pi = false;
         double chi2_Kpi;
         if(D0KinTree->isValid()) {

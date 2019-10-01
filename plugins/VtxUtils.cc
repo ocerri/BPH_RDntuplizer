@@ -48,7 +48,7 @@ using namespace std;
 #define _B0Mass_ 5.27955
 #define _B0MassErr_ 0.00026
 
-RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constrain, int verbose = 0) {
+RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constrain) {
   // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
@@ -176,7 +176,7 @@ RefCountedKinematicTree vtxu::FitJpsi_mumu(const edm::EventSetup& iSetup, pat::M
   }
 }
 
-RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedCandidate pisoft, const RefCountedKinematicParticle D0, bool mass_constrain, int verbose = 0) {
+RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedCandidate pisoft, const RefCountedKinematicParticle D0, bool mass_constrain) {
 // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
@@ -208,12 +208,12 @@ RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedC
   }
 }
 
-RefCountedKinematicTree vtxu::FitVtxMuDst(const edm::EventSetup& iSetup, const RefCountedKinematicParticle Dst, pat::PackedCandidate mu, int verbose = 0) {
+RefCountedKinematicTree vtxu::FitVtxMuDst(const edm::EventSetup& iSetup, const RefCountedKinematicParticle Dst, pat::Muon mu) {
   // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack Mu_tk = TTBuilder->build(mu.bestTrack());
+  reco::TransientTrack Mu_tk = TTBuilder->build(mu.muonBestTrack());
   reco::TransientTrack Dst_tk = Dst->refittedTransientTrack();
 
   KinematicParticleFactoryFromTransientTrack pFactory;

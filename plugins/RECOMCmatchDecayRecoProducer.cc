@@ -216,7 +216,7 @@ void RECOMCmatchDecayRecoProducer::produce(edm::Event& iEvent, const edm::EventS
       auto p4_K = vtxu::getTLVfromCand(matchedPart["K"], mass_K);
       (*outputNtuplizer)["D0prefit_mass"] = (p4_pi + p4_K).M();
 
-      auto D0KinTree = vtxu::FitD0(iSetup, matchedPart["pi"], matchedPart["K"], false, 0);
+      auto D0KinTree = vtxu::FitD0(iSetup, matchedPart["pi"], matchedPart["K"], false);
       if(!D0KinTree->isValid()) return;
 
       D0KinTree->movePointerToTheTop();

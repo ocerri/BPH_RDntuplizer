@@ -3,10 +3,13 @@ import os
 import datetime
 
 # tag = 'B2DstMu'
-tag = 'B2DstK'
+# tag = 'B2DstK'
+tag = 'B2JpsiKst'
 
 cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
-       'B2DstK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py'}
+       'B2DstK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py',
+       'B2JpsiKst': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py'
+       }
 
 date = datetime.datetime.today()
 date_str = '{}{:02}{:02}'.format(date.year%100, date.month, date.day)
@@ -39,7 +42,7 @@ config.General.transferLogs = True
     fout.write('\n')
     fout.write("config.JobType.maxJobRuntimeMin = {}".format(60*int(settings['samples'][k]['maxRunTime'])))
     fout.write('\n')
-    fout.write("config.JobType.maxMemoryMB = 2500")
+    fout.write("config.JobType.maxMemoryMB = 2000")
     fout.write('\n')
     fout.write("config.JobType.allowUndistributedCMSSW = True")
     fout.write('\n')
@@ -81,6 +84,7 @@ if not os.path.isdir('tmp'):
 for k, d in prod_samples['samples'].iteritems():
     if 'data_Run2018A' in k:
         for i in d['parts']:
+            if int(i) != 1: continue
             dataset = d['dataset'].format(i)
             print '\n########## {} ##########\n'.format(dataset)
 

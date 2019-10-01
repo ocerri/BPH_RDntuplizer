@@ -13,12 +13,12 @@
 #include <utility>
 
 namespace vtxu {
-  RefCountedKinematicTree FitD0(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool, int);
+  RefCountedKinematicTree FitD0(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);
   RefCountedKinematicTree FitKst_piK(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);
   RefCountedKinematicTree FitDst_fitD0wMassConstraint(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, pat::PackedCandidate, bool, int);
   RefCountedKinematicTree FitJpsi_mumu(const edm::EventSetup&, pat::Muon, pat::Muon, bool);
-  RefCountedKinematicTree FitDst(const edm::EventSetup&, pat::PackedCandidate, const RefCountedKinematicParticle, bool, int);
-  RefCountedKinematicTree FitVtxMuDst(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, int);
+  RefCountedKinematicTree FitDst(const edm::EventSetup&, pat::PackedCandidate, const RefCountedKinematicParticle, bool);
+  RefCountedKinematicTree FitVtxMuDst(const edm::EventSetup&, const RefCountedKinematicParticle, pat::Muon);
   RefCountedKinematicTree FitVtxJpsiKst(const edm::EventSetup&, const RefCountedKinematicParticle, const RefCountedKinematicParticle, bool);
   RefCountedKinematicTree FitVtxDstK(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, int);
   RefCountedKinematicTree FitVtxDstPi(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, int);
