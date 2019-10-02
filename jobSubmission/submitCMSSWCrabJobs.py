@@ -39,8 +39,8 @@ config.General.transferLogs = True
     fout.write("config.JobType.pluginName = 'Analysis'")
     fout.write('\n')
     fout.write("config.JobType.outputFiles = ['{}_CAND.root']".format(tag))
-    fout.write('\n')
-    fout.write("config.JobType.maxJobRuntimeMin = {}".format(60*int(settings['samples'][k]['maxRunTime'])))
+    # fout.write('\n')
+    # fout.write("config.JobType.maxJobRuntimeMin = {}".format(60*int(settings['common']['data']['maxRunTime'])))
     fout.write('\n')
     fout.write("config.JobType.maxMemoryMB = 2000")
     fout.write('\n')
@@ -54,11 +54,11 @@ config.General.transferLogs = True
     fout.write('\n')
     fout.write("config.Data.publication = False")
     fout.write('\n')
-    fout.write("config.Data.unitsPerJob = {}".format(settings['samples'][k]['splitting']))
+    fout.write("config.Data.unitsPerJob = {}".format(60*int(settings['common']['data']['unitsPerJob'])))
     fout.write('\n')
     fout.write("config.Data.publishDBS = 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter/'")
     fout.write('\n')
-    fout.write("config.Data.splitting = 'FileBased'")
+    fout.write("config.Data.splitting = 'Automatic'")
     fout.write('\n')
     fout.write("config.Data.inputDBS = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/'")
     fout.write('\n')
@@ -82,7 +82,7 @@ if not os.path.isdir('tmp'):
     os.system('mkdir tmp')
 
 for k, d in prod_samples['samples'].iteritems():
-    if 'data_Run2018A' in k:
+    if 'data_Run2018' in k:
         for i in d['parts']:
             if int(i) != 1: continue
             dataset = d['dataset'].format(i)

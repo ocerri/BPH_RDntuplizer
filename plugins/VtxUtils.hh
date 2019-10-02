@@ -15,6 +15,7 @@
 namespace vtxu {
   RefCountedKinematicTree FitD0(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);
   RefCountedKinematicTree FitKst_piK(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);
+  RefCountedKinematicTree FitPhi_KK(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);
   RefCountedKinematicTree FitDst_fitD0wMassConstraint(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, pat::PackedCandidate, bool, int);
   RefCountedKinematicTree FitJpsi_mumu(const edm::EventSetup&, pat::Muon, pat::Muon, bool);
   RefCountedKinematicTree FitDst(const edm::EventSetup&, pat::PackedCandidate, const RefCountedKinematicParticle, bool);
@@ -27,6 +28,7 @@ namespace vtxu {
   std::pair<double,double> computeDCA(reco::TransientTrack, GlobalPoint);
   std::pair<double,double> vtxsDistance(reco::VertexRef, RefCountedKinematicVertex);
   std::pair<double,double> vtxsDistance(reco::Vertex, RefCountedKinematicVertex);
+  std::pair<double,double> vtxsTransverseDistance(reco::Vertex, RefCountedKinematicVertex);
   double computePointingCos(reco::Vertex, const RefCountedKinematicVertex, const RefCountedKinematicParticle);
   TLorentzVector getTLVfromKinPart(const RefCountedKinematicParticle);
   TLorentzVector getTLVfromTrack(reco::Track, double);

@@ -144,6 +144,8 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     }
   }
 
+  (*outputNtuplizer)["N_vertexes"] = vtxHandle->size();
+
   iEvent.put(move(trgMuonsMatched), "trgMuonsMatched");
   iEvent.put(move(outputNtuplizer), "outputNtuplizer");
 

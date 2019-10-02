@@ -11,7 +11,12 @@ for dir in glob(args.inputDir):
         print 20*'#' + 50*'-' + 20*'#'
         cmd = 'source /cvmfs/cms.cern.ch/crab3/crab.sh; '
         cmd += 'crab status -d ' + dir
+        cmd += ' --verboseErrors --long'
         os.system(cmd)
-        print 20*'#' + 50*'-' + 20*'#' + '\n'
+        print '\n' + 70*'~' + '\n'
+        cmd = 'source /cvmfs/cms.cern.ch/crab3/crab.sh; '
+        cmd += 'crab report -d ' + dir
+        os.system(cmd)
+        print 20*'#' + 50*'-' + 20*'#' + '\n\n'
 
 print 'For info on exit codes visit: https://twiki.cern.ch/twiki/bin/viewauth/CMSPublic/JobExitCodes'

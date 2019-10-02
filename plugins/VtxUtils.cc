@@ -33,12 +33,13 @@ using namespace std;
 
 #define _MuMass_ 0.1056583745
 #define _MuMassErr_ 0.0000000024
-#define _KMass_ 0.493677
-#define _KMassErr_ 0.000013
 #define _PiMass_ 0.13957018
 #define _PiMassErr_ 0.00000035
+#define _KMass_ 0.493677
+#define _KMassErr_ 0.000013
 #define _KstMass_ 0.89166
 #define _KstMassErr_ 0.00011
+#define _PhiMass_ 1.020
 #define _D0Mass_ 1.86484
 #define _D0MassErr_ 0.00017
 #define _DstMass_ 2.01027
@@ -104,6 +105,36 @@ RefCountedKinematicTree vtxu::FitKst_piK(const edm::EventSetup& iSetup, pat::Pac
   }
   else {
     ParticleMass mass = _KstMass_;
+    MultiTrackKinematicConstraint * mass_c = new TwoTrackMassKinematicConstraint(mass);
+    KinematicConstrainedVertexFitter kcVtxFitter;
+    RefCountedKinematicTree kinTree = kcVtxFitter.fit(parts, mass_c);
+    return kinTree;
+  }
+}
+
+RefCountedKinematicTree vtxu::FitPhi_KK(const edm::EventSetup& iSetup, pat::PackedCandidate K1, pat::PackedCandidate K2, bool mass_constrain) {
+  // Get transient track builder
+  edm::ESHandle<TransientTrackBuilder> TTBuilder;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+
+  reco::TransientTrack K1_tk = TTBuilder->build(K1.bestTrack());
+  reco::TransientTrack K2_tk = TTBuilder->build(K2.bestTrack());
+
+  KinematicParticleFactoryFromTransientTrack pFactory;
+
+  std::vector<RefCountedKinematicParticle> parts;
+  double chi = 0, ndf = 0;
+  float mK = _KMass_, dmK = _KMassErr_;
+  parts.push_back(pFactory.particle(K1_tk, mK, chi, ndf, dmK));
+  parts.push_back(pFactory.particle(K2_tk, mK, chi, ndf, dmK));
+
+  if (!mass_constrain) {
+    KinematicParticleVertexFitter VtxFitter;
+    RefCountedKinematicTree kinTree = VtxFitter.fit(parts);
+    return kinTree;
+  }
+  else {
+    ParticleMass mass = _PhiMass_;
     MultiTrackKinematicConstraint * mass_c = new TwoTrackMassKinematicConstraint(mass);
     KinematicConstrainedVertexFitter kcVtxFitter;
     RefCountedKinematicTree kinTree = kcVtxFitter.fit(parts, mass_c);
@@ -436,6 +467,27 @@ std::pair<double,double> vtxu::vtxsDistance(reco::Vertex v1, RefCountedKinematic
 
   return make_pair(d,sqrt(Ed2));
 }
+
+std::pair<double,double> vtxu::vtxsTransverseDistance(reco::Vertex v1, RefCountedKinematicVertex v2){
+  double dx = v2->position().x() - v1.x();
+  double dy = v2->position().y() - v1.y();
+
+  double d = sqrt(dx*dx + dy*dy);
+
+  double dd[2] = {dx/d, dy/d};
+  auto e1 = v1.covariance();
+  auto e2 = v2->error().matrix();
+
+  double Ed2 = 0;
+  for(uint i=0; i<2; ++i){
+    for(uint j=0; j<2; ++j){
+      Ed2 += dd[i]* ( e1.At(i,j)+e2.At(i,j) ) *dd[j];
+    }
+  }
+
+  return make_pair(d,sqrt(Ed2));
+}
+
 
 double vtxu::computePointingCos(reco::Vertex vtxP, const RefCountedKinematicVertex vtxKinPartDecay, const RefCountedKinematicParticle p) {
   TVector3 dvtx(vtxKinPartDecay->position().x() - vtxP.position().x(),
