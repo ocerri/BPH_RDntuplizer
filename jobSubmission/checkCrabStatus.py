@@ -6,6 +6,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument ('inputDir', type=str, default='tmp/crab_*', help='Input dir template for glob')
 parser.add_argument ('--report', default=False, action='store_true')
 parser.add_argument ('--long', default=False, action='store_true')
+parser.add_argument ('--verboseErrors', default=False, action='store_true')
 parser.add_argument ('--brilcalc', default=False, action='store_true')
 args = parser.parse_args()
 
@@ -17,7 +18,8 @@ for dir in glob(args.inputDir):
         print 20*'#' + 50*'-' + 20*'#'
         cmd = 'source /cvmfs/cms.cern.ch/crab3/crab.sh; '
         cmd += 'crab status -d ' + dir
-        cmd += ' --verboseErrors'
+        if args.verboseErrors:
+            cmd += ' --verboseErrors'
         if args.long:
             cmd += ' --long'
         os.system(cmd)
@@ -33,8 +35,13 @@ for dir in glob(args.inputDir):
                 cmd += '; brilcalc lumi -u /fb'
                 cmd += ' --normtag /cvmfs/cms-bril.cern.ch/cms-lumi-pog/Normtags/normtag_PHYSICS.json'
                 cmd += ' -i ' + dir + '/results/processedLumis.json'
-                cmd += ' -o ' + dir + '/results/lumireport_brilcalc.csv'
-                cmd += '; tail ' + dir + '/results/lumireport_brilcalc.csv'
+                cmd += ' -o ' + dir + '/results/lumiReport_brilcalc.csv'
+                cmd += '; tail ' + dir + '/results/lumiReport_brilcalc.csv'
+                os.system(cmd)
+
+                cmd = 'cp ' + dir + '/results/lumiReport_brilcalc.csv'
+                cmd += ' /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsRD/lumiReport/'
+                cmd += os.path.basename(dir)[5:] + '_bricalc.csv'
                 os.system(cmd)
         print 20*'#' + 50*'-' + 20*'#' + '\n\n'
 
