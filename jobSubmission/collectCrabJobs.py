@@ -5,13 +5,15 @@ import humanfriendly
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument ('inputDir', help='Input dir template for glob', nargs='+')
+parser.add_argument ('inputDir', help='list of directories', nargs='+')
 
 args = parser.parse_args()
 
 for dir in args.inputDir:
     print 20*'#' + 50*'-' + 20*'#'
     print 'Direcory:', dir
+    if dir[-1] != '/':
+        dir += '/'
     dlist = dir.split('/')
 
     i_BPH = None

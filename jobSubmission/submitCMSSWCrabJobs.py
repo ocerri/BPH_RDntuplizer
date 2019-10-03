@@ -84,7 +84,7 @@ if not os.path.isdir('tmp'):
 for k, d in prod_samples['samples'].iteritems():
     if 'data_Run2018' in k:
         for i in d['parts']:
-            if int(i) != 1: continue
+            if int(i) != 3: continue
             dataset = d['dataset'].format(i)
             print '\n########## {} ##########\n'.format(dataset)
 

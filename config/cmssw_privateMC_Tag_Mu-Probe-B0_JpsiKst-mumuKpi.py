@@ -97,16 +97,16 @@ process.trgF = cms.EDFilter("BPHTriggerPathFilter",
 
 process.B2JpsiKstDT = cms.EDProducer("B2JpsiKstDecayTreeProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.B2JpsiKstDTFilter = cms.EDFilter("B2JpsiKstDecayTreeFilter",
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.MCpart = cms.EDProducer("MCTruthB2JpsiKstProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 cfg_name = os.path.basename(sys.argv[0])
