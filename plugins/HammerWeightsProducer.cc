@@ -94,7 +94,7 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
       centralValuesOpt += Form("%s: %f, ", elem.first.c_str(), elem.second[0]);
     }
     centralValuesOpt += "}";
-    cout << centralValuesOpt << endl;
+    if (verbose) {cout << centralValuesOpt << endl;}
     hammer.setOptions("BtoD*CLN");
 
     produces<map<string, float>>("outputNtuplizer");

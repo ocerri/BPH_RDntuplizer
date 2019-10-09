@@ -2,9 +2,9 @@ import yaml
 import os
 import datetime
 
-# tag = 'B2DstMu'
+tag = 'B2DstMu'
 # tag = 'B2DstK'
-tag = 'B2JpsiKst'
+# tag = 'B2JpsiKst'
 
 cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
        'B2DstK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py',
@@ -29,7 +29,7 @@ config.General.transferOutputs = True
 config.General.transferLogs = True
 '''
     )
-    dataset_tag = '{}_{}_RDntuplizer_{}_{}'.format(ds_list[1], ds_list[2], tag, date_str)
+    dataset_tag = '{}_{}_RDntuplizer_{}'.format(ds_list[1], ds_list[2], tag)#, date_str)
     fout.write("config.General.requestName = '{}'".format(dataset_tag))
     fout.write('\n')
     fout.write("config.section_('JobType')")
@@ -82,9 +82,9 @@ if not os.path.isdir('tmp'):
     os.system('mkdir tmp')
 
 for k, d in prod_samples['samples'].iteritems():
-    if 'data_Run2018' in k:
+    if 'data_Run2018A' in k:
         for i in d['parts']:
-            if int(i) != 3: continue
+            if int(i) == 1: continue
             dataset = d['dataset'].format(i)
             print '\n########## {} ##########\n'.format(dataset)
 

@@ -226,7 +226,6 @@ RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedC
   parts.push_back(pFactory.particle(D0_tk, mD0, chi, ndf, dmD0));
   if (!mass_constrain) {
     KinematicParticleVertexFitter VtxFitter;
-    cout << parts.size() << endl;
     RefCountedKinematicTree DstKinTree = VtxFitter.fit(parts);
     return DstKinTree;
   }

@@ -58,6 +58,8 @@ process.source = cms.Source("PoolSource",
 '''
 if args.outputFile == '.root':
     outname = 'B2DstMu_CAND.root'
+elif args.outputFile.startswith('_numEvent'):
+    outname = 'B2DstMu_CAND' + args.outputFile
 else:
     outname = args.outputFile
 
@@ -85,14 +87,6 @@ process.trgF = cms.EDFilter("BPHTriggerPathFilter",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", "")
 )
 
-
-process.R2Mmatch = cms.EDProducer("RECOMCmatchDecayRecoProducer",
-        verbose = cms.int32(0)
-)
-
-process.R2MmatchFilter = cms.EDFilter("RECOMCmatchDecayRecoFilter",
-        verbose = cms.int32(0)
-)
 
 process.B2MuDstDT = cms.EDProducer("B2DstMuDecayTreeProducer",
         trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
