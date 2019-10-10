@@ -139,6 +139,8 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     p4["Dst"] = TLorentzVector();
     p4["pis"] = TLorentzVector();
     p4["D0"] = TLorentzVector();
+    p4["pi"] = TLorentzVector();
+    p4["K"] = TLorentzVector();
 
     if(i_B >= 0){
       auto p = (*PrunedGenParticlesHandle)[i_B];
@@ -164,12 +166,13 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
             }
             else if(abs(dd->pdgId()) == 421) {
               p4["D0"].SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
-              // for(auto ddd : dd->daughterRefVector()) {
-              //   if (ddd->pdgId() == -211 || ddd->pdgId() == 321)
-              //   {
-              //     string name = ddd->pdgId() == -211 ? "pi" : "K";
-              //   }
-              // }
+              for(auto ddd : dd->daughterRefVector()) {
+                if (ddd->pdgId() == -211 || ddd->pdgId() == 321)
+                {
+                  string name = ddd->pdgId() == -211 ? "pi" : "K";
+                  p4[name].SetPtEtaPhiM(ddd->pt(), ddd->eta(), ddd->phi(), ddd->mass());
+                }
+              }
             }
           }
         }
