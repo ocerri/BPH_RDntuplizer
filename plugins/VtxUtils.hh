@@ -13,11 +13,21 @@
 #include <utility>
 
 namespace vtxu {
+  struct kinFitResuts{
+    bool isValid = false;
+    double chi2 = -1;
+    double dof = -1;
+    double pval = -1;
+    bool isGood = false;
+  };
+
   RefCountedKinematicTree FitD0(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);
   RefCountedKinematicTree FitKst_piK(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);
   RefCountedKinematicTree FitPhi_KK(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);
   RefCountedKinematicTree FitDst_fitD0wMassConstraint(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, pat::PackedCandidate, bool, int);
   RefCountedKinematicTree FitJpsi_mumu(const edm::EventSetup&, pat::Muon, pat::Muon, bool);
+  RefCountedKinematicTree FitB_mumupiK(const edm::EventSetup&, pat::Muon, pat::Muon, pat::PackedCandidate, pat::PackedCandidate, bool, bool, bool, reco::Vertex* = nullptr);
+  RefCountedKinematicTree FitB_mumupiK(const RefCountedKinematicParticle, const RefCountedKinematicParticle, const RefCountedKinematicParticle, const RefCountedKinematicParticle, bool, bool, bool, reco::Vertex* = nullptr);
   RefCountedKinematicTree FitDst(const edm::EventSetup&, pat::PackedCandidate, const RefCountedKinematicParticle, bool);
   RefCountedKinematicTree FitVtxMuDst(const edm::EventSetup&, const RefCountedKinematicParticle, pat::Muon);
   RefCountedKinematicTree FitVtxJpsiKst(const edm::EventSetup&, const RefCountedKinematicParticle, const RefCountedKinematicParticle, bool);
@@ -29,6 +39,7 @@ namespace vtxu {
   std::pair<double,double> vtxsDistance(reco::VertexRef, RefCountedKinematicVertex);
   std::pair<double,double> vtxsDistance(reco::Vertex, RefCountedKinematicVertex);
   std::pair<double,double> vtxsTransverseDistance(reco::Vertex, RefCountedKinematicVertex);
+  kinFitResuts fitQuality(RefCountedKinematicTree, double = -1);
   double computePointingCos(reco::Vertex, const RefCountedKinematicVertex, const RefCountedKinematicParticle);
   TLorentzVector getTLVfromKinPart(const RefCountedKinematicParticle);
   TLorentzVector getTLVfromTrack(reco::Track, double);
@@ -36,4 +47,4 @@ namespace vtxu {
   double dPhi(double, double);
   double dR(double, double, double, double);
   double computeIP(reco::Candidate::Point, reco::Candidate::Point, reco::Candidate::Vector, bool);
-}
+};
