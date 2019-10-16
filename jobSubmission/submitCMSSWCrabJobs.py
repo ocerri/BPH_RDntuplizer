@@ -6,6 +6,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument ('tag', type=str, choices=['B2DstMu', 'B2DstK', 'B2JpsiKst'], help='Tag identifying the production')
+parser.add_argument ('--wait', default=False, action='store_true')
 args = parser.parse_args()
 
 tag = args.tag
@@ -100,5 +101,7 @@ for k, d in prod_samples['samples'].iteritems():
             print ''
             cmd = 'cd tmp; source /cvmfs/cms.cern.ch/crab3/crab.sh;'
             cmd += ' crab submit -c ' + fname
+            if args.wait:
+                cmd += ' --wait'
             os.system(cmd)
             print '\n\n'

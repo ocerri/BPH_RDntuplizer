@@ -41,6 +41,7 @@ namespace vtxu {
   std::pair<double,double> vtxsTransverseDistance(reco::Vertex, RefCountedKinematicVertex);
   kinFitResuts fitQuality(RefCountedKinematicTree, double = -1);
   double computePointingCos(reco::Vertex, const RefCountedKinematicVertex, const RefCountedKinematicParticle);
+  double computePointingCosTransverse(reco::Vertex, const RefCountedKinematicVertex, const RefCountedKinematicParticle);
   TLorentzVector getTLVfromKinPart(const RefCountedKinematicParticle);
   TLorentzVector getTLVfromTrack(reco::Track, double);
   TLorentzVector getTLVfromCand(pat::PackedCandidate, double);

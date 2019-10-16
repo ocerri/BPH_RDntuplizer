@@ -49,7 +49,7 @@ elif args.inputFiles:
     else:
         flist = args.inputFiles
 else:
-    flist = glob('/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-Mu_Probe-B0_KDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVS_PU0_10-2-3/*MINIAODSIM*.root')
+    flist = glob('/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU20_10-2-3/jobs_out/*MINIAODSIM*.root')
 
 for i in range(len(flist)):
     flist[i] = 'file:' + flist[i]

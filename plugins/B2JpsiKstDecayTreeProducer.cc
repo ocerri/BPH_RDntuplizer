@@ -19,7 +19,7 @@
 
 #include "VtxUtils.hh"
 
-#define __PvalChi2Vtx_max__ 0.95 // Very loose cut
+#define __PvalChi2Vtx_min__ 0.05 // Very loose cut
 #define __dzMax__ 2.0
 #define __dmJpsi_max__ 1.0 // loose cut
 #define __sigIPpfCand_min__ 2. // loose cut
@@ -126,7 +126,7 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
 
         if(verbose){cout << "Fitting the J/Psi from: " << Form("%d %d", i1, i2) << endl;}
         auto kinTree = vtxu::FitJpsi_mumu(iSetup, mup, mum, false);
-        auto res = vtxu::fitQuality(kinTree, 1-__PvalChi2Vtx_max__);
+        auto res = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
         if(!res.isGood) continue;
 
         kinTree->movePointerToTheTop();
@@ -134,10 +134,10 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
         if (fabs(massMuPair - mass_Jpsi) > __dmJpsi_max__) continue;
         if(verbose) {cout << Form("chi2: %.2f (%.2f) - pval: %.2f - mass: %.2f", res.chi2, res.dof, res.pval, massMuPair) << endl;}
 
-        kinTree = vtxu::FitJpsi_mumu(iSetup, mup, mum, true);
-        auto resC = vtxu::fitQuality(kinTree, 1-__PvalChi2Vtx_max__);
-        if(!resC.isValid) continue;
-        if(verbose) {cout << Form("chi2 mass: %.2f (%.2f) - pval: %.2f", resC.chi2, resC.dof, resC.pval) << endl;}
+        // kinTree = vtxu::FitJpsi_mumu(iSetup, mup, mum, true);
+        // auto resC = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
+        // if(!resC.isValid) continue;
+        // if(verbose) {cout << Form("chi2 mass: %.2f (%.2f) - pval: %.2f", resC.chi2, resC.dof, resC.pval) << endl;}
 
         vecJpsiKinTree.push_back(kinTree);
         vecMass_mumu.push_back(massMuPair);
@@ -212,7 +212,7 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
 
         //Fit the vertex w/o mass constraint
         auto KstKinTree = vtxu::FitKst_piK(iSetup, pi, K, false);
-        auto res_piK = vtxu::fitQuality(KstKinTree, 1-__PvalChi2Vtx_max__);
+        auto res_piK = vtxu::fitQuality(KstKinTree, __PvalChi2Vtx_min__);
         if(!res_piK.isGood) continue;
 
         KstKinTree->movePointerToTheTop();
@@ -220,17 +220,19 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
         if (fabs(mass_piK - mass_Kst) > __dmKst_max__) continue;
 
         //Fit the vertex WITH mass constraint
-        KstKinTree = vtxu::FitKst_piK(iSetup, pi, K, true);
-        auto res_piK_cKstMass = vtxu::fitQuality(KstKinTree, 1-__PvalChi2Vtx_max__);
-        if(!res_piK_cKstMass.isValid) continue;
+        // KstKinTree = vtxu::FitKst_piK(iSetup, pi, K, true);
+        // auto res_piK_cKstMass = vtxu::fitQuality(KstKinTree, __PvalChi2Vtx_min__);
+        // if(!res_piK_cKstMass.isValid) continue;
 
         KstKinTree->movePointerToTheTop();
         auto Kst = KstKinTree->currentParticle();
         auto vtxKst = KstKinTree->currentDecayVertex();
 
         auto cos_Kst_PV = vtxu::computePointingCos(primaryVtx, vtxKst, Kst);
+        auto cosT_Kst_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxKst, Kst);
         auto d_vtxKst_PV = vtxu::vtxsDistance(primaryVtx, vtxKst);
         auto sigd_vtxKst_PV = d_vtxKst_PV.first/d_vtxKst_PV.second;
+        auto dxy_vtxKst_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxKst);
 
         auto PhiKinTree = vtxu::FitPhi_KK(iSetup, pi, K, false);
         float mass_KK = -1;
@@ -256,21 +258,22 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
         */
         for(uint i_J = 0; i_J < vecJpsiKinTree.size(); ++i_J) {
           auto JpsiKinTree = vecJpsiKinTree[i_J];
-          auto res_mumu_cJpsiMass = vtxu::fitQuality(JpsiKinTree, 1-__PvalChi2Vtx_max__);
+          // auto res_mumu_cJpsiMass = vtxu::fitQuality(JpsiKinTree, __PvalChi2Vtx_min__);
           JpsiKinTree->movePointerToTheTop();
           auto Jpsi = JpsiKinTree->currentParticle();
           auto vtxJpsi = JpsiKinTree->currentDecayVertex();
 
           auto cos_Jpsi_PV = vtxu::computePointingCos(primaryVtx, vtxJpsi, Jpsi);
+          auto cosT_Jpsi_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxJpsi, Jpsi);
           auto d_vtxJpsi_PV = vtxu::vtxsDistance(primaryVtx, vtxJpsi);
           auto sigd_vtxJpsi_PV = fabs(d_vtxJpsi_PV.first/d_vtxJpsi_PV.second);
           auto dxy_vtxJpsi_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxJpsi);
 
-          auto debugPrint = [](string tag, vtxu::kinFitResuts r, double m) {
-            cout << tag << endl;
-            cout << "Valid: " << r.isValid << ", Good: " << r.isGood << endl;
-            cout << Form("chi2: %.2f (%.2f), pval: %.2f, mass: %.2f", r.chi2, r.dof, r.pval, m) << endl << endl;
-          };
+          // auto debugPrint = [](string tag, vtxu::kinFitResuts r, double m) {
+          //   cout << tag << endl;
+          //   cout << "Valid: " << r.isValid << ", Good: " << r.isGood << endl;
+          //   cout << Form("chi2: %.2f (%.2f), pval: %.2f, mass: %.2f", r.chi2, r.dof, r.pval, m) << endl << endl;
+          // };
 
           auto addToOutBFit = [](string tag, vtxu::kinFitResuts r, double m, RefCountedKinematicTree kinTree, reco::Vertex primaryVtx, map<string, vector<float>>* outv) {
             (*outv)["isValid_"+tag].push_back(r.isValid);
@@ -304,85 +307,65 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
               (*outv)["sigd_vtxB_PV_"+tag].push_back(0);
               (*outv)["B_"+tag+"_pt"].push_back(0);
               (*outv)["B_"+tag+"_eta"].push_back(0);
-              (*outv)["B_"+tag+"_phi"].push_back(0);              
+              (*outv)["B_"+tag+"_phi"].push_back(0);
             }
           };
 
-          // Fit the B vertex from Jpsi and Kst
-          RefCountedKinematicTree BKinTree;
-          try{BKinTree = vtxu::FitVtxJpsiKst(iSetup, Jpsi, Kst, false);}
-          catch(...) {cout << "Fitting B -> J/psi K* failed" << endl; continue;}
 
-          auto res = vtxu::fitQuality(BKinTree, 1-__PvalChi2Vtx_max__);
+          RefCountedKinematicTree BKinTree;
+          BKinTree = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, false, false, false);
+          auto res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
           if(!res.isValid) continue;
           auto mass = BKinTree->currentParticle()->currentState().mass();
           if(fabs(mass - mass_B0) > __dmB0_max__) continue;
-          debugPrint("JpsiKst", res, mass);
-          addToOutBFit("JpsiKst", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
-          // if(verbose) {
-          //   cout << Form("chi2: %.2f (%.2f), pval: %.2f", chi2_JpsiKst, dof_JpsiKst, pval_JspiKst) << endl;
-          //   cout << Form("Candidate B0 mass (%.3f GeV) check passed", mass_JpsiKst) << endl;
-          // }
+          // debugPrint("mumupiK", res, mass);
+          addToOutBFit("mumupiK", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
 
-          BKinTree = vtxu::FitVtxJpsiKst(iSetup, Jpsi, Kst, true);
-          res = vtxu::fitQuality(BKinTree, 1-__PvalChi2Vtx_max__);
+
+
+          BKinTree = vtxu::FitVtxJpsiKst(iSetup, Jpsi, Kst, false);
+          res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
           if(res.isValid) mass = BKinTree->currentParticle()->currentState().mass();
           else mass = 0;
-          debugPrint("JpsiKst mass constraint", res, mass);
+          // debugPrint("JpsiKst", res, mass);
+          addToOutBFit("JpsiKst", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
+
+          BKinTree = vtxu::FitVtxJpsiKst(iSetup, Jpsi, Kst, true);
+          res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+          if(res.isValid) mass = BKinTree->currentParticle()->currentState().mass();
+          else mass = 0;
+          // debugPrint("JpsiKst mass constraint", res, mass);
           addToOutBFit("JpsiKst_cBMass", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
 
-          // BKinTree->movePointerToTheTop();
-          // auto B = BKinTree->currentParticle();
-          // auto vtxB = BKinTree->currentDecayVertex();
-          // //
-          // double cos_B_PV = vtxu::computePointingCos(primaryVtx, vtxB, B);
-          // auto d_vtxB_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
-          // double sigd_vtxB_PV = d_vtxB_PV.first/d_vtxB_PV.second;
-          // if (1 || verbose) {
-          //   cout << Form("PV: sigd = %.2f  cos = %.3e", sigd_vtxB_PV, 1-cos_B_PV) << endl;
-          //   cout << "B0 -> J/psi K* found\n";
-          // }
+          // BKinTree = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, true, false, false);
+          // res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+          // if(res.isValid) mass = BKinTree->currentParticle()->currentState().mass();
+          // else mass = 0;
+          // // debugPrint("mumupiK JpsiKst mass", res, mass);
+          // addToOutBFit("mumupiK_cJpsiKstMass", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
 
-
-          // Fit the B vertex from the final state
-          RefCountedKinematicTree BKinTree_fs;
-          BKinTree_fs = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, false, false, false);
-          res = vtxu::fitQuality(BKinTree_fs, 1-__PvalChi2Vtx_max__);
-          if(res.isValid) mass = BKinTree_fs->currentParticle()->currentState().mass();
+          BKinTree = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, false, true, false);
+          res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+          if(res.isValid) mass = BKinTree->currentParticle()->currentState().mass();
           else mass = 0;
-          debugPrint("mumupiK", res, mass);
-          addToOutBFit("mumupiK", res, mass, BKinTree_fs, primaryVtx, &(*outputVecNtuplizer));
+          // debugPrint("mumupiK B mass", res, mass);
+          addToOutBFit("mumupiK_cBMass", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
 
-          BKinTree_fs = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, true, false, false);
-          res = vtxu::fitQuality(BKinTree_fs, 1-__PvalChi2Vtx_max__);
-          if(res.isValid) mass = BKinTree_fs->currentParticle()->currentState().mass();
+          BKinTree = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, false, false, true, &primaryVtx);
+          res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+          if(res.isValid) mass = BKinTree->currentParticle()->currentState().mass();
           else mass = 0;
-          debugPrint("mumupiK JpsiKst mass", res, mass);
-          addToOutBFit("mumupiK_cJpsiKstMass", res, mass, BKinTree_fs, primaryVtx, &(*outputVecNtuplizer));
-
-          BKinTree_fs = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, false, true, false);
-          res = vtxu::fitQuality(BKinTree_fs, 1-__PvalChi2Vtx_max__);
-          if(res.isValid) mass = BKinTree_fs->currentParticle()->currentState().mass();
-          else mass = 0;
-          debugPrint("mumupiK B mass", res, mass);
-          addToOutBFit("mumupiK_cBMass", res, mass, BKinTree_fs, primaryVtx, &(*outputVecNtuplizer));
-
-          BKinTree_fs = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, false, false, true, &primaryVtx);
-          res = vtxu::fitQuality(BKinTree_fs, 1-__PvalChi2Vtx_max__);
-          if(res.isValid) mass = BKinTree_fs->currentParticle()->currentState().mass();
-          else mass = 0;
-          debugPrint("mumupiK pointing", res, mass);
-          addToOutBFit("mumupiK_cPointing", res, mass, BKinTree_fs, primaryVtx, &(*outputVecNtuplizer));
+          // debugPrint("mumupiK pointing", res, mass);
+          addToOutBFit("mumupiK_cPointing", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
 
 
-          BKinTree_fs = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, true, false, true, &primaryVtx);
-          res = vtxu::fitQuality(BKinTree_fs, 1-__PvalChi2Vtx_max__);
-          if(res.isValid) mass = BKinTree_fs->currentParticle()->currentState().mass();
-          else mass = 0;
-          debugPrint("mumupiK JpsiKst mass + pointing", res, mass);
-          addToOutBFit("mumupiK_cJpsiKstMassPointing", res, mass, BKinTree_fs, primaryVtx, &(*outputVecNtuplizer));
+          // BKinTree = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, true, false, true, &primaryVtx);
+          // res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+          // if(res.isValid) mass = BKinTree->currentParticle()->currentState().mass();
+          // else mass = 0;
+          // // debugPrint("mumupiK JpsiKst mass + pointing", res, mass);
+          // addToOutBFit("mumupiK_cJpsiKstMassPointing", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
 
-          cout << "---------------------- Refitted -------------------------\n";
 
           JpsiKinTree->movePointerToTheFirstChild();
           auto refit_Mu1 = JpsiKinTree->currentParticle();
@@ -393,19 +376,19 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           KstKinTree->movePointerToTheNextChild();
           auto refit_K = KstKinTree->currentParticle();
 
-          BKinTree_fs = vtxu::FitB_mumupiK(refit_Mu1, refit_Mu2, refit_pi, refit_K, false, false, false);
-          res = vtxu::fitQuality(BKinTree_fs, 1-__PvalChi2Vtx_max__);
-          if(res.isValid) mass = BKinTree_fs->currentParticle()->currentState().mass();
+          BKinTree = vtxu::FitB_mumupiK(refit_Mu1, refit_Mu2, refit_pi, refit_K, false, false, false);
+          res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+          if(res.isValid) mass = BKinTree->currentParticle()->currentState().mass();
           else mass = 0;
-          debugPrint("mumupiK", res, mass);
-          addToOutBFit("mumupiKrefit", res, mass, BKinTree_fs, primaryVtx, &(*outputVecNtuplizer));
+          // debugPrint("mumupiK", res, mass);
+          addToOutBFit("mumupiKrefit", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
 
-          BKinTree_fs = vtxu::FitB_mumupiK(refit_Mu1, refit_Mu2, refit_pi, refit_K, false, true, false);
-          res = vtxu::fitQuality(BKinTree_fs, 1-__PvalChi2Vtx_max__);
-          if(res.isValid) mass = BKinTree_fs->currentParticle()->currentState().mass();
+          BKinTree = vtxu::FitB_mumupiK(refit_Mu1, refit_Mu2, refit_pi, refit_K, false, true, false);
+          res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+          if(res.isValid) mass = BKinTree->currentParticle()->currentState().mass();
           else mass = 0;
-          debugPrint("mumupiK B mass", res, mass);
-          addToOutBFit("mumupiKrefit_cBmass", res, mass, BKinTree_fs, primaryVtx, &(*outputVecNtuplizer));
+          // debugPrint("mumupiK B mass", res, mass);
+          addToOutBFit("mumupiKrefit_cBmass", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
 
           n_B++;
 
@@ -427,9 +410,10 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           (*outputVecNtuplizer)["dof_piK"].push_back(res_piK.dof);
           (*outputVecNtuplizer)["pval_piK"].push_back(res_piK.pval);
           (*outputVecNtuplizer)["mass_piK"].push_back(mass_piK);
-          (*outputVecNtuplizer)["chi2_piK_cKstMass"].push_back(res_piK_cKstMass.chi2);
-          (*outputVecNtuplizer)["dof_piK_cKstMass"].push_back(res_piK_cKstMass.dof);
-          (*outputVecNtuplizer)["pval_piK_cKstMass"].push_back(res_piK_cKstMass.pval);
+          // (*outputVecNtuplizer)["chi2_piK_cKstMass"].push_back(res_piK_cKstMass.chi2);
+          // (*outputVecNtuplizer)["dof_piK_cKstMass"].push_back(res_piK_cKstMass.dof);
+          // (*outputVecNtuplizer)["pval_piK_cKstMass"].push_back(res_piK_cKstMass.pval);
+          AddTLVToOut(vtxu::getTLVfromKinPart(Kst), string("Kst"), &(*outputVecNtuplizer));
           // KstKinTree->movePointerToTheFirstChild();
           // auto refit_pi = KstKinTree->currentParticle();
           AddTLVToOut(vtxu::getTLVfromKinPart(refit_pi), string("piRefit"), &(*outputVecNtuplizer));
@@ -437,8 +421,10 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           // auto refit_K = KstKinTree->currentParticle();
           AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("KRefit"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["cos_Kst_PV"].push_back(cos_Kst_PV);
+          (*outputVecNtuplizer)["cosT_Kst_PV"].push_back(cosT_Kst_PV);
           (*outputVecNtuplizer)["d_vtxKst_PV"].push_back(d_vtxKst_PV.first);
           (*outputVecNtuplizer)["sigd_vtxKst_PV"].push_back(sigd_vtxKst_PV);
+          (*outputVecNtuplizer)["sigdxy_vtxKst_PV"].push_back(dxy_vtxKst_PV.first/dxy_vtxKst_PV.second);
           (*outputVecNtuplizer)["mass_KK"].push_back(mass_KK);
           (*outputVecNtuplizer)["mass_piK_CPconj"].push_back(mass_piK_CPconj);
 
@@ -462,10 +448,10 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           (*outputVecNtuplizer)["dof_mumu"].push_back(vecRes_mumu[i_J].dof);
           (*outputVecNtuplizer)["pval_mumu"].push_back(vecRes_mumu[i_J].pval);
           (*outputVecNtuplizer)["mass_mumu"].push_back(vecMass_mumu[i_J]);
-          (*outputVecNtuplizer)["chi2_mumu_cJpsiMass"].push_back(res_mumu_cJpsiMass.chi2);
-          (*outputVecNtuplizer)["dof_mumu_cJpsiMass"].push_back(res_mumu_cJpsiMass.dof);
-          (*outputVecNtuplizer)["pval_mumu_cJpsiMass"].push_back(res_mumu_cJpsiMass.pval);
-          // (*outputVecNtuplizer)["chi2_Jpsi"].push_back(vtxJpsi->chiSquared());
+          // (*outputVecNtuplizer)["chi2_mumu_cJpsiMass"].push_back(res_mumu_cJpsiMass.chi2);
+          // (*outputVecNtuplizer)["dof_mumu_cJpsiMass"].push_back(res_mumu_cJpsiMass.dof);
+          // (*outputVecNtuplizer)["pval_mumu_cJpsiMass"].push_back(res_mumu_cJpsiMass.pval);
+          AddTLVToOut(vtxu::getTLVfromKinPart(Jpsi), string("Jpsi"), &(*outputVecNtuplizer));
           // JpsiKinTree->movePointerToTheFirstChild();
           // auto refit_Mu1 = JpsiKinTree->currentParticle();
           AddTLVToOut(vtxu::getTLVfromKinPart(refit_Mu1), string("mupRefit"), &(*outputVecNtuplizer));
@@ -473,32 +459,10 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           // auto refit_Mu2 = JpsiKinTree->currentParticle();
           AddTLVToOut(vtxu::getTLVfromKinPart(refit_Mu2), string("mumRefit"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["cos_Jpsi_PV"].push_back(cos_Jpsi_PV);
+          (*outputVecNtuplizer)["cosT_Jpsi_PV"].push_back(cosT_Jpsi_PV);
           (*outputVecNtuplizer)["d_vtxJpsi_PV"].push_back(d_vtxJpsi_PV.first);
           (*outputVecNtuplizer)["sigd_vtxJpsi_PV"].push_back(sigd_vtxJpsi_PV);
           (*outputVecNtuplizer)["sigdxy_vtxJpsi_PV"].push_back(dxy_vtxJpsi_PV.first/dxy_vtxJpsi_PV.second);
-
-          // (*outputVecNtuplizer)["chi2_JpsiKst"].push_back(chi2_JpsiKst);
-          // (*outputVecNtuplizer)["mass_JpsiKst"].push_back(mass_JpsiKst);
-          // (*outputVecNtuplizer)["chi2_JpsiKst_cBMass"].push_back(chi2_JpsiKst_cBMass);
-          // (*outputVecNtuplizer)["cos_B_PV"].push_back(cos_B_PV);
-          // (*outputVecNtuplizer)["d_vtxB_PV"].push_back(d_vtxB_PV.first);
-          // (*outputVecNtuplizer)["sigd_vtxB_PV"].push_back(sigd_vtxB_PV);
-
-          // (*outputVecNtuplizer)["dof_mumupiK"].push_back(dof_mumupiK);
-          // (*outputVecNtuplizer)["chi2_mumupiK"].push_back(chi2_mumupiK);
-          // (*outputVecNtuplizer)["mass_mumupiK"].push_back(mass_mumupiK);
-
-          // (*outputVecNtuplizer)["dof_mumupiK_cJpsiKstMass"].push_back(dof_mumupiK_cJpsiKstMass);
-          // (*outputVecNtuplizer)["chi2_mumupiK_cJpsiKstMass"].push_back(chi2_mumupiK_cJpsiKstMass);
-          // (*outputVecNtuplizer)["mass_mumupiK_cJpsiKstMass"].push_back(mass_mumupiK_cJpsiKstMass);
-
-          // (*outputVecNtuplizer)["dof_mumupiK_cPointingPV"].push_back(dof_mumupiK_cPointingPV);
-          // (*outputVecNtuplizer)["chi2_mumupiK_cPointingPV"].push_back(chi2_mumupiK_cPointingPV);
-          // (*outputVecNtuplizer)["mass_mumupiK_cPointingPV"].push_back(mass_mumupiK_cPointingPV);
-          //
-          // (*outputVecNtuplizer)["dof_mumupiK_cJpsiKstMassPointingPV"].push_back(dof_mumupiK_cJpsiKstMassPointingPV);
-          // (*outputVecNtuplizer)["chi2_mumupiK_cJpsiKstMassPointingPV"].push_back(chi2_mumupiK_cJpsiKstMassPointingPV);
-          // (*outputVecNtuplizer)["mass_mumupiK_cJpsiKstMassPointingPV"].push_back(mass_mumupiK_cJpsiKstMassPointingPV);
 
           // AddTLVToOut(vtxu::getTLVfromKinPart(B), string("B"), &(*outputVecNtuplizer));
           // BKinTree->movePointerToTheFirstChild();

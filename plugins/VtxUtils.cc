@@ -543,7 +543,6 @@ TLorentzVector vtxu::getTLVfromKinPart(const RefCountedKinematicParticle p) {
   return out;
 }
 
-
 TLorentzVector vtxu::getTLVfromTrack(reco::Track t, double mass) {
   TLorentzVector out;
   auto p3 = t.momentum();
@@ -661,6 +660,21 @@ double vtxu::computePointingCos(reco::Vertex vtxP, const RefCountedKinematicVert
   TVector3 p3(p->currentState().globalMomentum().x(),
               p->currentState().globalMomentum().y(),
               p->currentState().globalMomentum().z()
+            );
+
+  double dalpha = dvtx.Angle(p3);
+  return cos(dalpha);
+}
+
+double vtxu::computePointingCosTransverse(reco::Vertex vtxP, const RefCountedKinematicVertex vtxKinPartDecay, const RefCountedKinematicParticle p) {
+  TVector3 dvtx(vtxKinPartDecay->position().x() - vtxP.position().x(),
+                vtxKinPartDecay->position().y() - vtxP.position().y(),
+                0
+               );
+
+  TVector3 p3(p->currentState().globalMomentum().x(),
+              p->currentState().globalMomentum().y(),
+              0
             );
 
   double dalpha = dvtx.Angle(p3);
