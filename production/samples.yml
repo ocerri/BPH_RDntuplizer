@@ -38,7 +38,6 @@ samples:
       - 3
       - 4
       - 5
-      - 6
   data_Run2018D:
     dataset: /ParkingBPH{}/Run2018D-05May2019promptD-v1/MINIAOD
     isMC: False
@@ -50,6 +49,8 @@ samples:
       - 2
       - 3
       # The rest is still to come, hopefully in the same version
+      # - 4
+      # - 5
   #
   #  MC
   #
