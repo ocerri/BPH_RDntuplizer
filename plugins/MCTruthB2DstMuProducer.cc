@@ -206,8 +206,8 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     for(auto kv : vtx) {
       auto n = kv.first;
       auto v = kv.second;
-      (*outputNtuplizer)["MC_prodVtx_"+n+"_x"] = v.x();
-      (*outputNtuplizer)["MC_prodVtx_"+n+"_y"] = v.y();
+      (*outputNtuplizer)["MC_prodVtx_"+n+"_dxy"] = hypot(v.x(), v.y());
+      (*outputNtuplizer)["MC_prodVtx_"+n+"_phi"] = atan2(v.y(), v.x());
       (*outputNtuplizer)["MC_prodVtx_"+n+"_z"] = v.z();
     }
 
