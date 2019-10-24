@@ -23,14 +23,13 @@
 #define __dzMax__ 1.0
 #define __dRMax__ 2.0
 #define __sigIPpfCand_min__ 2. // loose cut
-#define __PvalChi2Vtx_max__ 0.99 // Very loose cut
-#define __dmD0_max__ 0.065 // 5*0.013 GeV(i.e. 3 sigma) form the D0 mass
-#define __cos_D0_PV_min__ 0.97 // Optimized in D0 fitting
-#define __sigd_vtxD0_PV_min__ 2.0 // Optimized in D0 fitting
-#define __dmDst_max__ 0.0040 // 5*0.8 MeV (i.e 3 inflated sigma) from Dst mass
-#define __mass_MuDst_max__ 7.0 // Some reasonable cut on the mass
-#define __cos_MuDst_PV_min__ 0.8 // Some loose cut tuned on MC
-#define __PvalChi2FakeVtx_min__ 0.90 // Very loose cut
+#define __PvalChi2Vtx_min__ 0.05 // Very loose cut
+#define __dmD0_max__ 0.1 // loose cut
+#define __sigdxy_vtx_PV_min__ 2.0 // Optimized in D0 fitting
+#define __dmDst_max__ 0.050 // Loose cut
+#define __mass_D0pismu_max__ 7.0 // Some reasonable cut on the mass
+// #define __cos_MuDst_PV_min__ 0.8 // Some loose cut tuned on MC
+// #define __PvalChi2FakeVtx_min__ 0.90 // Very loose cut
 
 
 using namespace std;
@@ -41,6 +40,7 @@ public:
 
     explicit B2DstMuDecayTreeProducer(const edm::ParameterSet &iConfig);
     void AddTLVToOut(TLorentzVector, string, map<string, vector<float>>*);
+    bool qualityMuonID(pat::Muon, reco::Vertex);
 
     ~B2DstMuDecayTreeProducer() override {};
 
@@ -96,6 +96,14 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     int n_K = 0, n_pi = 0, n_D0 = 0, n_pis = 0, n_Dst = 0, n_B = 0;
 
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
+    //######## Require muon quality ##################
+    if(!qualityMuonID(trgMu, primaryVtx)) {
+      (*outputNtuplizer)["n_B"] = 0;
+      iEvent.put(move(outputNtuplizer), "outputNtuplizer");
+      iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");
+      return;
+    }
+
     /*
     ############################################################################
                               Look for the K+ (321)
@@ -151,33 +159,24 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
         //Fit the vertex
         auto D0KinTree = vtxu::FitD0(iSetup, pi, K, false);
-        bool accept_D0 = false;
-        double chi2_Kpi;
-        if(D0KinTree->isValid()) {
-          D0KinTree->movePointerToTheTop();
-          chi2_Kpi = D0KinTree->currentDecayVertex()->chiSquared();
-          accept_D0 = chi2_Kpi > 0 && chi2_Kpi < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, D0KinTree->currentDecayVertex()->degreesOfFreedom());
-        }
-        if(!accept_D0) continue;
+        auto res_piK = vtxu::fitQuality(D0KinTree, __PvalChi2Vtx_min__);
+        if(!res_piK.isGood) continue;
 
-        auto mass_Kpi = D0KinTree->currentParticle()->currentState().mass();
-        if (fabs(mass_Kpi - mass_D0) > __dmD0_max__) continue;
-
-        // Refit with mass constraint
-        D0KinTree = vtxu::FitD0(iSetup, pi, K, true);
-        if(!D0KinTree->isValid()) continue;
         D0KinTree->movePointerToTheTop();
+        auto mass_piK = D0KinTree->currentParticle()->currentState().mass();
+        if (fabs(mass_piK - mass_D0) > __dmD0_max__) continue;
+
         auto D0 = D0KinTree->currentParticle();
         auto vtxD0 = D0KinTree->currentDecayVertex();
 
         auto cos_D0_PV = vtxu::computePointingCos(primaryVtx, vtxD0, D0);
+        auto cosT_D0_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxD0, D0);
         auto d_vtxD0_PV = vtxu::vtxsDistance(primaryVtx, vtxD0);
         auto sigd_vtxD0_PV = d_vtxD0_PV.first/d_vtxD0_PV.second;
+        auto dxy_vtxD0_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxD0);
+        auto sigdxy_vtxD0_PV = dxy_vtxD0_PV.first/dxy_vtxD0_PV.second;
 
-        // Make selection cut to get good D0
-        accept_D0 = cos_D0_PV > __cos_D0_PV_min__;
-        accept_D0 &= sigd_vtxD0_PV > __sigd_vtxD0_PV_min__;
-        if(!accept_D0) continue;
+        if(sigdxy_vtxD0_PV < __sigdxy_vtx_PV_min__) continue;
         n_D0++;
 
         /*
@@ -208,61 +207,174 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
           // Fit the Dst vertex
           auto DstKinTree = vtxu::FitDst(iSetup, pis, D0, false);
-          bool accept_Dst = false;
-          double chi2_D0pis;
-          if(DstKinTree->isValid()) {
-            DstKinTree->movePointerToTheTop();
-            chi2_D0pis = DstKinTree->currentDecayVertex()->chiSquared();
-            accept_Dst = chi2_D0pis > 0 && chi2_D0pis < TMath::ChisquareQuantile(__PvalChi2Vtx_max__, DstKinTree->currentDecayVertex()->degreesOfFreedom());
-          }
-          if(!accept_Dst) continue;
+          auto res_D0pis = vtxu::fitQuality(DstKinTree, __PvalChi2Vtx_min__);
+          if(!res_D0pis.isGood) continue;
 
+          DstKinTree->movePointerToTheTop();
           auto mass_D0pis = DstKinTree->currentParticle()->currentState().mass();
           if (fabs(mass_D0pis - mass_Dst) > __dmDst_max__) continue;
 
-          // Refit with mass constraint
-          DstKinTree = vtxu::FitDst(iSetup, pis, D0, true);
-          if(!DstKinTree->isValid()) continue;
-          DstKinTree->movePointerToTheTop();
           auto Dst = DstKinTree->currentParticle();
           auto vtxDst = DstKinTree->currentDecayVertex();
 
           auto cos_Dst_PV = vtxu::computePointingCos(primaryVtx, vtxDst, Dst);
+          auto cosT_Dst_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxDst, Dst);
           auto d_vtxDst_PV = vtxu::vtxsDistance(primaryVtx, vtxDst);
           auto sigd_vtxDst_PV = d_vtxDst_PV.first/d_vtxDst_PV.second;
+          auto dxy_vtxDst_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxDst);
+          auto sigdxy_vtxDst_PV = dxy_vtxDst_PV.first/dxy_vtxDst_PV.second;
 
           n_Dst++;
           if (verbose) {cout << "D* found\n";}
 
-          //  Look for the Dst- and trigger muon to make a vertex
-          auto BKinTree = vtxu::FitVtxMuDst(iSetup, Dst, trgMu);
-          bool accept_MuDst = false;
-          double chi2_MuDst;
-          if(BKinTree->isValid()) {
-            BKinTree->movePointerToTheTop();
-            chi2_MuDst = BKinTree->currentDecayVertex()->chiSquared();
-            auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2Vtx_max__, BKinTree->currentDecayVertex()->degreesOfFreedom());
-            accept_MuDst = chi2_MuDst > 0 && chi2_MuDst < max_chi2;
-          }
-          if(!accept_MuDst) continue;
+          // Vertex fitting from B and Dst products
+          auto BKinTree = vtxu::FitB_D0pismu(iSetup, D0, pis, trgMu);
+          auto res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+          if(!res.isGood) continue;
+          BKinTree->movePointerToTheTop();
+          auto mass_D0pismu = BKinTree->currentParticle()->currentState().mass();
+          if (mass_D0pismu > __mass_D0pismu_max__) continue; // Last cut! from now on always save
+          if (verbose) {cout << "B->D* mu found\n";}
 
-          auto MuDst = BKinTree->currentParticle();
+          (*outputVecNtuplizer)["chi2_D0pismu"].push_back(res.chi2);
+          (*outputVecNtuplizer)["dof_D0pismu"].push_back(res.dof);
+          (*outputVecNtuplizer)["pval_D0pismu"].push_back(res.pval);
+          (*outputVecNtuplizer)["mass_D0pismu"].push_back(mass_D0pismu);
+
+          auto D0pismu = BKinTree->currentParticle();
           auto vtxB = BKinTree->currentDecayVertex();
 
           BKinTree->movePointerToTheFirstChild();
-          auto refit_Mu = BKinTree->currentParticle();
+          auto refit_D0 = BKinTree->currentParticle();
+          AddTLVToOut(vtxu::getTLVfromKinPart(refit_D0), string("D0_refitD0pismu"), &(*outputVecNtuplizer));
           BKinTree->movePointerToTheNextChild();
-          auto refit_Dst = BKinTree->currentParticle();
+          auto refit_pis = BKinTree->currentParticle();
+          AddTLVToOut(vtxu::getTLVfromKinPart(refit_pis), string("pis_refitD0pismu"), &(*outputVecNtuplizer));
+          BKinTree->movePointerToTheNextChild();
+          auto refit_mu = BKinTree->currentParticle();
+          AddTLVToOut(vtxu::getTLVfromKinPart(refit_mu), string("mu_refitD0pismu"), &(*outputVecNtuplizer));
 
-          auto mass_MuDst = MuDst->currentState().mass();
-          auto cos_MuDst_PV = vtxu::computePointingCos(primaryVtx, vtxB, MuDst);
-          auto d_vtxB_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
-          auto sigd_vtxB_PV = d_vtxB_PV.first/d_vtxB_PV.second;
+          auto p4_Dst_refitD0pismu = vtxu::getTLVfromKinPart(refit_pis) + vtxu::getTLVfromKinPart(refit_D0);
+          (*outputVecNtuplizer)["mass_D0pis_refitD0pismu"].push_back(p4_Dst_refitD0pismu.M());
+          AddTLVToOut(p4_Dst_refitD0pismu, string("Dst_refitD0pismu"), &(*outputVecNtuplizer));
 
-          bool accept_B = mass_MuDst < __mass_MuDst_max__;
-          accept_B &= cos_MuDst_PV > __cos_MuDst_PV_min__;
-          if(!accept_B) continue;
-          if (verbose) {cout << "B->D* mu found\n";}
+          auto cos_D0pismu_PV = vtxu::computePointingCos(primaryVtx, vtxB, D0pismu);
+          auto cosT_D0pismu_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxB, D0pismu);
+          auto d_vtxD0pismu_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
+          auto sigd_vtxD0pismu_PV = d_vtxD0pismu_PV.first/d_vtxD0pismu_PV.second;
+          auto dxy_vtxD0pismu_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
+          auto sigdxy_vtxD0pismu_PV = dxy_vtxD0pismu_PV.first/dxy_vtxD0pismu_PV.second;
+          (*outputVecNtuplizer)["cos_D0pismu_PV"].push_back(cos_D0pismu_PV);
+          (*outputVecNtuplizer)["cosT_D0pismu_PV"].push_back(cosT_D0pismu_PV);
+          (*outputVecNtuplizer)["d_vtxD0pismu_PV"].push_back(d_vtxD0pismu_PV.first);
+          (*outputVecNtuplizer)["sigd_vtxD0pismu_PV"].push_back(sigd_vtxD0pismu_PV);
+          (*outputVecNtuplizer)["dxy_vtxD0pismu_PV"].push_back(dxy_vtxD0pismu_PV.first);
+          (*outputVecNtuplizer)["sigdxy_vtxD0pismu_PV"].push_back(sigdxy_vtxD0pismu_PV);
+
+          /*
+          ############################################################################
+                                Compute analysis variables
+          ############################################################################
+          */
+          auto p4_vis = vtxu::getTLVfromKinPart(D0pismu);
+          TLorentzVector p4_Dst = p4_Dst_refitD0pismu;
+          auto p4_mu = vtxu::getTLVfromKinPart(refit_mu);
+
+          // // ------------- Transverse Approx ------------------
+          double pt_B_reco = p4_vis.Pt() * mass_B0/ p4_vis.M();
+          TVector3 flightB(vtxB->position().x() - primaryVtx.position().x(),
+                           vtxB->position().y() - primaryVtx.position().y(),
+                           vtxB->position().z() - primaryVtx.position().z()
+                          );
+          auto B_vect = flightB * ( pt_B_reco / flightB.Perp() );
+          TLorentzVector p4_B;
+          p4_B.SetVectM(B_vect, mass_B0);
+
+          auto M2_miss = (p4_B - p4_vis).M2();
+          auto q2 = (p4_B - p4_Dst).M2();
+
+          TLorentzVector p4st_mu(p4_mu);
+          p4st_mu.Boost(-1*p4_B.BoostVector());
+          auto Est_mu = p4st_mu.E();
+
+          AddTLVToOut(p4_B, string("B_D0pismu"), &(*outputVecNtuplizer));
+          (*outputVecNtuplizer)["M2_miss_D0pismu"].push_back(M2_miss);
+          (*outputVecNtuplizer)["q2_D0pismu"].push_back(q2);
+          (*outputVecNtuplizer)["Est_mu_D0pismu"].push_back(Est_mu);
+          /*
+          ############################################################################
+          */
+
+
+          //  Look for the Dst- and trigger muon to make a vertex
+          BKinTree = vtxu::FitVtxMuDst(iSetup, Dst, trgMu);
+          res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+          if(res.isValid) {
+            (*outputVecNtuplizer)["isGood_Dstmu"].push_back(res.isGood);
+            (*outputVecNtuplizer)["chi2_Dstmu"].push_back(res.chi2);
+            (*outputVecNtuplizer)["dof_Dstmu"].push_back(res.dof);
+            (*outputVecNtuplizer)["pval_Dstmu"].push_back(res.pval);
+
+            BKinTree->movePointerToTheTop();
+            auto Dstmu = BKinTree->currentParticle();
+            (*outputVecNtuplizer)["mass_Dstmu"].push_back(Dstmu->currentState().mass());
+
+            auto vtxB = BKinTree->currentDecayVertex();
+
+            auto cos_Dstmu_PV = vtxu::computePointingCos(primaryVtx, vtxB, Dstmu);
+            auto cosT_Dstmu_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxB, Dstmu);
+            (*outputVecNtuplizer)["cos_Dstmu_PV"].push_back(cos_Dstmu_PV);
+            (*outputVecNtuplizer)["cosT_Dstmu_PV"].push_back(cosT_Dstmu_PV);
+
+            BKinTree->movePointerToTheFirstChild();
+            auto refit_mu = BKinTree->currentParticle();
+            BKinTree->movePointerToTheNextChild();
+            auto refit_Dst = BKinTree->currentParticle();
+
+            auto p4_vis = vtxu::getTLVfromKinPart(Dstmu);
+            auto p4_Dst = vtxu::getTLVfromKinPart(refit_Dst);
+            auto p4_mu = vtxu::getTLVfromKinPart(refit_mu);
+
+            // // ------------- Transverse Approx ------------------
+            double pt_B_reco = p4_vis.Pt() * mass_B0/ p4_vis.M();
+            TVector3 flightB(vtxB->position().x() - primaryVtx.position().x(),
+                             vtxB->position().y() - primaryVtx.position().y(),
+                             vtxB->position().z() - primaryVtx.position().z()
+                            );
+            auto B_vect = flightB * ( pt_B_reco / flightB.Perp() );
+            TLorentzVector p4_B;
+            p4_B.SetVectM(B_vect, mass_B0);
+
+            auto M2_miss = (p4_B - p4_vis).M2();
+            auto q2 = (p4_B - p4_Dst).M2();
+
+            TLorentzVector p4st_mu(p4_mu);
+            p4st_mu.Boost(-1*p4_B.BoostVector());
+            auto Est_mu = p4st_mu.E();
+
+            AddTLVToOut(p4_B, string("B_Dstmu"), &(*outputVecNtuplizer));
+            (*outputVecNtuplizer)["M2_miss_Dstmu"].push_back(M2_miss);
+            (*outputVecNtuplizer)["q2_Dstmu"].push_back(q2);
+            (*outputVecNtuplizer)["Est_mu_Dstmu"].push_back(Est_mu);
+          }
+          else {
+            (*outputVecNtuplizer)["isGood_Dstmu"].push_back(-1);
+            (*outputVecNtuplizer)["chi2_Dstmu"].push_back(-1);
+            (*outputVecNtuplizer)["dof_Dstmu"].push_back(-1);
+            (*outputVecNtuplizer)["pval_Dstmu"].push_back(-1);
+            (*outputVecNtuplizer)["mass_Dstmu"].push_back(-1);
+            (*outputVecNtuplizer)["cos_Dstmu_PV"].push_back(-1);
+            (*outputVecNtuplizer)["cosT_Dstmu_PV"].push_back(-1);
+            TLorentzVector void_p4;
+            AddTLVToOut(void_p4, string("B_Dstmu"), &(*outputVecNtuplizer));
+            (*outputVecNtuplizer)["M2_miss_Dstmu"].push_back(-1);
+            (*outputVecNtuplizer)["q2_Dstmu"].push_back(-1);
+            (*outputVecNtuplizer)["Est_mu_Dstmu"].push_back(-1);
+          }
+
+          // bool accept_B = mass_MuDst < __mass_MuDst_max__;
+          // accept_B &= cos_MuDst_PV > __cos_MuDst_PV_min__;
+          // if(!accept_B) continue;
 
           /*
           ############################################################################
@@ -309,32 +421,6 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
           n_B++;
 
-          /*
-          ############################################################################
-                                Compute analysis variables
-          ############################################################################
-          */
-          auto p4_vis = vtxu::getTLVfromKinPart(MuDst);
-          auto p4_Dst = vtxu::getTLVfromKinPart(refit_Dst);
-          auto p4_mu = vtxu::getTLVfromKinPart(refit_Mu);
-
-          // // ------------- Transverse Approx ------------------
-          double pt_B_reco = p4_vis.Pt() * mass_B0/ p4_vis.M();
-          TVector3 flightB(vtxB->position().x() - primaryVtx.position().x(),
-                           vtxB->position().y() - primaryVtx.position().y(),
-                           vtxB->position().z() - primaryVtx.position().z()
-                          );
-          auto B_vect = flightB * ( pt_B_reco / flightB.Perp() );
-          TLorentzVector p4_B;
-          p4_B.SetVectM(B_vect, mass_B0);
-
-          auto M2_miss = (p4_B - p4_vis).M2();
-          auto q2 = (p4_B - p4_Dst).M2();
-
-          TLorentzVector p4st_mu(p4_mu);
-          p4st_mu.Boost(-1*p4_B.BoostVector());
-          auto Est_mu = p4st_mu.E();
-
           (*outputVecNtuplizer)["sigdxy_K_PV"].push_back(sigdxy_K_PV);
           (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
           (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
@@ -342,8 +428,10 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           (*outputVecNtuplizer)["pi_norm_chi2"].push_back(pi_norm_chi2);
           (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
 
-          (*outputVecNtuplizer)["chi2_Kpi"].push_back(chi2_Kpi);
-          (*outputVecNtuplizer)["mass_Kpi"].push_back(mass_Kpi);
+          (*outputVecNtuplizer)["chi2_piK"].push_back(res_piK.chi2);
+          (*outputVecNtuplizer)["dof_piK"].push_back(res_piK.dof);
+          (*outputVecNtuplizer)["pval_piK"].push_back(res_piK.pval);
+          (*outputVecNtuplizer)["mass_piK"].push_back(mass_piK);
           D0KinTree->movePointerToTheFirstChild();
           auto refit_K = D0KinTree->currentParticle();
           AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("K"), &(*outputVecNtuplizer));
@@ -351,38 +439,54 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           auto refit_pi = D0KinTree->currentParticle();
           AddTLVToOut(vtxu::getTLVfromKinPart(refit_pi), string("pi"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["cos_D0_PV"].push_back(cos_D0_PV);
+          (*outputVecNtuplizer)["cosT_D0_PV"].push_back(cosT_D0_PV);
           (*outputVecNtuplizer)["d_vtxD0_PV"].push_back(d_vtxD0_PV.first);
           (*outputVecNtuplizer)["sigd_vtxD0_PV"].push_back(sigd_vtxD0_PV);
+          (*outputVecNtuplizer)["dxy_vtxD0_PV"].push_back(dxy_vtxD0_PV.first);
+          (*outputVecNtuplizer)["sigdxy_vtxD0_PV"].push_back(sigdxy_vtxD0_PV);
 
           (*outputVecNtuplizer)["sigdxy_pis_PV"].push_back(sigdxy_pis_PV);
           (*outputVecNtuplizer)["pis_norm_chi2"].push_back(pis_norm_chi2);
           (*outputVecNtuplizer)["pis_N_valid_hits"].push_back(pis_N_valid_hits);
 
-          (*outputVecNtuplizer)["chi2_D0pis"].push_back(chi2_D0pis);
+          (*outputVecNtuplizer)["chi2_D0pis"].push_back(res_D0pis.chi2);
+          (*outputVecNtuplizer)["dof_D0pis"].push_back(res_D0pis.dof);
+          (*outputVecNtuplizer)["pval_D0pis"].push_back(res_D0pis.pval);
           (*outputVecNtuplizer)["mass_D0pis"].push_back(mass_D0pis);
-          DstKinTree->movePointerToTheFirstChild();
-          auto refit_pis = DstKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_pis), string("pis"), &(*outputVecNtuplizer));
-          DstKinTree->movePointerToTheNextChild();
-          auto refit_D0 = DstKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_D0), string("D0"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["cos_Dst_PV"].push_back(cos_Dst_PV);
+          (*outputVecNtuplizer)["cosT_Dst_PV"].push_back(cosT_Dst_PV);
           (*outputVecNtuplizer)["d_vtxDst_PV"].push_back(d_vtxDst_PV.first);
           (*outputVecNtuplizer)["sigd_vtxDst_PV"].push_back(sigd_vtxDst_PV);
+          (*outputVecNtuplizer)["dxy_vtxDst_PV"].push_back(dxy_vtxDst_PV.first);
+          (*outputVecNtuplizer)["sigdxy_vtxDst_PV"].push_back(sigdxy_vtxDst_PV);
 
-          (*outputVecNtuplizer)["chi2_MuDst"].push_back(chi2_MuDst);
-          (*outputVecNtuplizer)["mass_MuDst"].push_back(mass_MuDst);
-          (*outputVecNtuplizer)["cos_MuDst_PV"].push_back(cos_MuDst_PV);
-          (*outputVecNtuplizer)["d_vtxB_PV"].push_back(d_vtxB_PV.first);
-          (*outputVecNtuplizer)["sigd_vtxB_PV"].push_back(sigd_vtxB_PV);
+          DstKinTree->movePointerToTheFirstChild();
+          auto refitD0pis_pis = DstKinTree->currentParticle();
+          AddTLVToOut(vtxu::getTLVfromKinPart(refitD0pis_pis), string("pis_refitD0pis"), &(*outputVecNtuplizer));
+          DstKinTree->movePointerToTheNextChild();
+          auto refitD0pis_D0 = DstKinTree->currentParticle();
+          AddTLVToOut(vtxu::getTLVfromKinPart(refitD0pis_D0), string("D0_refitD0pis"), &(*outputVecNtuplizer));
 
-          AddTLVToOut(p4_Dst, string("Dst"), &(*outputVecNtuplizer));
-          AddTLVToOut(p4_mu, string("mu"), &(*outputVecNtuplizer));
-          AddTLVToOut(p4_B, string("B"), &(*outputVecNtuplizer));
-
-          (*outputVecNtuplizer)["M2_miss"].push_back(M2_miss);
-          (*outputVecNtuplizer)["q2"].push_back(q2);
-          (*outputVecNtuplizer)["Est_mu"].push_back(Est_mu);
+          // DstKinTree->movePointerToTheFirstChild();
+          // auto refit_pis = DstKinTree->currentParticle();
+          // AddTLVToOut(vtxu::getTLVfromKinPart(refit_pis), string("pis"), &(*outputVecNtuplizer));
+          // DstKinTree->movePointerToTheNextChild();
+          // auto refit_D0 = DstKinTree->currentParticle();
+          // AddTLVToOut(vtxu::getTLVfromKinPart(refit_D0), string("D0"), &(*outputVecNtuplizer));
+          //
+          // (*outputVecNtuplizer)["chi2_MuDst"].push_back(chi2_MuDst);
+          // (*outputVecNtuplizer)["mass_MuDst"].push_back(mass_MuDst);
+          // (*outputVecNtuplizer)["cos_MuDst_PV"].push_back(cos_MuDst_PV);
+          // (*outputVecNtuplizer)["d_vtxB_PV"].push_back(d_vtxB_PV.first);
+          // (*outputVecNtuplizer)["sigd_vtxB_PV"].push_back(sigd_vtxB_PV);
+          //
+          // AddTLVToOut(p4_Dst, string("Dst"), &(*outputVecNtuplizer));
+          // AddTLVToOut(p4_mu, string("mu"), &(*outputVecNtuplizer));
+          // AddTLVToOut(p4_B, string("B"), &(*outputVecNtuplizer));
+          //
+          // (*outputVecNtuplizer)["M2_miss"].push_back(M2_miss);
+          // (*outputVecNtuplizer)["q2"].push_back(q2);
+          // (*outputVecNtuplizer)["Est_mu"].push_back(Est_mu);
         }
 
 
@@ -413,9 +517,22 @@ void B2DstMuDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<strin
   (*outv)[n+"_pz"].push_back(v.Pz());
   (*outv)[n+"_eta"].push_back(v.Eta());
   (*outv)[n+"_phi"].push_back(v.Phi());
-  (*outv)[n+"_P"].push_back(v.P());
-  (*outv)[n+"_E"].push_back(v.E());
   return;
+}
+
+bool B2DstMuDecayTreeProducer::qualityMuonID(pat::Muon m, reco::Vertex pVtx) {
+  if(m.innerTrack().isNull()) return false;
+
+  if(m.innerTrack()->hitPattern().pixelLayersWithMeasurement() < 2) return false;
+  if(!m.innerTrack()->quality(reco::TrackBase::highPurity)) return false;
+  if(!m.isGood("TMOneStationTight")) return false;
+  if(m.innerTrack()->normalizedChi2() > 1.8) return false;
+
+  double dxy = m.innerTrack()->dxy(pVtx.position());
+  float sigdxy = fabs(dxy)/m.innerTrack()->dxyError();
+  if (sigdxy < 2) return false;
+
+  return true;
 }
 
 DEFINE_FWK_MODULE(B2DstMuDecayTreeProducer);

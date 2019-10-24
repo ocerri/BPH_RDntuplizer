@@ -145,6 +145,16 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
   }
 
   (*outputNtuplizer)["N_vertexes"] = vtxHandle->size();
+  (*outputNtuplizer)["primaryVtx_x"] = primaryVtx.x();
+  (*outputNtuplizer)["primaryVtx_y"] = primaryVtx.y();
+  (*outputNtuplizer)["primaryVtx_z"] = primaryVtx.z();
+  (*outputNtuplizer)["primaryVtx_sig_xx"] = primaryVtx.covariance(0, 0);
+  (*outputNtuplizer)["primaryVtx_sig_xy"] = primaryVtx.covariance(0, 1);
+  (*outputNtuplizer)["primaryVtx_sig_xz"] = primaryVtx.covariance(0, 2);
+  (*outputNtuplizer)["primaryVtx_sig_yy"] = primaryVtx.covariance(1, 1);
+  (*outputNtuplizer)["primaryVtx_sig_yz"] = primaryVtx.covariance(1, 2);
+  (*outputNtuplizer)["primaryVtx_sig_zz"] = primaryVtx.covariance(2, 2);
+
 
   iEvent.put(move(trgMuonsMatched), "trgMuonsMatched");
   iEvent.put(move(outputNtuplizer), "outputNtuplizer");

@@ -4,7 +4,6 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
-cmssw_version = os.environ['CMSSW_VERSION']
 # import of standard configurations
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
@@ -15,7 +14,7 @@ process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_Prompt_v13', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_v11', '')
 
 '''
 ############ Command line args ################
