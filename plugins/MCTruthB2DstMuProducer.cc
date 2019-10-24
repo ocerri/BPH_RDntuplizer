@@ -142,8 +142,17 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     p4["pi"] = TLorentzVector();
     p4["K"] = TLorentzVector();
 
+    map<string, reco::Candidate::Point> vtx;
+    vtx["B"] = reco::Candidate::Point();
+    vtx["Dst"] = reco::Candidate::Point();
+    vtx["D0"] = reco::Candidate::Point();
+    vtx["K"] = reco::Candidate::Point();
+
+
+
     if(i_B >= 0){
       auto p = (*PrunedGenParticlesHandle)[i_B];
+      vtx["B"] = p.vertex();
       p4["B"].SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
 
       for(auto d : p.daughterRefVector()) {
@@ -159,18 +168,20 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         }
         else if(d->pdgId() == -413) {
           p4["Dst"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
-
+          vtx["Dst"] = d->vertex();
           for(auto dd : d->daughterRefVector()) {
             if(dd->pdgId() == -211) {
               p4["pis"].SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
             }
             else if(abs(dd->pdgId()) == 421) {
               p4["D0"].SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
+              vtx["D0"] = dd->vertex();
               for(auto ddd : dd->daughterRefVector()) {
                 if (ddd->pdgId() == -211 || ddd->pdgId() == 321)
                 {
                   string name = ddd->pdgId() == -211 ? "pi" : "K";
                   p4[name].SetPtEtaPhiM(ddd->pt(), ddd->eta(), ddd->phi(), ddd->mass());
+                  if (ddd->pdgId() == 321) vtx["K"] = ddd->vertex();
                 }
               }
             }
@@ -190,6 +201,14 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
 
     for(auto kv : p4) {
       AddTLVToOut(kv.second, "MC_"+kv.first, &(*outputNtuplizer));
+    }
+
+    for(auto kv : vtx) {
+      auto n = kv.first;
+      auto v = kv.second;
+      (*outputNtuplizer)["MC_prodVtx_"+n+"_x"] = v.x();
+      (*outputNtuplizer)["MC_prodVtx_"+n+"_y"] = v.y();
+      (*outputNtuplizer)["MC_prodVtx_"+n+"_z"] = v.z();
     }
 
     if(verbose) {

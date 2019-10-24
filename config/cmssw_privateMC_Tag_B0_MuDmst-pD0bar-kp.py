@@ -68,7 +68,9 @@ process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 '''
 
 if args.outputFile == '.root':
-    outname = 'B02DstMu_CAND.root'
+    outname = 'B2DstMu_CAND.root'
+elif args.outputFile.startswith('_numEvent'):
+    outname = 'B2DstMu_CAND' + args.outputFile
 else:
     outname = args.outputFile
 

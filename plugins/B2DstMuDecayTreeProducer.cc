@@ -40,7 +40,6 @@ class B2DstMuDecayTreeProducer : public edm::EDProducer {
 public:
 
     explicit B2DstMuDecayTreeProducer(const edm::ParameterSet &iConfig);
-    // void DeclareTLVToOut(string, map<string, vector<float>>*);
     void AddTLVToOut(TLorentzVector, string, map<string, vector<float>>*);
 
     ~B2DstMuDecayTreeProducer() override {};
@@ -94,54 +93,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
     unique_ptr<map<string, vector<float>>> outputVecNtuplizer(new map<string, vector<float>>);
 
-    // auto mu = (*trgMuonsHandle)[0];
-    // pat::PackedCandidate trgMu;
-    // uint i_trgMu = 0;
-    // for (i_trgMu = 0; i_trgMu < N_pfCand; ++i_trgMu) {
-    //   const pat::PackedCandidate & p = (*pfCandHandle)[i_trgMu];
-    //   if (fabs(mu.pt() - p.pt())/mu.pt() > 5e-3) continue;
-    //   if (fabs(mu.eta() - p.eta()) > 5e-3) continue;
-    //   if (fabs(vtxu::dPhi(mu.phi(), p.phi())) > 5e-3) continue;
-    //   trgMu = p;
-    //   break;
-    // }
-    //
-    // auto vtxMu = trgMu.vertexRef();
-    // GlobalPoint p_vtxMu(vtxMu->x(), vtxMu->y(), vtxMu->z());
-
-
     int n_K = 0, n_pi = 0, n_D0 = 0, n_pis = 0, n_Dst = 0, n_B = 0;
-
-    // (*outputVecNtuplizer)["chi2_Kpi"] = {};
-    // (*outputVecNtuplizer)["mass_Kpi"] = {};
-    // (*outputVecNtuplizer)["dca_Kpi_vtxMu"] = {};
-    // (*outputVecNtuplizer)["sigdca_Kpi_vtxMu"] = {};
-    // (*outputVecNtuplizer)["cos_Kpi_vtxMu"] = {};
-    // (*outputVecNtuplizer)["d_vtxKpi_vtxMu"] = {};
-    // (*outputVecNtuplizer)["sigd_vtxKpi_vtxMu"] = {};
-    //
-    // (*outputVecNtuplizer)["chi2_D0pis"] = {};
-    // (*outputVecNtuplizer)["mass_D0pis"] = {};
-    // (*outputVecNtuplizer)["dca_D0pis_vtxMu"] = {};
-    // (*outputVecNtuplizer)["sigdca_D0pis_vtxMu"] = {};
-    // (*outputVecNtuplizer)["cos_D0pis_vtxMu"] = {};
-    // (*outputVecNtuplizer)["d_vtxD0pis_vtxMu"] = {};
-    // (*outputVecNtuplizer)["sigd_vtxD0pis_vtxMu"] = {};
-    //
-    // (*outputVecNtuplizer)["chi2_MuDst"] = {};
-    // (*outputVecNtuplizer)["mass_MuDst"] = {};
-    // (*outputVecNtuplizer)["cos_MuDst_vtxBest"] = {};
-    //
-    // DeclareTLVToOut("K", &(*outputVecNtuplizer));
-    // DeclareTLVToOut("pi", &(*outputVecNtuplizer));
-    // DeclareTLVToOut("pis", &(*outputVecNtuplizer));
-    // DeclareTLVToOut("D0", &(*outputVecNtuplizer));
-    // DeclareTLVToOut("Dst", &(*outputVecNtuplizer));
-    // DeclareTLVToOut("B", &(*outputVecNtuplizer));
-    //
-    // (*outputVecNtuplizer)["M2_miss"] = {};
-    // (*outputVecNtuplizer)["q2"] = {};
-    // (*outputVecNtuplizer)["Est_mu"] = {};
 
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
     /*
@@ -454,17 +406,6 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");
     return;
 }
-
-
-// void B2DstMuDecayTreeProducer::DeclareTLVToOut(string n, map<string, vector<float>>* outv) {
-//   (*outv)[n+"_pt"] = {};
-//   (*outv)[n+"_pz"] = {};
-//   (*outv)[n+"_eta"] = {};
-//   (*outv)[n+"_phi"] = {};
-//   (*outv)[n+"_P"] = {};
-//   (*outv)[n+"_E"] = {};
-//   return;
-// }
 
 
 void B2DstMuDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<string, vector<float>>* outv) {
