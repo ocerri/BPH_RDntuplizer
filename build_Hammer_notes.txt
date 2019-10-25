@@ -3,8 +3,8 @@ cmsenv
 export PATH=/cvmfs/sft.cern.ch/lcg/contrib/CMake/3.8.1/Linux-x86_64/bin:${PATH}
 export BOOST_ROOT=/cvmfs/sft.cern.ch/lcg/releases/Boost/1.66.0-f50b5/x86_64-centos7-gcc7-opt/
 export HEPMC_DIR=/cvmfs/sft.cern.ch/lcg/external/HepMC/2.06.08/x86_64-slc6-gcc48-opt
-mkdir Hammer-0.2.1-build
-cd Hammer-0.2.1-build
+mkdir -p ntuplizer/Hammer-0.2.1-build
+cd ntuplizer/Hammer-0.2.1-build
 cmake -DCMAKE_INSTALL_PREFIX=../Hammer-0.2.1 -DENABLE_TESTS=ON -DWITH_ROOT=OFF -DWITH_EXAMPLES=ON -DINSTALL_EXTERNAL_DEPENDENCIES=ON -DWITH_PYTHON=OFF -DBUILD_SHARED_LIBS=ON ../Hammer-0.2.1-Source
 make -j12
 make install
