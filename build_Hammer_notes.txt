@@ -5,6 +5,8 @@ export BOOST_ROOT=/cvmfs/sft.cern.ch/lcg/releases/Boost/1.66.0-f50b5/x86_64-cent
 export HEPMC_DIR=/cvmfs/sft.cern.ch/lcg/external/HepMC/2.06.08/x86_64-slc6-gcc48-opt
 mkdir -p ntuplizer/Hammer-0.2.1-build
 cd ntuplizer/Hammer-0.2.1-build
+#Download the source file from https://hammer.physics.lbl.gov/files/
+# tar -xf Hammer-0.2.1-Source.tar.gz
 cmake -DCMAKE_INSTALL_PREFIX=../Hammer-0.2.1 -DENABLE_TESTS=ON -DWITH_ROOT=OFF -DWITH_EXAMPLES=ON -DINSTALL_EXTERNAL_DEPENDENCIES=ON -DWITH_PYTHON=OFF -DBUILD_SHARED_LIBS=ON ../Hammer-0.2.1-Source
 make -j12
 make install
@@ -13,5 +15,4 @@ ctest
 cd $CMSSW_BASE/lib/slc7_amd64_gcc700
 cp ../../src/ntuplizer/Hammer-0.2.1/lib64/*.so.* ./
 cp ../../src/ntuplizer/Hammer-0.2.1/lib64/Hammer/*.so.* ./
-
-cd $CMSSW_BASE
+cd $CMSSW_BASE/src/ntuplizer

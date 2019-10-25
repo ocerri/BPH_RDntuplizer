@@ -12,5 +12,5 @@
 <use name="RecoVertex/KinematicFitPrimitives"/>
 <use name="RecoVertex/KinematicFit"/>
 <use name="boost"/>
-<flags CXXFLAGS="-Wno-unknown-pragmas -I/afs/cern.ch/work/o/ocerri/CMSSW_10_2_3/src/ntuplizer/Hammer-0.2.1/include -l:libHammerCore.so.0.2.0 -l:libHammerBase.so.0.2.0 -l:libHammerTools.so.0.2.0 -l:libAmplitudes.so.0.2.0 -l:libRates.so.0.2.0 -l:libFormFactors.so.0.2.0 -l:libyaml-cpp.so.0.6"/>
+<flags CXXFLAGS="-Wno-unknown-pragmas -I$(CMSSW_BASE)/src/ntuplizer/Hammer-0.2.1/include -l:libHammerCore.so.0.2.0 -l:libHammerBase.so.0.2.0 -l:libHammerTools.so.0.2.0 -l:libAmplitudes.so.0.2.0 -l:libRates.so.0.2.0 -l:libFormFactors.so.0.2.0 -l:libyaml-cpp.so.0.6"/>
 <flags EDM_PLUGIN="1"/>
