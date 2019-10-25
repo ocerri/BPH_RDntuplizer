@@ -7,5 +7,6 @@ outputFile=$4
 
 
 cd $ntuplizer_loc
+source /cvmfs/cms.cern.ch/cmsset_default.sh
 eval `scramv1 runtime -sh`
 cmsRun $config inputFiles=$inputFiles outputFile=$outputFile

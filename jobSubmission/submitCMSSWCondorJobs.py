@@ -20,11 +20,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument ('-N', '--nFilePerJob', type=int, help='Number of files per job', default=10)
+    parser.add_argument ('--nMaxJobs', type=int, help='Number of files per job', default=None)
     parser.add_argument ('-i', '--input_file', type=str, default='', help='Input file template for glob or list in a txt format', nargs='+')
     parser.add_argument ('-o', '--output_file', type=str, default='', help='Output root file template')
     parser.add_argument ('-f', '--force_production', action='store_true', default=False, help='Proceed even if output file is already existing')
     parser.add_argument ('-c', '--config', type=str, help='Config file for cmsRUn')
     parser.add_argument ('--maxtime', help='Max wall run time [s=seconds, m=minutes, h=hours, d=days]', default='8h')
+    parser.add_argument ('--memory', help='min virtual memory', default='4000')
+    parser.add_argument ('--disk', help='min disk space', default='4000')
+    parser.add_argument ('--cpu', help='cpu threads', default='1')
     parser.add_argument ('--name', type=str, default='BPH_RDntuplizer', help='Job batch name')
 
     args = parser.parse_args()
@@ -88,8 +92,12 @@ if __name__ == "__main__":
         with open(outdir + '/cfg/file_list_{}.txt'.format(i), 'w') as f:
             f.write(aux+'\n')
 
-
-
+    if args.nMaxJobs:
+        print 'Max number of jobs set to ', args.nMaxJobs
+        if args.nMaxJobs < Njobs:
+            Njobs = args.nMaxJobs
+            print 'Only', Njobs, 'will be submitted'
+    if Njobs == 0: exit()
     '''
     ###################### Check CMSSW and config ############################
     '''
@@ -119,14 +127,31 @@ if __name__ == "__main__":
         exec_args += ' ' + args.output_file.replace('.root', '_$(ProcId).root')
         fsub.write('arguments      = ' + exec_args)
         fsub.write('\n')
-        fsub.write('output         = {}/out/job$(ProcId).out'.format(outdir))
+        fsub.write('output         = {}/out/job_$(ProcId)_$(ClusterId).out'.format(outdir))
         fsub.write('\n')
-        fsub.write('error          = {}/out/job$(ProcId).err'.format(outdir))
+        fsub.write('error          = {}/out/job_$(ProcId)_$(ClusterId).err'.format(outdir))
         fsub.write('\n')
-        fsub.write('log            = {}/out/job$(ProcId).log'.format(outdir))
+        fsub.write('log            = {}/out/job_$(ProcId)_$(ClusterId).log'.format(outdir))
         fsub.write('\n')
         fsub.write('+MaxRuntime    = '+str(maxRunTime))
         fsub.write('\n')
+        if os.uname()[1] == 'login-1.hep.caltech.edu':
+            fsub.write('+RunAsOwner = True')
+            fsub.write('\n')
+            fsub.write('+InteractiveUser = True')
+            fsub.write('\n')
+            fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/bbockelm/cms:rhel7"')
+            fsub.write('\n')
+            fsub.write('+SingularityBindCVMFS = True')
+            fsub.write('\n')
+            fsub.write('run_as_owner = True')
+            fsub.write('\n')
+            fsub.write('RequestDisk = ' + args.disk)
+            fsub.write('\n')
+            fsub.write('RequestMemory = ' + args.memory)
+            fsub.write('\n')
+            fsub.write('RequestCpus = ' + args.cpu)
+            fsub.write('\n')
         fsub.write('+JobBatchName  = '+args.name)
         fsub.write('\n')
         fsub.write('x509userproxy  = $ENV(X509_USER_PROXY)')
@@ -136,6 +161,8 @@ if __name__ == "__main__":
         fsub.write('max_retries    = 3')
         fsub.write('\n')
         fsub.write('requirements   = Machine =!= LastRemoteHost')
+        fsub.write('\n')
+        fsub.write('universe = vanilla')
         fsub.write('\n')
         fsub.write('queue '+str(Njobs))
         fsub.write('\n')
