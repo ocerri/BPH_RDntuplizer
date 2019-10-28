@@ -1,4 +1,7 @@
----------- Monte Carlo ------------
+##############################################
+                   LXPLUS
+##############################################
+------------------------------- Monte Carlo ----------------------------------------
 dir=/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3
 dir=/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3
 
@@ -18,3 +21,14 @@ python jobSubmission/submitCMSSWCondorJobs.py -i $dir/jobs_out/*MINIAODSIM*.root
 python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH1_Run2018A-05May2019-v1_MINIAOD.txt -o /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsRD/Run2018A/ParkingBPH1/jobs_B2DstK/out_CAND.root -c config/cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py --maxtime 12h -N 5 -f
 
 python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH1_Run2018A-05May2019-v1_MINIAOD.txt -o /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsRD/Run2018A/ParkingBPH1/jobs_Run2018A-05May2019-v1_B2JpsiKst/out_CAND.root -c config/cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py --maxtime 4h -N 30 -f
+
+
+
+##############################################
+                Caltech T2
+##############################################
+------------------------------- Monte Carlo ----------------------------------------
+process=BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_SVV
+process=BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV
+
+python jobSubmission/submitCMSSWCondorJobs.py -i /storage/user/ocerri/cmsstore/cmsMC_private/$process/*/*/*.root -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/jobs_B2JpsiKst/out_CAND.root -c config/cmssw_privateMC_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py --maxtime 30m -N 30 -f

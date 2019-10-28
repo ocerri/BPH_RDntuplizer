@@ -54,7 +54,7 @@ samples:
   #
   #  MC
   #
-  B0_JpsiKst-mumuKpi:
+  B0_JpsiKst-mumuKpi_Hardbbar:
     dataset: /cmsMC_private/ocerri-BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV-c21dec93027231dc6f615dfe5c662834/USER
     isMC: True
 
