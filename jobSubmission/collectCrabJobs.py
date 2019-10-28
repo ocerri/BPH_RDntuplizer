@@ -24,7 +24,7 @@ for dir in args.inputDir:
         print 'No <ParkingBPH> dir found'
         raise
 
-    outpath = '/storage/user/ocerri/cmsRD/'
+    outpath = '/storage/user/ocerri/BPhysics/data/cmsRD/'
     outpath += dlist[i_BPH]
     if not os.path.isdir(outpath):
         os.makedirs(outpath)
