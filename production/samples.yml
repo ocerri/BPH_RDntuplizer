@@ -41,9 +41,7 @@ samples:
   data_Run2018D:
     dataset: /ParkingBPH{}/Run2018D-05May2019promptD-v1/MINIAOD
     isMC: False
-    globaltag: 102X_dataRun2_Prompt_v14
-    splitting: 20
-    maxRunTime: 8 #hours
+    # globaltag: 102X_dataRun2_Prompt_v14
     parts:
       - 1
       - 2

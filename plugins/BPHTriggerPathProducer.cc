@@ -9,6 +9,7 @@
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
@@ -16,10 +17,10 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 
 // Needed for Transient Tracks
-#include "TrackingTools/TransientTrack/interface/TransientTrack.h"
-#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
-#include "TrackingTools/Records/interface/TransientTrackRecord.h"
-#include "MagneticField/Engine/interface/MagneticField.h"
+// #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
+// #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+// #include "TrackingTools/Records/interface/TransientTrackRecord.h"
+// #include "MagneticField/Engine/interface/MagneticField.h"
 
 #include "VtxUtils.hh"
 
@@ -43,20 +44,23 @@ class BPHTriggerPathProducer : public edm::EDProducer {
 
       // ----------member data ---------------------------
       edm::EDGetTokenT<edm::TriggerResults> triggerBitsSrc_;
-      int muonCharge_ = 0;
+      edm::EDGetTokenT <pat::PackedTriggerPrescales> triggerPrescalesSrc_;
       edm::EDGetTokenT<vector<pat::TriggerObjectStandAlone>> triggerObjectsSrc_;
+
       edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
       edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
+      int muonCharge_ = 0;
       int verbose = 0;
 };
 
 
 BPHTriggerPathProducer::BPHTriggerPathProducer(const edm::ParameterSet& iConfig):
   triggerBitsSrc_( consumes<edm::TriggerResults> ( iConfig.getParameter<edm::InputTag>("triggerBits") ) ),
-  muonCharge_( iConfig.getParameter<int>( "muon_charge" ) ),
+  triggerPrescalesSrc_(consumes<pat::PackedTriggerPrescales>(edm::InputTag("patTrigger"))),
   triggerObjectsSrc_(consumes<vector<pat::TriggerObjectStandAlone>> ( iConfig.getParameter<edm::InputTag>("triggerObjects") ) ),
   muonSrc_( consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "muonCollection" ) ) ),
   vtxSrc_( consumes<vector<reco::Vertex>> ( iConfig.getParameter<edm::InputTag>( "vertexCollection" ) ) ),
+  muonCharge_( iConfig.getParameter<int>( "muon_charge" ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
   produces<vector<pat::Muon>>("trgMuonsMatched");
@@ -70,10 +74,10 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
   edm::Handle<vector<pat::TriggerObjectStandAlone>> triggerObjects;
   iEvent.getByToken(triggerObjectsSrc_, triggerObjects);
 
-  edm::Handle<std::vector<pat::Muon>> muonHandle;
+  edm::Handle<vector<pat::Muon>> muonHandle;
   iEvent.getByToken(muonSrc_, muonHandle);
 
-  edm::Handle<std::vector<reco::Vertex>> vtxHandle;
+  edm::Handle<vector<reco::Vertex>> vtxHandle;
   iEvent.getByToken(vtxSrc_, vtxHandle);
   auto primaryVtx = (*vtxHandle)[0];
 
@@ -81,21 +85,46 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
   unique_ptr<vector<pat::Muon>> trgMuonsMatched( new vector<pat::Muon> );
 
   //BPH trigger footprint
-  std::regex txt_regex_path("HLT_Mu[0-9]+_IP[0-9]+.*");
-  if (verbose) {std::cout << "\n == BPH TRIGGER OBJ == " << std::endl;}
+  regex txt_regex_path("HLT_Mu[0-9]+_IP[0-9]_part[0-9].*");
 
+  if (verbose) {
+    edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
+    iEvent.getByToken(triggerPrescalesSrc_, triggerPrescales);
+    const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
+    cout << "\n == TRIGGER PATHS= " << endl;
+    for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i) {
+      auto trgName = names.triggerName(i);
+      if (!regex_match(trgName, txt_regex_path)) continue;
+      cout << "Trigger " << trgName << ", prescale " << triggerPrescales->getPrescaleForIndex(i);
+      cout << ": " << (triggerBits->accept(i) ? "PASS" : "fail (or not run)") << endl;
+    }
+  }
+
+  vector<string> trigger_paths = {"Mu12_IP6", "Mu9_IP5", "Mu7_IP4", "Mu9_IP4", "Mu8_IP5", "Mu8_IP6", "Mu9_IP6", "Mu8_IP3"};
+  map<string, bool> trigger_bits;
+  for(auto n : trigger_paths) trigger_bits[n] = false;
+
+  if (verbose) {cout << "\n == BPH TRIGGER OBJ == " << endl;}
   for (pat::TriggerObjectStandAlone obj : *triggerObjects) {
+    regex txt_regex_coll("hlt.*MuonCandidates::HLT");
+    if (!regex_match(obj.collection(), txt_regex_coll)) continue;
+
     obj.unpackNamesAndLabels(iEvent, *triggerBits);
     vector pathNamesLast = obj.pathNames(true);
     unsigned int obj_BPH_path = 0;
     for (unsigned h = 0, n = pathNamesLast.size(); h < n; ++h) {
-      if (regex_match(pathNamesLast[h], txt_regex_path)) obj_BPH_path++;
+      if (regex_match(pathNamesLast[h], txt_regex_path)){
+        obj_BPH_path++;
+        if (trgMuonsMatched->size() == 0) {
+          for(auto n : trigger_paths) {
+            TString s_aux = pathNamesLast[h];
+            if ( s_aux.BeginsWith("HLT_" + n) ) trigger_bits[n] = true;
+          }
+        }
+      }
     }
 
-    std::regex txt_regex_coll("hlt.*MuonCandidates::HLT");
-    bool HLT_muon = regex_match(obj.collection(), txt_regex_coll);
-
-    if (obj_BPH_path>0 && HLT_muon){
+    if (obj_BPH_path>0){
       if (verbose) {
         cout << "\t\t" << obj.charge() << endl;
         cout << "\tTriggered mu" << obj.charge() << ":  pt " << obj.pt() << ", eta " << obj.eta() << ", phi " << obj.phi() << endl;
@@ -125,7 +154,11 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
   }
 
   unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
+  (*outputNtuplizer)["N_trgMu"] = trgMuonsMatched->size();
   if (trgMuonsMatched->size()) {
+    for(auto n : trigger_paths) {
+      (*outputNtuplizer)["trgMu_HLT_" + n] = trigger_bits[n];
+    }
     auto m = (*trgMuonsMatched)[0];
     (*outputNtuplizer)["trgMu_pt"] = m.pt();
     (*outputNtuplizer)["trgMu_eta"] = m.eta();
@@ -144,6 +177,7 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     }
   }
 
+
   (*outputNtuplizer)["N_vertexes"] = vtxHandle->size();
   (*outputNtuplizer)["primaryVtx_x"] = primaryVtx.x();
   (*outputNtuplizer)["primaryVtx_y"] = primaryVtx.y();
@@ -159,7 +193,7 @@ void BPHTriggerPathProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
   iEvent.put(move(trgMuonsMatched), "trgMuonsMatched");
   iEvent.put(move(outputNtuplizer), "outputNtuplizer");
 
-  if (verbose) {std::cout << "======================== " << std::endl;}
+  if (verbose) {cout << "======================== " << endl;}
   return;
 }
 
