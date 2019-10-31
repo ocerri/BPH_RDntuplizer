@@ -66,7 +66,7 @@ if __name__ == "__main__":
     ################### Prepare input file and division #######################
     '''
     if not args.input_file:
-        print 'No input file provided'
+        print 'No input file(s) provided'
         exit()
 
     flist = []
