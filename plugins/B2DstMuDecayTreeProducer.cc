@@ -23,13 +23,11 @@
 #define __dzMax__ 1.0
 #define __dRMax__ 2.0
 #define __sigIPpfCand_min__ 2. // loose cut
-#define __PvalChi2Vtx_min__ 0.05 // Very loose cut
+#define __PvalChi2Vtx_min__ 0.05 // loose cut
 #define __dmD0_max__ 0.1 // loose cut
-#define __sigdxy_vtx_PV_min__ 2.0 // Optimized in D0 fitting
-#define __dmDst_max__ 0.050 // Loose cut
+#define __sigdxy_vtx_PV_min__ 2.0 // loose cut
+#define __dmDst_max__ 0.050 // loose cut
 #define __mass_D0pismu_max__ 7.0 // Some reasonable cut on the mass
-// #define __cos_MuDst_PV_min__ 0.8 // Some loose cut tuned on MC
-// #define __PvalChi2FakeVtx_min__ 0.90 // Very loose cut
 
 
 using namespace std;
@@ -53,7 +51,7 @@ private:
     edm::EDGetTokenT<vector<pat::Muon>> TrgMuonSrc_;
 
     double mass_Mu  = 0.10565;
-    double mass_Pi  = 0.13957;
+    double mass_pi  = 0.13957;
     double mass_K   = 0.49367;
     double mass_D0  = 1.86483;
     double mass_Dst = 2.01026;
@@ -424,20 +422,29 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           (*outputVecNtuplizer)["sigdxy_K_PV"].push_back(sigdxy_K_PV);
           (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
           (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
+          AddTLVToOut(vtxu::getTLVfromCand(K, mass_K), string("K"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["sigdxy_pi_PV"].push_back(sigdxy_pi_PV);
           (*outputVecNtuplizer)["pi_norm_chi2"].push_back(pi_norm_chi2);
           (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
+          AddTLVToOut(vtxu::getTLVfromCand(pi, mass_pi), string("pi"), &(*outputVecNtuplizer));
+          double m = (vtxu::getTLVfromCand(pi, mass_pi) + vtxu::getTLVfromCand(K, mass_K)).M();
+          (*outputVecNtuplizer)["massb_piK"].push_back(m);
+          m = (vtxu::getTLVfromCand(pi, mass_K) + vtxu::getTLVfromCand(K, mass_K)).M();
+          (*outputVecNtuplizer)["massb_KK"].push_back(m);
+          m = (vtxu::getTLVfromCand(pi, mass_K) + vtxu::getTLVfromCand(K, mass_pi)).M();
+          (*outputVecNtuplizer)["massb_Kpi_conj"].push_back(m);
 
           (*outputVecNtuplizer)["chi2_piK"].push_back(res_piK.chi2);
           (*outputVecNtuplizer)["dof_piK"].push_back(res_piK.dof);
           (*outputVecNtuplizer)["pval_piK"].push_back(res_piK.pval);
           (*outputVecNtuplizer)["mass_piK"].push_back(mass_piK);
+          AddTLVToOut(vtxu::getTLVfromKinPart(D0), string("D0"), &(*outputVecNtuplizer));
           D0KinTree->movePointerToTheFirstChild();
           auto refit_K = D0KinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("K"), &(*outputVecNtuplizer));
+          AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("K_refitpiK"), &(*outputVecNtuplizer));
           D0KinTree->movePointerToTheNextChild();
           auto refit_pi = D0KinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_pi), string("pi"), &(*outputVecNtuplizer));
+          AddTLVToOut(vtxu::getTLVfromKinPart(refit_pi), string("pi_refitpiK"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["cos_D0_PV"].push_back(cos_D0_PV);
           (*outputVecNtuplizer)["cosT_D0_PV"].push_back(cosT_D0_PV);
           (*outputVecNtuplizer)["d_vtxD0_PV"].push_back(d_vtxD0_PV.first);
@@ -448,6 +455,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           (*outputVecNtuplizer)["sigdxy_pis_PV"].push_back(sigdxy_pis_PV);
           (*outputVecNtuplizer)["pis_norm_chi2"].push_back(pis_norm_chi2);
           (*outputVecNtuplizer)["pis_N_valid_hits"].push_back(pis_N_valid_hits);
+          AddTLVToOut(vtxu::getTLVfromCand(pis, mass_pi), string("pis"), &(*outputVecNtuplizer));
 
           (*outputVecNtuplizer)["chi2_D0pis"].push_back(res_D0pis.chi2);
           (*outputVecNtuplizer)["dof_D0pis"].push_back(res_D0pis.dof);
