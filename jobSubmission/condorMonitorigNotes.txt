@@ -1,0 +1,9 @@
+# See exit code
+condor_history 2094925 -af ExitCode  | sort | uniq -c
+
+# Job lenght histogram
+condor_history 2094925 -af 'quantize(CommittedTime, 50)' | sort | uniq -c | sort -n &> /tmp/timing.log
+perl -lane 'print $F[1], "\t", "=" x ($F[0])' /tmp/timing.log
+
+# Memory usage
+condor_history 2094925 -af RequestMemory MemoryUsage | sort | uniq -c
