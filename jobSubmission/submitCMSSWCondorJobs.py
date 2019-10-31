@@ -26,7 +26,7 @@ if __name__ == "__main__":
     parser.add_argument ('-f', '--force_production', action='store_true', default=False, help='Proceed even if output file is already existing')
     parser.add_argument ('-c', '--config', type=str, help='Config file for cmsRUn')
     parser.add_argument ('--maxtime', help='Max wall run time [s=seconds, m=minutes, h=hours, d=days]', default='8h')
-    parser.add_argument ('--memory', help='min virtual memory in MB', default='512')
+    parser.add_argument ('--memory', help='min virtual memory in MB', default='2000')
     parser.add_argument ('--disk', help='min disk space in MB', default='4000')
     parser.add_argument ('--cpu', help='cpu threads', default='1')
     parser.add_argument ('--name', type=str, default='BPH_RDntuplizer', help='Job batch name')
@@ -149,7 +149,7 @@ if __name__ == "__main__":
             fsub.write('RequestDisk = ' + args.disk)
             fsub.write('\n')
             # fsub.write('RequestMemory = ' + args.memory) #Static allocation
-            fsub.write('request_memory = ifthenelse(MemoryUsage =!= undefined, MAX({{MemoryUsage * 3/2, {0}}}), {0})'.format(args.memory)) # Dynamic allocation
+            fsub.write('request_memory = ifthenelse(MemoryUsage =!= undefined, MAX({{MemoryUsage + 1024, {0}}}), {0})'.format(args.memory)) # Dynamic allocation
             fsub.write('\n')
             fsub.write('RequestCpus = ' + args.cpu)
             fsub.write('\n')

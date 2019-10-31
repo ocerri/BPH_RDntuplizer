@@ -23,6 +23,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_v11', '')
 
 args = VarParsing.VarParsing('analysis')
 args.register('inputFile', '', args.multiplicity.list, args.varType.string, "Input file or template for glob")
+args.register('useLocalLumiList', 1, args.multiplicity.singleton, args.varType.int, "Flag to use local lumi list")
 args.outputFile = ''
 args.parseArguments()
 
@@ -52,8 +53,11 @@ process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist))
                            )
 
-# import FWCore.PythonUtilities.LumiList as LumiList
-# process.source.lumisToProcess = LumiList.LumiList(filename = '/afs/cern.ch/user/o/ocerri/work/CMSSW_10_2_3/src/ntuplizer/BPH_RDntuplizer/production/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt').getVLuminosityBlockRange()
+if args.useLocalLumiList:
+    lumiListFile = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt'
+    if os.path.isfile(lumiListFile):
+        import FWCore.PythonUtilities.LumiList as LumiList
+        process.source.lumisToProcess = LumiList.LumiList(filename = lumiListFile).getVLuminosityBlockRange()
 
 
 '''
