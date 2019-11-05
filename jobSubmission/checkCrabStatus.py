@@ -3,7 +3,7 @@ import argparse
 from glob import glob
 
 parser = argparse.ArgumentParser()
-parser.add_argument ('inputDir', type=str, default='tmp/crab_*', help='Input dir template for glob')
+parser.add_argument ('inputDir', type=str, default='tmp/crab_*', help='Input dir template for glob', nargs='+')
 parser.add_argument ('--report', default=False, action='store_true')
 parser.add_argument ('--long', default=False, action='store_true')
 parser.add_argument ('--verboseErrors', default=False, action='store_true')
@@ -13,7 +13,7 @@ args = parser.parse_args()
 if args.brilcalc:
     args.report = True
 
-for dir in glob(args.inputDir):
+for dir in args.inputDir:
     if os.path.isdir(dir):
         print 20*'#' + 50*'-' + 20*'#'
         cmd = 'source /cvmfs/cms.cern.ch/crab3/crab.sh; '
@@ -33,6 +33,8 @@ for dir in glob(args.inputDir):
                 print 'Running brilcalc...\n'
                 cmd = 'export PATH=$HOME/.local/bin:/cvmfs/cms-bril.cern.ch/brilconda/bin:$PATH'
                 cmd += '; brilcalc lumi -u /fb'
+                if os.uname()[1] == 'login-1.hep.caltech.edu':
+                    cmd += ' -c web'
                 cmd += ' --normtag /cvmfs/cms-bril.cern.ch/cms-lumi-pog/Normtags/normtag_PHYSICS.json'
                 cmd += ' -i ' + dir + '/results/processedLumis.json'
                 cmd += ' -o ' + dir + '/results/lumiReport_brilcalc.csv'
@@ -40,7 +42,10 @@ for dir in glob(args.inputDir):
                 os.system(cmd)
 
                 cmd = 'cp ' + dir + '/results/lumiReport_brilcalc.csv'
-                cmd += ' /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsRD/lumiReport/'
+                if os.uname()[1] == 'login-1.hep.caltech.edu':
+                    cmd += ' /storage/user/ocerri/BPhysics/data/cmsRD/lumiReport/'
+                else:
+                    cmd += ' /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsRD/lumiReport/'
                 cmd += os.path.basename(dir)[5:] + '_bricalc.csv'
                 os.system(cmd)
         print 20*'#' + 50*'-' + 20*'#' + '\n\n'
