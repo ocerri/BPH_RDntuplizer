@@ -8,3 +8,4 @@ jobSubmission/tmp
 production/*.txt
 *tmp*
 *test*
+crab.log

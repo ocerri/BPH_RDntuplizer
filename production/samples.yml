@@ -56,6 +56,14 @@ samples:
     dataset: /cmsMC_private/ocerri-BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV-c21dec93027231dc6f615dfe5c662834/USER
     isMC: True
 
+  B0_MuNuDmst-pD0bar-kp:
+    dataset: /cmsMC_private/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
+    isMC: True
+
+  B0_TauNuDmst-pD0bar-kp-t2mnn:
+    dataset: /cmsMC_private/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2-c21dec93027231dc6f615dfe5c662834/USER
+    isMC: True
+
   # BuToKPsi2S_ToMuMu:
   #   dataset: /BuToKPsi2S_ToMuMu_probefilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-PUPoissonAve20_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
   #   isMC: True
