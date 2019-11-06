@@ -46,15 +46,17 @@ if args.inputFile:
 elif args.inputFiles:
     if len(args.inputFiles) == 1:
         with open(args.inputFiles[0]) as f:
-            flist = [l for l in f.readlines()]
+            flist = [l[:-1] for l in f.readlines()]
     else:
         flist = args.inputFiles
 else:
     flist = glob('/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3/jobs_out/*MINIAODSIM*.root')
+print flist
 
 for i in range(len(flist)):
     if os.path.isfile(flist[i]):
         flist[i] = 'file:' + flist[i]
+print flist
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist)),
