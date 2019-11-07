@@ -50,13 +50,12 @@ elif args.inputFiles:
     else:
         flist = args.inputFiles
 else:
-    flist = glob('/eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3/jobs_out/*MINIAODSIM*.root')
-print flist
+    print 'No input provided'
+    raise
 
 for i in range(len(flist)):
     if os.path.isfile(flist[i]):
         flist[i] = 'file:' + flist[i]
-print flist
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist)),

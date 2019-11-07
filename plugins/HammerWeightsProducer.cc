@@ -112,9 +112,9 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     edm::Handle<int> indexBmcHandle;
     iEvent.getByToken(indexBmcSrc_, indexBmcHandle);
     int i_B = (*indexBmcHandle);
-    if(i_B <0){
+    if(i_B == -1){
       cout << "Invalid B idx (i.e. no B MC set)" << endl;
-      assert(false);
+      exit(1);
     }
     // cout << "i_B retieved: " << i_B << endl;
 
@@ -168,6 +168,8 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     hammer.processEvent();
 
     auto weights = hammer.getWeights("SchmeCLN");
+    if(weights.empty()) return;
+    
     if(verbose) {cout << "CLNCentral: " << flush;}
     for(auto elem: weights) {
       (*outputNtuplizer)["wh_CLNCentral"] = elem.second;
@@ -196,6 +198,7 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
         }
       }
     }
+    if(verbose) {cout << endl;}
 
     iEvent.put(move(outputNtuplizer), "outputNtuplizer");
     return;
