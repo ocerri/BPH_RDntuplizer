@@ -161,7 +161,7 @@ if __name__ == "__main__":
         fsub.write('\n')
         fsub.write('on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)')   # Send the job to Held state on failure.
         fsub.write('\n')
-        fsub.write('periodic_release =  (NumJobStarts < 3) && ((CurrentTime - EnteredCurrentStatus) > (60*60))')   # Periodically retry the jobs for 3 times with an interval 1 hour.
+        fsub.write('periodic_release =  (NumJobStarts < 3) && ((CurrentTime - EnteredCurrentStatus) > (60*20))')   # Periodically retry the jobs for 3 times with an interval 20 mins.
         fsub.write('\n')
         fsub.write('max_retries    = 3')
         fsub.write('\n')
