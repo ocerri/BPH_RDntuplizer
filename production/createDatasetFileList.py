@@ -6,13 +6,16 @@ prod_samples = yaml.load(open('samples.yml'))
 
 for k, d in prod_samples['samples'].iteritems():
     if 'data_' in k:
-        continue
         for i in d['parts']:
             dataset = d['dataset'].format(i)
             print '########## {} ##########\n'.format(dataset)
             fname = 'inputFiles' + dataset.replace('/', '_') + '.txt'
-            cmd = 'das_client --query="file dataset={}" --limit=0 > {}'.format(dataset, fname)
-            os.system(cmd)
+            if os.path.isfile(fname):
+                print 'Files list already existing'
+            else:
+                print 'Creating files list'
+                cmd = 'das_client --query="file dataset={}" --limit=0 > {}'.format(dataset, fname)
+                os.system(cmd)
     else:
         dataset = d['dataset']
         print '########## {} ##########\n'.format(dataset)

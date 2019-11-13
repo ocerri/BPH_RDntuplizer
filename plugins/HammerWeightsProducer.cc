@@ -55,6 +55,8 @@ private:
       // from TH: https://journals.aps.org/prd/pdf/10.1103/PhysRevD.85.094025
       {"R0", {1.14, +0.11, -0.11}},
     };
+
+    int N_evets_weights_produced = 0;
 };
 
 
@@ -113,8 +115,10 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     iEvent.getByToken(indexBmcSrc_, indexBmcHandle);
     int i_B = (*indexBmcHandle);
     if(i_B == -1){
-      cout << "Invalid B idx (i.e. no B MC set)" << endl;
-      exit(1);
+      cout << "[ERROR]: Invalid B idx (i.e. no B MC set)" << endl;
+      cerr << "[ERROR]: Invalid B idx (i.e. no B MC set)" << endl;
+      if (N_evets_weights_produced == 0) return;
+      else exit(1);
     }
     // cout << "i_B retieved: " << i_B << endl;
 
@@ -169,7 +173,8 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
 
     auto weights = hammer.getWeights("SchmeCLN");
     if(weights.empty()) return;
-    
+    else N_evets_weights_produced++;
+
     if(verbose) {cout << "CLNCentral: " << flush;}
     for(auto elem: weights) {
       (*outputNtuplizer)["wh_CLNCentral"] = elem.second;

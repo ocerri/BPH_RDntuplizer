@@ -189,9 +189,9 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         if(verbose) {
           cout << "Recognized B --> D*Mu +(X): " << endl;
           auxPrintDau(&p, -1);
+          cout << endl << endl;
         }
 
-        cout << endl << endl;
       }
     }
 
