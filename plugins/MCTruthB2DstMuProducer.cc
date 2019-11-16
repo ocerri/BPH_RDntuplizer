@@ -135,8 +135,14 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     // Looking for the B -> Mu/Tau + D* + X with the cloasest muon to the trigger muon
     int i_B = -1;
     float mInv_min = 9999999999999999;
+    reco::Candidate::Point interactionPoint(-9999999999, -999, -999);
     for(unsigned int i = 0; i < N_PrunedGenParticles; i++) {
       auto p = (*PrunedGenParticlesHandle)[i];
+      if(p.isHardProcess() && interactionPoint.x() == -9999999999) {
+        interactionPoint = p.vertex();
+        if(verbose) {cout << "[Hard process] " << p.pdgId() << ": " << p.vx() << ", " << p.vy() << endl;}
+      }
+
       if (p.pdgId() != 511 || p.numberOfDaughters()<=1) continue;
 
       TLorentzVector p_Mu;
@@ -206,6 +212,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     p4["D0"] = TLorentzVector();
     p4["pi"] = TLorentzVector();
     p4["K"] = TLorentzVector();
+    double mu_impactParam = -1;
 
     map<string, reco::Candidate::Point> vtx;
     vtx["B"] = reco::Candidate::Point();
@@ -228,13 +235,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       for(auto d : *PrunedGenParticlesHandle) {
         if(d.pdgId() == -13 && auxIsAncestor(&p, &d)) {
           p4["mu"].SetPtEtaPhiM(d.pt(), d.eta(), d.phi(), d.mass());
-        }
-        else if(d.pdgId() == -15 && auxIsAncestor(&p, &d)) {
-          for (auto dd : d.daughterRefVector()) {
-            if (dd->pdgId() == -13) {
-              p4["mu"].SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
-            }
-          }
+          mu_impactParam = vtxu::computeIP(interactionPoint, d.vertex(), d.momentum(), true);
         }
         else if(d.pdgId() == -413 && auxIsAncestor(&p, &d)) {
           p4["Dst"].SetPtEtaPhiM(d.pt(), d.eta(), d.phi(), d.mass());
@@ -275,6 +276,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     for(auto kv : p4) {
       AddTLVToOut(kv.second, "MC_"+kv.first, &(*outputNtuplizer));
     }
+    (*outputNtuplizer)["MC_mu_IP"] = mu_impactParam;
 
     for(auto kv : vtx) {
       auto n = kv.first;
@@ -288,7 +290,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       cout << i_B << ": ";
       for(auto v : (*outputVecNtuplizer)["MC_decay"]) {cout << v << " ";} cout << endl;
       cout << "Muon matched: " << trgMuon_match_BMuon << endl;
-      cout << Form("Muon pt:%.1f eta:%.1f", p4["mu"].Pt(), p4["mu"].Eta()) << endl;
+      cout << Form("Muon pt:%.1f eta:%.1f IP:%1.2e", p4["mu"].Pt(), p4["mu"].Eta(), mu_impactParam) << endl;
       if(p4["mu"].Pt() > 0) {
         cout << "Distance between MC muon and trigger muon" << endl;
         cout << "dPhi: " << vtxu::dPhi(trgMu.phi(), p4["mu"].Phi()) << endl;
