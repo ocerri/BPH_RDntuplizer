@@ -46,8 +46,8 @@ samples:
       - 1
       - 2
       - 3
+      - 4
       # The rest is still to come, hopefully in the same version
-      # - 4
       # - 5
   #
   #  MC
@@ -65,6 +65,12 @@ samples:
     parts:
       - /cmsMC_private/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDmst_HQETcentral_PU0:
+    isMC: True
+    dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3
+    parts:
+      - /cmsMC_private/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_TauNuDmst_PU0:
     isMC: True

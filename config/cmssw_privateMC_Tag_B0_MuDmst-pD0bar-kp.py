@@ -160,4 +160,4 @@ process.p = cms.Path(
 #############   Overall settings    ################
 '''
 
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 100

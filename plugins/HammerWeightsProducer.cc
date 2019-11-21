@@ -19,6 +19,8 @@
 #include "Hammer/Process.hh"
 #include "Hammer/Particle.hh"
 
+#include "TLorentzVector.h"
+
 using namespace std;
 
 class HammerWeightsProducer : public edm::EDProducer {
@@ -96,8 +98,8 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
       centralValuesOpt += Form("%s: %f, ", elem.first.c_str(), elem.second[0]);
     }
     centralValuesOpt += "}";
-    if (verbose) {cout << centralValuesOpt << endl;}
-    hammer.setOptions("BtoD*CLN");
+    if (verbose) {cout << "[Hmmer]: Central values\n\t" << centralValuesOpt << endl;}
+    hammer.setOptions(centralValuesOpt);
 
     produces<map<string, float>>("outputNtuplizer");
 }
@@ -134,17 +136,38 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     int idxDst = -1;
     vector<size_t> Dstvtx_idxs;
 
+    TLorentzVector p4B;
+    vector<TLorentzVector> pDauB;
+    vector<TLorentzVector> pDauDst;
+    bool DstFound = false;
+    int idxDst_v = -1;
+
     auto p = (*PrunedGenParticlesHandle)[i_B];
     Hammer::Particle pB({p.energy(), p.px(), p.py(), p.pz()}, p.pdgId());
+    if(verbose) {
+      p4B.SetPxPyPzE(p.px(), p.py(), p.pz(), p.energy());
+      cout << Form("B --> E:%.5f, Px:%.5f, Py:%.5f, Pz:%.5f PDG:%d", p.energy(), p.px(), p.py(), p.pz(), p.pdgId()) << endl;
+    }
     auto idxB = B2DstLNu_Dst2DPi.addParticle(pB);
     for(auto d : p.daughterRefVector()) {
       Hammer::Particle B_dau({d->energy(), d->px(), d->py(), d->pz()}, d->pdgId());
+      if(verbose) {
+        TLorentzVector v;
+        v.SetPxPyPzE(d->px(), d->py(), d->pz(), d->energy());
+        pDauB.push_back(v);
+        if(!DstFound){
+          idxDst_v++;
+          if (abs(d->pdgId()) == 413) DstFound = true;
+        }
+        cout << Form("%d --> E:%.5f, Px:%.5f, Py:%.5f, Pz:%.5f", d->pdgId(), d->energy(), d->px(), d->py(), d->pz()) << endl;
+      }
       auto idx_d = B2DstLNu_Dst2DPi.addParticle(B_dau);
       Bvtx_idxs.push_back(idx_d);
 
       if(d->pdgId() == -15) {
         idxTau = idx_d;
         for (auto dd : d->daughterRefVector()) {
+          if(verbose) { cout << Form("\t%d --> E:%.5f, Px:%.5f, Py:%.5f, Pz:%.5f", dd->pdgId(), dd->energy(), dd->px(), dd->py(), dd->pz()) << endl;}
           Hammer::Particle Tau_dau({dd->energy(), dd->px(), dd->py(), dd->pz()}, dd->pdgId());
           auto idx_dd = B2DstLNu_Dst2DPi.addParticle(Tau_dau);
           Tauvtx_idxs.push_back(idx_dd);
@@ -153,11 +176,37 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       else if(d->pdgId() == -413) {
         idxDst = idx_d;
         for (auto dd : d->daughterRefVector()) {
+          if(verbose) {
+            TLorentzVector v;
+            v.SetPxPyPzE(dd->px(), dd->py(), dd->pz(), dd->energy());
+            pDauDst.push_back(v);
+            cout << Form("\t%d --> E:%.5f, Px:%.5f, Py:%.5f, Pz:%.5f", dd->pdgId(), dd->energy(), dd->px(), dd->py(), dd->pz()) << endl;
+          }
           Hammer::Particle Dst_dau({dd->energy(), dd->px(), dd->py(), dd->pz()}, dd->pdgId());
           auto idx_dd = B2DstLNu_Dst2DPi.addParticle(Dst_dau);
           Dstvtx_idxs.push_back(idx_dd);
         }
       }
+    }
+
+    if(verbose) {
+      TLorentzVector vtxB;
+      vtxB = p4B;
+      for(auto v : pDauB) {
+        cout << "Mass: " << v.M() << endl;
+        vtxB -= v;
+      }
+      cout << "B vertex coservation " << endl;
+      vtxB.Print();
+
+      TLorentzVector vtxDst;
+      vtxDst = pDauB[idxDst_v];
+      for(auto v : pDauDst) {
+        cout << "Mass: " << v.M() << endl;
+        vtxDst -= v;
+      }
+      cout << "Dst vertex coservation " << endl;
+      vtxDst.Print();
     }
 
     B2DstLNu_Dst2DPi.addVertex(idxB, Bvtx_idxs);
@@ -177,6 +226,11 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
 
     if(verbose) {cout << "CLNCentral: " << flush;}
     for(auto elem: weights) {
+      if(isnan(elem.second)) {
+        cout << "[ERROR]: CLNCentral nan weight: " << elem.second << endl;
+        cerr << "[ERROR]: CLNCentral nan weight: " << elem.second << endl;
+        assert(false);
+      }
       (*outputNtuplizer)["wh_CLNCentral"] = elem.second;
       if(verbose) {cout << elem.second << endl;}
     }

@@ -3,16 +3,27 @@ cmsenv
 export PATH=/cvmfs/sft.cern.ch/lcg/contrib/CMake/3.8.1/Linux-x86_64/bin:${PATH}
 export BOOST_ROOT=/cvmfs/sft.cern.ch/lcg/releases/Boost/1.66.0-f50b5/x86_64-centos7-gcc7-opt/
 export HEPMC_DIR=/cvmfs/sft.cern.ch/lcg/external/HepMC/2.06.08/x86_64-slc6-gcc48-opt
-mkdir -p ntuplizer/Hammer-0.2.1-build
-cd ntuplizer/Hammer-0.2.1-build
+mkdir ntuplizer
+cd ntuplizer
 #Download the source file from https://hammer.physics.lbl.gov/files/
-# tar -xf Hammer-0.2.1-Source.tar.gz
-cmake -DCMAKE_INSTALL_PREFIX=../Hammer-0.2.1 -DENABLE_TESTS=ON -DWITH_ROOT=OFF -DWITH_EXAMPLES=ON -DINSTALL_EXTERNAL_DEPENDENCIES=ON -DWITH_PYTHON=OFF -DBUILD_SHARED_LIBS=ON ../Hammer-0.2.1-Source
-make -j12
-make install
-ctest
+# tar -xf Hammer-0.9.0-Source.tar.gz
+mkdir Hammer-0.9.0-build
+cd Hammer-0.9.0-build
+cmake -DCMAKE_INSTALL_PREFIX=../Hammer-0.9.0 -DENABLE_TESTS=ON -DWITH_ROOT=OFF -DWITH_EXAMPLES=OFF -DINSTALL_EXTERNAL_DEPENDENCIES=ON -DWITH_PYTHON=OFF -DBUILD_SHARED_LIBS=ON ../Hammer-0.9.0-Source
+#Change ln 58 of Hammer-0.9.0-Source/src/Amplitudes/AmplBDstarDPiLepNu.cc
+#// const FourMomentum& pPion = daughters[4].momentum();
+#const FourMomentum& pPion = pDstarmes - pDmes;
+make -j24
+make install -j24
 
 cd $CMSSW_BASE/lib/slc7_amd64_gcc700
-cp ../../src/ntuplizer/Hammer-0.2.1/lib64/*.so.* ./
-cp ../../src/ntuplizer/Hammer-0.2.1/lib64/Hammer/*.so.* ./
+cp ../../src/ntuplizer/Hammer-0.9.0/lib64/*.so.* ./
+cp ../../src/ntuplizer/Hammer-0.9.0/lib64/Hammer/*.so.* ./
+cd $CMSSW_BASE/src/ntuplizer/Hammer-0.9.0-build
+ctest
+
+rm -rf Hammer-0.9.0-*
+
 cd $CMSSW_BASE/src/ntuplizer
+# Add this line to plugin/BuildFile.xml
+# <flags CXXFLAGS="-Wno-unknown-pragmas -I$(CMSSW_BASE)/src/ntuplizer/Hammer-0.9.0/include -l:libHammerCore.so.0.9.0 -l:libHammerBase.so.0.9.0 -l:libHammerTools.so.0.9.0 -l:libAmplitudes.so.0.9.0 -l:libRates.so.0.9.0 -l:libFormFactors.so.0.9.0 -l:libyaml-cpp.so.0.6"/>
