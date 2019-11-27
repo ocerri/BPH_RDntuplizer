@@ -29,9 +29,16 @@ python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBP
 ##############################################
 ------------------------------- Monte Carlo ----------------------------------------
 process=BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_SVV
-process=BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV
+process=BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU0_10-2-3
+
+python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_B2JpsiKst/out_CAND.root -c config/cmssw_privateMC_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py --maxtime 20m -N 20 -f
+
 
 python jobSubmission/submitCMSSWCondorJobs.py -i /storage/user/ocerri/cmsstore/cmsMC_private/$process/*/*/*.root -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/jobs_B2JpsiKst/out_CAND.root -c config/cmssw_privateMC_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py --maxtime 30m -N 30 -f
+
+
+
+
 
 
 process=BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3

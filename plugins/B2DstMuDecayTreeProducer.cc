@@ -28,6 +28,8 @@
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
 #define __dmDst_max__ 0.050 // loose cut
 #define __mass_D0pismu_max__ 7.0 // Some reasonable cut on the mass
+#define __pTaddTracks_min__ 0.3 // loose cut
+#define __mass_D0pismupi_max__ 6.5 // Some reasonable cut on the mass
 
 
 using namespace std;
@@ -108,8 +110,6 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     ############################################################################
     */
     for(uint i_K = 0; i_K < N_pfCand; ++i_K) {
-      // if(i_K==i_trgMu) continue;
-
       const pat::PackedCandidate & K = (*pfCandHandle)[i_K];
       if (!K.hasTrackDetails()) continue;
       //Require a positive charged hadron
@@ -370,51 +370,80 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["Est_mu_Dstmu"].push_back(-1);
           }
 
-          // bool accept_B = mass_MuDst < __mass_MuDst_max__;
-          // accept_B &= cos_MuDst_PV > __cos_MuDst_PV_min__;
-          // if(!accept_B) continue;
-
           /*
           ############################################################################
                   Veto the presence of additional tracks in the D* mu vertex
           ############################################################################
           */
-          // int N_compatible_tk = 0;
-          // for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
-          //   // Pion different from the pion from D0
-          //   if( i_tk==i_trgMu || i_tk==i_K || i_tk==i_pi || i_tk==i_pis) continue;
-          //
-          //   const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
-          //   //Require a charged candidate
-          //   if ( ptk.charge() == 0 ) continue;
-          //   if (!ptk.hasTrackDetails()) continue;
-          //
-          //   // Require to be close to the trigger muon;
-          //   if (fabs(ptk.dz() - trgMu.dz()) > __dzMax__) continue;
-          //   if (vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta()) > __dRMax__) continue;
-          //
-          //   //  Look for the Dst- and trigger muon to make a vertex
-          //   auto VtxKinTree = vtxu::FitVtxDstPi(iSetup, Dst, ptk, 0);
-          //   // auto VtxKinTree = vtxu::FitVtxMuDstPi(iSetup, Dst, trgMu, ptk, 0);
-          //   bool accept_Vtx = false;
-          //   double chi2_vtx;
-          //   if(VtxKinTree->isValid()) {
-          //     VtxKinTree->movePointerToTheTop();
-          //     auto vtx = VtxKinTree->currentDecayVertex();
-          //     chi2_vtx = vtx->chiSquared();
-          //     auto max_chi2 = TMath::ChisquareQuantile(__PvalChi2FakeVtx_min__, vtx->degreesOfFreedom());
-          //     if (chi2_vtx > 0 && chi2_vtx < max_chi2) accept_Vtx = true;
-          //   }
-          //   if(!accept_Vtx) continue;
-          //
-          //   auto particle = VtxKinTree->currentParticle();
-          //   auto mass_particle = particle->currentState().mass();
-          //   if(verbose) {cout << Form("Tk pt=%.1f eta=%.1f phi=%.1f - Vtx chi2=%.1f Mass=%.3f ", ptk.pt(), ptk.eta(), ptk.phi(), chi2_vtx, mass_particle) << endl;}
-          //
-          //   // accept_Vtx &=  mass_particle >
-          //   N_compatible_tk++;
-          // }
-          // if(verbose) {cout << "Compatible tracks: " << N_compatible_tk << endl;}
+          int N_compatible_tk = 0;
+          vector<double> tksAdd_massHad = {};
+          vector<double> tksAdd_massVis = {};
+          vector<double> tksAdd_pval = {};
+          vector<double> tksAdd_pt = {};
+          vector<double> tksAdd_sigdca_vtxB = {};
+          if(verbose) {cout << "Looking for additional tracks" << endl;}
+          for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
+            // Pion different from the pion from D0
+            if( i_tk==i_K || i_tk==i_pi || i_tk==i_pis) continue;
+
+            const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
+            if (!ptk.hasTrackDetails()) continue;
+            //Require a positive charged hadron
+            if (abs(ptk.pdgId()) != 211 ) continue;
+            if (ptk.pt() < __pTaddTracks_min__) continue;
+            // Require to be close to the trigger muon;
+            auto tk = ptk.bestTrack();
+            if (fabs(tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+            if (vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta()) > __dRMax__) continue;
+
+            GlobalPoint auxp(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
+            auto dca = vtxu::computeDCA(iSetup, ptk, auxp);
+
+            // Check if it makes a consistent vertex
+            auto kinTree = vtxu::Fit_D0pismupi(iSetup, D0, pis, trgMu, ptk);
+            auto res = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
+            if(!res.isGood) continue;
+            cout << N_compatible_tk << Form(": pval=%.3f", res.pval) << endl;
+            if (verbose) {cout << Form("Trk pars: pt=%.2f eta=%.2f phi=%.2f\n", ptk.pt(), ptk.eta(), ptk.phi());}
+
+            kinTree->movePointerToTheTop();
+            auto p_vis = kinTree->currentParticle();
+            auto m_vis = p_vis->currentState().mass();
+            if (m_vis > __mass_D0pismupi_max__) continue;
+
+            kinTree->movePointerToTheFirstChild();
+            auto refit_D0 = kinTree->currentParticle();
+            kinTree->movePointerToTheNextChild();
+            auto refit_pis = kinTree->currentParticle();
+            kinTree->movePointerToTheNextChild();
+            auto refit_mu = kinTree->currentParticle();
+            kinTree->movePointerToTheNextChild();
+            auto refit_pi = kinTree->currentParticle();
+
+            auto p4_D0pispi = vtxu::getTLVfromKinPart(refit_pis) + vtxu::getTLVfromKinPart(refit_D0) + vtxu::getTLVfromKinPart(refit_pi);
+            auto m_D0pispi = p4_D0pispi.M();
+
+            tksAdd_massVis.push_back(m_vis);
+            tksAdd_massHad.push_back(m_D0pispi);
+            tksAdd_pval.push_back(res.pval);
+            tksAdd_pt.push_back(ptk.pt());
+            tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
+            N_compatible_tk++;
+          }
+          (*outputVecNtuplizer)["nTksAdd"].push_back(N_compatible_tk);
+          if(verbose) {cout << "Compatible tracks: " << N_compatible_tk << endl;}
+          (*outputVecNtuplizer)["tksAdd_massVis"] = {};
+          (*outputVecNtuplizer)["tksAdd_massHad"] = {};
+          (*outputVecNtuplizer)["tksAdd_pval"] = {};
+          (*outputVecNtuplizer)["tksAdd_pt"] = {};
+          (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
+          for(uint i = 0; i < tksAdd_massHad.size(); i++){
+            (*outputVecNtuplizer)["tksAdd_massVis"].push_back(tksAdd_massVis[i]);
+            (*outputVecNtuplizer)["tksAdd_massHad"].push_back(tksAdd_massHad[i]);
+            (*outputVecNtuplizer)["tksAdd_pval"].push_back(tksAdd_pval[i]);
+            (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
+            (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
+          }
 
 
           n_B++;

@@ -43,16 +43,18 @@ if args.inputFile:
     else:
         flist = args.inputFile
 elif args.inputFiles:
-    if len(args.inputFiles) == 1:
+    if len(args.inputFiles) == 1 and args.inputFiles[0].endswith('.txt'):
         with open(args.inputFiles[0]) as f:
-            flist = [l for l in f.readlines()]
+            flist = [l[:-1] for l in f.readlines()]
     else:
         flist = args.inputFiles
 else:
-    flist = glob('/afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU20_10-2-3/jobs_out/*MINIAODSIM*.root')
+    print 'No input provided'
+    raise
 
 for i in range(len(flist)):
-    flist[i] = 'file:' + flist[i]
+    if os.path.isfile(flist[i]):
+        flist[i] = 'file:' + flist[i]
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist)),
