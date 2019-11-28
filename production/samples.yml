@@ -47,8 +47,7 @@ samples:
       - 2
       - 3
       - 4
-      # The rest is still to come, hopefully in the same version
-      # - 5
+      - 5
   #
   #  MC
   #
