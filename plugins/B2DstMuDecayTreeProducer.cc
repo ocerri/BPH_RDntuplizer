@@ -27,9 +27,9 @@
 #define __dmD0_max__ 0.1 // loose cut
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
 #define __dmDst_max__ 0.050 // loose cut
-#define __mass_D0pismu_max__ 7.0 // Some reasonable cut on the mass
+#define __mass_D0pismu_max__ 10.0 // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
-#define __mass_D0pismupi_max__ 6.5 // Some reasonable cut on the mass
+#define __mass_D0pismupi_max__ 10.0 // Some reasonable cut on the mass
 
 
 using namespace std;
@@ -375,7 +375,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
                   Veto the presence of additional tracks in the D* mu vertex
           ############################################################################
           */
-          int N_compatible_tk = 0;
+          uint N_compatible_tk = 0;
           vector<double> tksAdd_massHad = {};
           vector<double> tksAdd_massVis = {};
           vector<double> tksAdd_pval = {};
@@ -437,12 +437,16 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           (*outputVecNtuplizer)["tksAdd_pval"] = {};
           (*outputVecNtuplizer)["tksAdd_pt"] = {};
           (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
-          for(uint i = 0; i < tksAdd_massHad.size(); i++){
+          for(uint i = 0; i < N_compatible_tk; i++){
             (*outputVecNtuplizer)["tksAdd_massVis"].push_back(tksAdd_massVis[i]);
             (*outputVecNtuplizer)["tksAdd_massHad"].push_back(tksAdd_massHad[i]);
             (*outputVecNtuplizer)["tksAdd_pval"].push_back(tksAdd_pval[i]);
             (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
             (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
+          }
+          if(N_compatible_tk != (*outputVecNtuplizer)["tksAdd_massVis"].size()){
+            cout << "Number of tracks and tracks details lenght not matching" << endl;
+            assert(false);
           }
 
 
