@@ -14,6 +14,17 @@ def processCmd(cmd, quite = 0):
         print 'Output:\n   ['+output+'] \n'
     return output
 
+def createBatchName(a):
+    knownTags = ['B0_JpsiKst', 'B0_Mu', 'B0_Tau']
+    n = None
+    for t in knownTags:
+        if t in a.input_file[0]:
+            n = 'B' + t.split('_')[1]
+            break
+    if n is None:
+        n = a.maxtime
+    return n
+
 #_____________________________________________________________________________________________________________
 #example line: python jobSubmission/submitCMSSWCondorJobs.py -i /eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root -o /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/MuDst_candidates/out.root -f -c config/cmssw_privateMC_Tag_MuDmst-pD0bar-kp.py --maxtime 8h -N 5 --name MC
 if __name__ == "__main__":
@@ -173,6 +184,8 @@ if __name__ == "__main__":
         fsub.write('\n')
 
     print 'Submitting jobs'
-    output = processCmd('condor_submit jobs.sub')
+    cmd = 'condor_submit jobs.sub'
+    cmd += ' -batch-name ntuplizer_' + createBatchName(args)
+    output = processCmd(cmd)
     print 'Job submitted'
     os.system('mv jobs.sub '+outdir+'/cfg/jobs.sub')

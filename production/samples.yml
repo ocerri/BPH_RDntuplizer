@@ -65,6 +65,12 @@ samples:
       - /cmsMC_private/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
 
+  B0_MuNuDmst_PU20:
+    isMC: True
+    dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3
+    parts:
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191202-c21dec93027231dc6f615dfe5c662834/USER
+
   B0_MuNuDmst_HQETcentral_PU0:
     isMC: True
     dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3
@@ -78,6 +84,13 @@ samples:
       - /cmsMC_private/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
       # - /storage/user/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3/jobs_out/out_MINIAODSIM_*.root
 
+  B0_TauNuDmst_PU20:
+    isMC: True
+    dataset: BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3
+    parts:
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191202-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191205-c21dec93027231dc6f615dfe5c662834/USER
+
   B0_DmstHc_PU0:
     isMC: True
     dataset: BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_PU0_10-2-3
@@ -85,8 +98,20 @@ samples:
       - /cmsMC_private/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
 
+  B0_DmstHc_PU20:
+    isMC: True
+    dataset: BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_PU20_10-2-3
+    parts:
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_191202-c21dec93027231dc6f615dfe5c662834/USER
+
   Bp_MuNuDstst_PU0:
     isMC: True
     dataset: BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU0_10-2-3
     parts:
       - /cmsMC_private/ocerri-BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bp_MuNuDstst_PU20:
+    isMC: True
+    dataset: BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3
+    parts:
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191202-c21dec93027231dc6f615dfe5c662834/USER
