@@ -15,7 +15,7 @@ def processCmd(cmd, quite = 0):
     return output
 
 def createBatchName(a):
-    knownTags = ['B0_JpsiKst', 'B0_Mu', 'B0_Tau']
+    knownTags = ['B0_JpsiKst', 'B0_Mu', 'B0_Tau', 'B0_DmstHc', 'Bp_MuNuDstst']
     n = None
     for t in knownTags:
         if t in a.input_file[0]:
@@ -185,7 +185,7 @@ if __name__ == "__main__":
 
     print 'Submitting jobs'
     cmd = 'condor_submit jobs.sub'
-    cmd += ' -batch-name ntuplizer_' + createBatchName(args)
+    cmd += ' -batch-name ntuple_' + createBatchName(args)
     output = processCmd(cmd)
     print 'Job submitted'
     os.system('mv jobs.sub '+outdir+'/cfg/jobs.sub')
