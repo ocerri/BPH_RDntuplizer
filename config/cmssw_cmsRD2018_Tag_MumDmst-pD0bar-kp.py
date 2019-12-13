@@ -74,9 +74,9 @@ if args.useLocalLumiList:
 #####################   Output   ###################
 '''
 if args.outputFile == '.root':
-    outname = 'B2DstMu_CAND.root'
+    outname = 'CombDstMum_CAND.root'
 elif args.outputFile.startswith('_numEvent'):
-    outname = 'B2DstMu_CAND' + args.outputFile
+    outname = 'CombDstMum_CAND' + args.outputFile
 else:
     outname = args.outputFile
 
@@ -96,7 +96,7 @@ process.trgBPH = cms.EDProducer("BPHTriggerPathProducer",
         vertexCollection = cms.InputTag("offlineSlimmedPrimaryVertices","", ""),
         triggerObjects = cms.InputTag("slimmedPatTrigger"),
         triggerBits = cms.InputTag("TriggerResults","","HLT"),
-        muon_charge = cms.int32(1),
+        muon_charge = cms.int32(-1),
         verbose = cms.int32(0)
 )
 

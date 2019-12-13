@@ -6,7 +6,11 @@ import datetime
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument ('tag', type=str, choices=['B2DstMu', 'B2DstK', 'B2JpsiKst'], help='Tag identifying the production')
+parser.add_argument ('tag', type=str, choices=['B2DstMu', 'B2DstK', 'B2JpsiKst', 'CombDstMum'], help='Tag identifying the production')
+
+parser.add_argument ('-e', '--eras', type=str, default=['A', 'B', 'C', 'D'], help='Eras to run on', nargs='+')
+parser.add_argument ('-p', '--parts', type=int, default=[1, 2, 3, 4, 5, 6], help='Parts to run on', nargs='+')
+
 parser.add_argument ('--wait', default=False, action='store_true')
 args = parser.parse_args()
 
@@ -14,7 +18,8 @@ tag = args.tag
 
 cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
        'B2DstK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py',
-       'B2JpsiKst': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py'
+       'B2JpsiKst': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py',
+       'CombDstMum': 'cmssw_cmsRD2018_Tag_MumDmst-pD0bar-kp.py'
        }
 
 date = datetime.datetime.today()
@@ -94,9 +99,10 @@ for k, d in prod_samples['samples'].iteritems():
         continue
     idx = k.find('Run2018')
     era = k[idx + len('Run2018')]
-    if era in ['D', 'C']:
+    if era in args.eras:
         for i in d['parts']:
-            # if int(i) != 1: continue
+            if not i in args.parts:
+                continue
             dataset = d['dataset'].format(i)
             print '\n########## {} ##########\n'.format(dataset)
 
