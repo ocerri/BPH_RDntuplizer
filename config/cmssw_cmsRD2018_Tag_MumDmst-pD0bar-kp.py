@@ -37,7 +37,7 @@ process.maxEvents = cms.untracked.PSet(
 from glob import glob
 if args.inputFile:
     flist = args.inputFile
-if args.inputFiles:
+elif args.inputFiles:
     if len(args.inputFiles) == 1 and args.inputFiles[0].endswith('.txt'):
         with open(args.inputFiles[0]) as f:
             flist = [l[:-1] for l in f.readlines()]

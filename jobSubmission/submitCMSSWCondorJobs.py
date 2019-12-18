@@ -90,6 +90,13 @@ if __name__ == "__main__":
     elif isinstance(args.input_file, list):
         flist = args.input_file
 
+    print 'Trying to get a local copy'
+    for i in range(len(flist)):
+        if flist[i].startswith('file:'):
+            continue
+        if os.path.isfile('/mnt/hadoop' + flist[i]):
+            flist[i] = 'file:/mnt/hadoop' + flist[i]
+
     rem = len(flist)%args.nFilePerJob
     Njobs = len(flist)/args.nFilePerJob
     if rem: Njobs += 1
@@ -109,6 +116,7 @@ if __name__ == "__main__":
             Njobs = args.nMaxJobs
             print 'Only', Njobs, 'will be submitted'
     if Njobs == 0: exit()
+    
     '''
     ###################### Check CMSSW and config ############################
     '''

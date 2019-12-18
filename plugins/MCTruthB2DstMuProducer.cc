@@ -299,6 +299,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       }
     }
 
+    (*outputNtuplizer)["MC_M_vis"] = (p4["Dst"] + p4["mu"]).M();
     (*outputNtuplizer)["MC_M2_miss"] = (p4["B"] - p4["Dst"] - p4["mu"]).M2();
     (*outputNtuplizer)["MC_q2"] = (p4["B"] - p4["Dst"]).M2();
 
