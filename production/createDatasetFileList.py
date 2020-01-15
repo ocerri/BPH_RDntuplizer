@@ -1,6 +1,7 @@
 import yaml
 import os
 import datetime
+from glob import glob
 
 forceMC = False
 prod_samples = yaml.load(open('samples.yml'))
@@ -40,7 +41,9 @@ for k, d in prod_samples['samples'].iteritems():
                 cmd += ' --limit=0 >> ' + fname
                 os.system(cmd)
             else:
-                os.system('ls ' + p + ' >> ' + fname)
+                with open(fname, 'a') as f:
+                    for name in glob(p):
+                        f.write(name+'\n')
 
             if p == '/cmsMC_private/ocerri-BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV-c21dec93027231dc6f615dfe5c662834/USER':
                 print 'Removing by hand the 191005 part of the JPsiKst dataset'
@@ -51,13 +54,15 @@ for k, d in prod_samples['samples'].iteritems():
                         if not '/191005_' in line:
                             f.write(line)
             elif p == '/cmsMC_private/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER':
-                print "Removing fils /191111_232736/0001/out_MINIAODSIM_1515.root 191111_232736/0003/out_MINIAODSIM_3049.root"
+                print "Removing corrupted files"
                 with open(fname, 'r') as f:
                     lines = f.readlines()
                 with open(fname, 'w') as f:
                     for line in lines:
                         condition = not '/191111_232736/0001/out_MINIAODSIM_1515.root' in line
                         condition *= not '191111_232736/0003/out_MINIAODSIM_3049.root' in line
+                        condition *= not '191205_195222/0005/out_MINIAODSIM_5429.root' in line
+                        condition *= not '191205_195222/0002/out_MINIAODSIM_2764.root' in line
                         if condition:
                             f.write(line)
 
