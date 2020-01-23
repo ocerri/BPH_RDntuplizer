@@ -564,9 +564,10 @@ void B2DstMuDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<strin
 bool B2DstMuDecayTreeProducer::qualityMuonID(pat::Muon m, reco::Vertex pVtx) {
   if(m.innerTrack().isNull()) return false;
 
-  if(m.innerTrack()->hitPattern().pixelLayersWithMeasurement() < 2) return false;
-  if(!m.innerTrack()->quality(reco::TrackBase::highPurity)) return false;
-  if(!m.isGood("TMOneStationTight")) return false;
+  if (!m.isSoftMuon(pVtx)) return false;
+  // if(m.innerTrack()->hitPattern().pixelLayersWithMeasurement() < 2) return false;
+  // if(!m.innerTrack()->quality(reco::TrackBase::highPurity)) return false;
+  // if(!m.isGood("TMOneStationTight")) return false;
   if(m.innerTrack()->normalizedChi2() > 1.8) return false;
 
   double dxy = m.innerTrack()->dxy(pVtx.position());

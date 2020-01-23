@@ -113,11 +113,13 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
     vector<pair<pat::Muon, pat::Muon>> vecJpsiMuons;
     for(uint i1 = 0; i1 < nMu -1; i1++){
       auto m1 = (*muonHandle)[i1];
-      if (!isMuonFromJpsiID(m1, primaryVtx, trgMu)) continue;
+      // if (!isMuonFromJpsiID(m1, primaryVtx, trgMu)) continue;
+      if (!m1.isSoftMuon(primaryVtx)) continue;
 
       for(uint i2 = i1+1; i2 < nMu; i2++){
         auto m2 = (*muonHandle)[i2];
-        if (!isMuonFromJpsiID(m2, primaryVtx, trgMu)) continue;
+        // if (!isMuonFromJpsiID(m2, primaryVtx, trgMu)) continue;
+        if (!m2.isSoftMuon(primaryVtx)) continue;
         if(m1.charge() * m2.charge() != -1) continue;
 
         auto mup = m1;

@@ -81,6 +81,7 @@ samples:
       - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191212-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200110-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200113-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200117-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_MuNuDmst_HQETcentral_PU0:
     isMC: True
@@ -117,6 +118,7 @@ samples:
     dataset: BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_PU20_10-2-3
     parts:
       - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_191202-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_200117-c21dec93027231dc6f615dfe5c662834/USER
 
   Bp_MuNuDstst_PU0:
     isMC: True
@@ -129,3 +131,4 @@ samples:
     dataset: BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3
     parts:
       - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191202-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200117-c21dec93027231dc6f615dfe5c662834/USER
