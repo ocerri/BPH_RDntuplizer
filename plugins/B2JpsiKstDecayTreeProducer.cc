@@ -20,7 +20,7 @@
 #include "VtxUtils.hh"
 
 #define __PvalChi2Vtx_min__ 0.05 // Very loose cut
-#define __dzMax__ 2.0
+#define __dzMax__ 3.0
 #define __dmJpsi_max__ 1.0 // loose cut
 #define __sigIPpfCand_min__ 2. // loose cut
 #define __pThad_min__ 0.5 // loose cut
@@ -36,6 +36,7 @@ public:
     explicit B2JpsiKstDecayTreeProducer(const edm::ParameterSet &iConfig);
     void AddTLVToOut(TLorentzVector, string, map<string, vector<float>>*);
     bool isMuonFromJpsiID(pat::Muon, reco::Vertex, pat::Muon);
+    int trgMuIdx(pat::Muon, vector<pat::Muon>);
 
     ~B2JpsiKstDecayTreeProducer() override {};
 
@@ -105,7 +106,6 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
 
     edm::Handle<vector<pat::Muon>> trgMuonsHandle;
     iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
-    auto trgMu = (*trgMuonsHandle)[0];
 
     vector<RefCountedKinematicTree> vecJpsiKinTree;
     vector<double> vecMass_mumu;
@@ -176,7 +176,8 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
       if(K.pt() < __pThad_min__) continue;
       // Require to be close to the trigger muon;
       auto K_tk = K.bestTrack();
-      if (fabs(K_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+      // if (fabs(K_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+      if (fabs( K_tk->dz(primaryVtx.position()) ) > __dzMax__) continue;
       // Require significant impact parameter
       auto dxy = K_tk->dxy(primaryVtx.position());
       auto K_sigdxy_PV = fabs(dxy)/K_tk->dxyError();
@@ -201,7 +202,8 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
         if(pi.pt() < __pThad_min__) continue;
         // Require to be close to the trigger muon;
         auto pi_tk = pi.bestTrack();
-        if (fabs(pi_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+        // if (fabs(pi_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+        if (fabs( pi_tk->dz(primaryVtx.position()) ) > __dzMax__) continue;
         // Require significant impact parameter
         auto dxy = pi_tk->dxy(primaryVtx.position());
         auto pi_sigdxy_PV = fabs(dxy)/pi.dxyError();
@@ -220,11 +222,6 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
         KstKinTree->movePointerToTheTop();
         auto mass_piK = KstKinTree->currentParticle()->currentState().mass();
         if (fabs(mass_piK - mass_Kst) > __dmKst_max__) continue;
-
-        //Fit the vertex WITH mass constraint
-        // KstKinTree = vtxu::FitKst_piK(iSetup, pi, K, true);
-        // auto res_piK_cKstMass = vtxu::fitQuality(KstKinTree, __PvalChi2Vtx_min__);
-        // if(!res_piK_cKstMass.isValid) continue;
 
         KstKinTree->movePointerToTheTop();
         auto Kst = KstKinTree->currentParticle();
@@ -339,12 +336,12 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           // // debugPrint("JpsiKst mass constraint", res, mass);
           // addToOutBFit("JpsiKst_cBMass", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
 
-          BKinTree = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, false, true, false);
-          res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
-          if(res.isValid) mass = BKinTree->currentParticle()->currentState().mass();
-          else mass = 0;
-          // debugPrint("mumupiK B mass", res, mass);
-          addToOutBFit("mumupiK_cBMass", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
+          // BKinTree = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, false, true, false);
+          // res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+          // if(res.isValid) mass = BKinTree->currentParticle()->currentState().mass();
+          // else mass = 0;
+          // // debugPrint("mumupiK B mass", res, mass);
+          // addToOutBFit("mumupiK_cBMass", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
 
           // BKinTree = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, false, false, true, &primaryVtx);
           // res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
@@ -405,15 +402,8 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           (*outputVecNtuplizer)["dof_piK"].push_back(res_piK.dof);
           (*outputVecNtuplizer)["pval_piK"].push_back(res_piK.pval);
           (*outputVecNtuplizer)["mass_piK"].push_back(mass_piK);
-          // (*outputVecNtuplizer)["chi2_piK_cKstMass"].push_back(res_piK_cKstMass.chi2);
-          // (*outputVecNtuplizer)["dof_piK_cKstMass"].push_back(res_piK_cKstMass.dof);
-          // (*outputVecNtuplizer)["pval_piK_cKstMass"].push_back(res_piK_cKstMass.pval);
           AddTLVToOut(vtxu::getTLVfromKinPart(Kst), string("Kst"), &(*outputVecNtuplizer));
-          // KstKinTree->movePointerToTheFirstChild();
-          // auto refit_pi = KstKinTree->currentParticle();
           AddTLVToOut(vtxu::getTLVfromKinPart(refit_pi), string("piRefit"), &(*outputVecNtuplizer));
-          // KstKinTree->movePointerToTheNextChild();
-          // auto refit_K = KstKinTree->currentParticle();
           AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("KRefit"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["cos_Kst_PV"].push_back(cos_Kst_PV);
           (*outputVecNtuplizer)["cosT_Kst_PV"].push_back(cosT_Kst_PV);
@@ -428,16 +418,14 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           auto dxy_mup = mup.innerTrack()->dxy(primaryVtx.position());
           (*outputVecNtuplizer)["mup_dxy"].push_back(dxy_mup);
           (*outputVecNtuplizer)["mup_sigdxy_PV"].push_back(fabs(dxy_mup)/mup.innerTrack()->dxyError());
-          float mup_isTrg = trgMu.pt()==mup.pt() && trgMu.phi()==mup.phi() && trgMu.eta()==mup.eta();
-          (*outputVecNtuplizer)["mup_isTrg"].push_back(mup_isTrg);
+          (*outputVecNtuplizer)["mup_isTrg"].push_back(trgMuIdx(mup, (*trgMuonsHandle) ));
 
           auto mum = vecJpsiMuons[i_J].second;
           AddTLVToOut(vtxu::getTLVfromTrack(*(mum.bestTrack()), mass_Mu), string("mum"), &(*outputVecNtuplizer));
           auto dxy_mum = mum.innerTrack()->dxy(primaryVtx.position());
           (*outputVecNtuplizer)["mum_dxy"].push_back(dxy_mum);
           (*outputVecNtuplizer)["mum_sigdxy_PV"].push_back(fabs(dxy_mum)/mum.innerTrack()->dxyError());
-          float mum_isTrg = trgMu.pt()==mum.pt() && trgMu.phi()==mum.phi() && trgMu.eta()==mum.eta();
-          (*outputVecNtuplizer)["mum_isTrg"].push_back(mum_isTrg);
+          (*outputVecNtuplizer)["mum_isTrg"].push_back(trgMuIdx(mum, (*trgMuonsHandle) ));
 
           (*outputVecNtuplizer)["chi2_mumu"].push_back(vecRes_mumu[i_J].chi2);
           (*outputVecNtuplizer)["dof_mumu"].push_back(vecRes_mumu[i_J].dof);
@@ -447,11 +435,7 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           // (*outputVecNtuplizer)["dof_mumu_cJpsiMass"].push_back(res_mumu_cJpsiMass.dof);
           // (*outputVecNtuplizer)["pval_mumu_cJpsiMass"].push_back(res_mumu_cJpsiMass.pval);
           AddTLVToOut(vtxu::getTLVfromKinPart(Jpsi), string("Jpsi"), &(*outputVecNtuplizer));
-          // JpsiKinTree->movePointerToTheFirstChild();
-          // auto refit_Mu1 = JpsiKinTree->currentParticle();
           AddTLVToOut(vtxu::getTLVfromKinPart(refit_Mu1), string("mupRefit"), &(*outputVecNtuplizer));
-          // JpsiKinTree->movePointerToTheNextChild();
-          // auto refit_Mu2 = JpsiKinTree->currentParticle();
           AddTLVToOut(vtxu::getTLVfromKinPart(refit_Mu2), string("mumRefit"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["cos_Jpsi_PV"].push_back(cos_Jpsi_PV);
           (*outputVecNtuplizer)["cosT_Jpsi_PV"].push_back(cosT_Jpsi_PV);
@@ -459,15 +443,11 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           (*outputVecNtuplizer)["sigd_vtxJpsi_PV"].push_back(sigd_vtxJpsi_PV);
           (*outputVecNtuplizer)["sigdxy_vtxJpsi_PV"].push_back(dxy_vtxJpsi_PV.first/dxy_vtxJpsi_PV.second);
 
-          // AddTLVToOut(vtxu::getTLVfromKinPart(B), string("B"), &(*outputVecNtuplizer));
-          // BKinTree->movePointerToTheFirstChild();
-          // auto refit_Jpsi = BKinTree->currentParticle();
-          // AddTLVToOut(vtxu::getTLVfromKinPart(refit_Jpsi), string("Jpsi"), &(*outputVecNtuplizer));
-          // BKinTree->movePointerToTheNextChild();
-          // auto refit_Kst = BKinTree->currentParticle();
-          // AddTLVToOut(vtxu::getTLVfromKinPart(refit_Kst), string("Kst"), &(*outputVecNtuplizer));
+          if(n_B >= 100) break;
         }
+        if(n_B >= 100) break;
       }
+      if(n_B >= 100) break;
     }
 
     (*outputNtuplizer)["Run"] = iEvent.run();
@@ -497,6 +477,21 @@ void B2JpsiKstDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<str
   return;
 }
 
+int B2JpsiKstDecayTreeProducer::trgMuIdx(pat::Muon m, vector<pat::Muon> trgMuons) {
+  int idx = -1;
+  int Nmu = trgMuons.size();
+  for(int i = 0; i < Nmu; i++) {
+    bool match = trgMuons[i].pt() == m.pt();
+    match &= trgMuons[i].eta() == m.eta();
+    match &= trgMuons[i].phi() == m.phi();
+    match &= trgMuons[i].charge() == m.charge();
+    if(match) {
+      idx = i;
+      break;
+    }
+  }
+  return idx;
+}
 
 bool B2JpsiKstDecayTreeProducer::isMuonFromJpsiID(pat::Muon m, reco::Vertex pVtx, pat::Muon trgMu) {
   if(m.innerTrack().isNull()) return false;
