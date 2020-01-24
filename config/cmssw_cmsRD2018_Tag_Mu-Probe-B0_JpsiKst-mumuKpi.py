@@ -44,9 +44,21 @@ elif args.inputFiles:
     else:
         flist = args.inputFiles
 else:
-    flist = glob('/eos/cms/store/data/Run2018C/ParkingBPH1/MINIAOD/05May2019-v1/*/*.root')
-    for i in range(len(flist)):
-        flist[i] = 'file:' + flist[i]
+    fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
+    fdefault += 'inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt'
+    with open(fdefault) as f:
+        flist = [l[:-1] for l in f.readlines()]
+    flist = flist[:10]
+
+print 'Trying to get a local copy'
+for i in range(len(flist)):
+    if flist[i].startswith('file:'):
+        print 'Already set to local'
+        continue
+    print 'Looking for: /mnt/hadoop' + flist[i]
+    if os.path.isfile('/mnt/hadoop' + flist[i]):
+        print 'Found'
+        flist[i] = 'file:/mnt/hadoop' + flist[i]
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist))
@@ -80,22 +92,13 @@ process.TFileService = cms.Service("TFileService",
 #################   Sequence    ####################
 '''
 
-process.trgBPH = cms.EDProducer("BPHTriggerPathProducer",
-        muonCollection = cms.InputTag("slimmedMuons","", ""),
-        vertexCollection = cms.InputTag("offlineSlimmedPrimaryVertices","", ""),
-        triggerObjects = cms.InputTag("slimmedPatTrigger"),
-        triggerBits = cms.InputTag("TriggerResults","","HLT"),
+process.trgF = cms.EDFilter("TriggerMuonsFilter",
         muon_charge = cms.int32(0),
-        verbose = cms.int32(0)
-)
-
-process.trgF = cms.EDFilter("BPHTriggerPathFilter",
-        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", "")
+        verbose = cms.int32(1)
 )
 
 process.B2JpsiKstDT = cms.EDProducer("B2JpsiKstDecayTreeProducer",
-# process.B2JpsiKstDT = cms.EDProducer("MuJpsiDecayTreeProducer",
-        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
+        trgMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
         verbose = cms.int32(0)
 )
 
@@ -115,7 +118,6 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 
 
 process.p = cms.Path(
-                    process.trgBPH +
                     process.trgF +
                     process.B2JpsiKstDT +
                     process.B2JpsiKstDTFilter +
