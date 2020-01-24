@@ -36,10 +36,10 @@ private:
     // ----------member data ---------------------------
     edm::EDGetTokenT<vector<reco::GenParticle>> PrunedParticlesSrc_;
     edm::EDGetTokenT<vector<pat::PackedGenParticle>> PackedParticlesSrc_;
-    edm::EDGetTokenT<vector<pat::Muon>> TrgMuonSrc_;
-
     edm::EDGetTokenT<vector<pat::PackedCandidate>> PFCandSrc_;
 
+    edm::EDGetTokenT<map<string, vector<float>>> B2DstKDecayTreeOutSrc_;
+    edm::EDGetTokenT<vector<pat::Muon>> trgMuonSrc_;
     int verbose = 0;
 };
 
@@ -50,12 +50,13 @@ MCTruthB2JpsiKstProducer::MCTruthB2JpsiKstProducer(const edm::ParameterSet &iCon
     verbose = iConfig.getParameter<int>( "verbose" );
     PrunedParticlesSrc_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
     PackedParticlesSrc_ = consumes<vector<pat::PackedGenParticle>>(edm::InputTag("packedGenParticles"));
-    TrgMuonSrc_ = consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "trgMuons" ) );
-
     PFCandSrc_ = consumes<vector<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"));
+    B2DstKDecayTreeOutSrc_ = consumes<map<string, vector<float>>>(iConfig.getParameter<edm::InputTag>( "decayTreeVecOut" ));
+    trgMuonSrc_ = consumes<vector<pat::Muon>>(iConfig.getParameter<edm::InputTag>( "triggerMuons" ));
 
-    produces<map<string, float>>("outputNtuplizer");
     produces<int>("indexBmc");
+    produces<map<string, float>>("outputNtuplizer");
+    produces<map<string, vector<float>>>("outputVecNtuplizer");
 }
 
 
@@ -63,28 +64,45 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
     if (verbose) {cout << "-----------  MC Truth ----------\n";}
 
     // Get prunedGenParticles
-    edm::Handle<std::vector<reco::GenParticle>> PrunedGenParticlesHandle;
+    edm::Handle<vector<reco::GenParticle>> PrunedGenParticlesHandle;
     iEvent.getByToken(PrunedParticlesSrc_, PrunedGenParticlesHandle);
     unsigned int N_PrunedGenParticles = PrunedGenParticlesHandle->size();
 
     // Get packedGenParticles
-    edm::Handle<std::vector<pat::PackedGenParticle>> PackedGenParticlesHandle;
+    edm::Handle<vector<pat::PackedGenParticle>> PackedGenParticlesHandle;
     iEvent.getByToken(PackedParticlesSrc_, PackedGenParticlesHandle);
-    // unsigned int N_packedGenParticles = PackedGenParticlesHandle->size();
-
-    // Get trigger muon
-    edm::Handle<vector<pat::Muon>> trgMuonsHandle;
-    iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
-    auto trgMu = (*trgMuonsHandle)[0];
 
     // Get PF cand
     edm::Handle<vector<pat::PackedCandidate>> pfCandHandle;
     iEvent.getByToken(PFCandSrc_, pfCandHandle);
 
-    // Output collection
-    unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
-    unique_ptr<int> indexBmc(new int);
+    // Get output from decay tree producer
+    edm::Handle<map<string, vector<float>>> outMapHandle;
+    iEvent.getByToken(B2DstKDecayTreeOutSrc_, outMapHandle);
+    vector<float> reco_B_pt;
+    vector<float> reco_B_eta;
+    vector<float> reco_B_phi;
+    for( auto const& kv : (*outMapHandle) ) {
+      if (kv.first == "B_mumupiK_pt") reco_B_pt = kv.second;
+      if (kv.first == "B_mumupiK_eta") reco_B_eta = kv.second;
+      if (kv.first == "B_mumupiK_phi") reco_B_phi = kv.second;
+    }
+    if(verbose) {
+      cout << "Reco B candidates" << endl;
+      for(uint j = 0; j < reco_B_pt.size(); j++) {
+        cout << Form("%d: pt:%.2f eta:%.2f phi:%.2f", j, reco_B_pt[j], reco_B_eta[j], reco_B_phi[j]) << endl;
+      }
+      cout << endl;
+    }
 
+    // Get trigger muons
+    edm::Handle<vector<pat::Muon>> trgMuHandle;
+    iEvent.getByToken(trgMuonSrc_, trgMuHandle);
+
+    // Output collection
+    unique_ptr<int> indexBmc(new int);
+    unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
+    unique_ptr<map<string, vector<float>>> outputVecNtuplizer(new map<string, vector<float>>);
 
     if(verbose) {
       uint nb = 0;
@@ -109,10 +127,11 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
     }
 
     // Looking for the B0 -> J/psi K*0
+    vector<reco::GenParticle> genMuons;  //Used later to match trigger muons
     map<string, TLorentzVector> p4;
-    p4["mu"] = TLorentzVector();
-    double mu_impactParam = -1;
     int i_B = -1;
+    int nB02JpsiKst = 0;
+    float best_dR = 1e9, best_dPt = 1e9;
     reco::Candidate::Point interactionPoint(-9999999999, -999, -999);
     for(unsigned int i = 0; i < N_PrunedGenParticles; i++) {
       auto p = (*PrunedGenParticlesHandle)[i];
@@ -128,23 +147,32 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
           if(d->pdgId() == 443) Jpsi_found = true;
           else if(d->pdgId() == 313) Kst_found = true;
         }
-        if(Jpsi_found && Kst_found) i_B = i;
-      }
+        if(Jpsi_found && Kst_found) nB02JpsiKst++;
+        else continue;
 
-      bool semilepDecay = p.pdgId() == -511 || abs(p.pdgId()) == 521 || abs(p.pdgId()) == 531;
-      if (semilepDecay && p.numberOfDaughters()>1) {
-        for(auto d : p.daughterRefVector()) {
-          if(abs(d->pdgId()) == 13) {
-            p4["mu"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
-            mu_impactParam = vtxu::computeIP(interactionPoint, d->vertex(), d->momentum(), true);
-            if(verbose) {
-              cout << "Muon from " << p.pdgId() << Form(" found (pt: %.1f, eta: %.1f, phi: %.1f, ip: %f)", d->pt(), d->eta(), d->phi(), mu_impactParam) << endl;
-            }
+        if(verbose) {cout << Form("%d (B0->JpsiKst): pt:%.2f eta:%.2f phi:%.2f", i, p.pt(), p.eta(), p.phi()) << endl;}
+
+        float dR = 1e9, dPt = 1e9;
+        for(uint j = 0; j < reco_B_pt.size(); j++) {
+          float aux_dR = vtxu::dR(p.phi(), reco_B_phi[j], p.eta(), reco_B_eta[j]);
+          float aux_dPt = fabs(reco_B_pt[j] - p.pt())/p.pt();
+          if(verbose) {cout << Form("%.2e %.2e", aux_dR, aux_dPt) << endl;}
+          if(aux_dR < dR && aux_dPt < dPt) {
+            dR = aux_dR;
+            dPt = aux_dPt;
           }
         }
+        if(dR  < best_dR && dPt < best_dPt) {
+          best_dR = dR;
+          best_dPt = dPt;
+          i_B = i;
+          if(verbose) {cout << "selected" << endl;}
+        }
       }
+      else if (abs(p.pdgId()) ==  13) genMuons.push_back(p);
     }
     (*indexBmc) = i_B;
+    (*outputNtuplizer)["MC_nB02JpsiKst"] = nB02JpsiKst;
 
     p4["B"] = TLorentzVector();
     p4["Jpsi"] = TLorentzVector();
@@ -218,12 +246,40 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
         cout << endl;
       }
     }
-    (*outputNtuplizer)["MC_mu_IP"] = mu_impactParam;
 
+    // Retrieve the cloaset MC mu to the trigger muons
+    for(pat::Muon recoMu : (*trgMuHandle)) {
+      float best_dR = 1e9, best_dPt = 1e9;
+      bool assigned = false;
+      reco::GenParticle bestMu;
+      for(reco::GenParticle mcMu : genMuons) {
+        float dR = vtxu::dR(recoMu.phi(), mcMu.phi(), recoMu.eta(), mcMu.eta());
+        float dPt = fabs(recoMu.pt() - mcMu.pt())/mcMu.pt();
+        if(dR < best_dR && dPt < best_dPt) {
+          best_dR = dR;
+          best_dPt = dPt;
+          bestMu = mcMu;
+          assigned = true;
+        }
+      }
+      if(assigned) {
+        (*outputVecNtuplizer)["MC_trgMu_pt"].push_back(bestMu.pt());
+        (*outputVecNtuplizer)["MC_trgMu_eta"].push_back(bestMu.eta());
+        (*outputVecNtuplizer)["MC_trgMu_phi"].push_back(bestMu.phi());
+        float impactParam = vtxu::computeIP(interactionPoint, bestMu.vertex(), bestMu.momentum(), true);
+        (*outputVecNtuplizer)["MC_trgMu_IP"].push_back(impactParam);
+      }
+      else {
+        (*outputVecNtuplizer)["MC_trgMu_pt"].push_back(-1);
+        (*outputVecNtuplizer)["MC_trgMu_eta"].push_back(-999);
+        (*outputVecNtuplizer)["MC_trgMu_phi"].push_back(-999);
+        (*outputVecNtuplizer)["MC_trgMu_IP"].push_back(-999);
+      }
+    }
 
-
-    iEvent.put(move(outputNtuplizer), "outputNtuplizer");
     iEvent.put(move(indexBmc), "indexBmc");
+    iEvent.put(move(outputNtuplizer), "outputNtuplizer");
+    iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");
     return;
 }
 
@@ -232,7 +288,6 @@ void MCTruthB2JpsiKstProducer::AddTLVToOut(TLorentzVector v, string n, map<strin
   (*outv)[n+"_pt"] = v.Pt();
   (*outv)[n+"_eta"] = v.Eta();
   (*outv)[n+"_phi"] = v.Phi();
-  (*outv)[n+"_P"] = v.P();
   return;
 }
 

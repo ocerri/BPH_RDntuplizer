@@ -52,6 +52,6 @@ python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.
 
 python jobSubmission/submitCMSSWCondorJobs.py -i /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/jobs_out/out_MINIAODSIM_*.root -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/jobs_B2DstMu/out_CAND.root -c config/cmssw_privateMC_Tag_B0_MuDmst-pD0bar-kp.py --maxtime 20m -N 20 -f
 
+
 ----------------------------------- DATA -------------------------------------------
-## Not working ###
-# python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt -o /storage/user/ocerri/BPhysics/data/cmsRD/ParkingBPH1/Run2018D-05May2019promptD-v1_RDntuplizer_B2DstMu_191031/out_CAND.root -c config/cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py --maxtime 2h -N 10
+python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt -o /storage/user/ocerri/BPhysics/data/cmsRD/ParkingBPH1/Run2018D-05May2019promptD-v1_RDntuplizer_JpsiKst_200123/out_CAND.root -c config/cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py --maxtime 2h -N 5 --nMaxJobs 100

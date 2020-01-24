@@ -74,11 +74,7 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
       cout << "\t" << Form("id:%d  pt:%.1f  eta:%.1f  phi:%.1f softID:%d", muon.pdgId(), muon.pt(), muon.eta(), muon.phi(), muon.isSoftMuon(primaryVtx)) << endl;
     }
     if(!muon.triggered("HLT_Mu*_IP*_part*_v*")) continue;
-    if(muon.innerTrack().isNull()) {
-      cout << "[ERROR] No inner track available" << endl;
-      cerr << "[ERROR] No inner track available" << endl;
-      continue;
-    };
+    if(muon.innerTrack().isNull()) continue;
     trgMuonsMatched->push_back(muon);
 
     for(auto tag : triggerTag) {

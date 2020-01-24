@@ -94,7 +94,7 @@ process.TFileService = cms.Service("TFileService",
 
 process.trgF = cms.EDFilter("TriggerMuonsFilter",
         muon_charge = cms.int32(0),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.B2JpsiKstDT = cms.EDProducer("B2JpsiKstDecayTreeProducer",
