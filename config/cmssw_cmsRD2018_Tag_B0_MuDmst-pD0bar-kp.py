@@ -91,22 +91,14 @@ process.TFileService = cms.Service("TFileService",
 #################   Sequence    ####################
 '''
 
-process.trgBPH = cms.EDProducer("BPHTriggerPathProducer",
-        muonCollection = cms.InputTag("slimmedMuons","", ""),
-        vertexCollection = cms.InputTag("offlineSlimmedPrimaryVertices","", ""),
-        triggerObjects = cms.InputTag("slimmedPatTrigger"),
-        triggerBits = cms.InputTag("TriggerResults","","HLT"),
-        muon_charge = cms.int32(1),
+process.trgF = cms.EDFilter("TriggerMuonsFilter",
+        muon_charge = cms.int32(0),
         verbose = cms.int32(0)
-)
-
-process.trgF = cms.EDFilter("BPHTriggerPathFilter",
-        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", "")
 )
 
 
 process.B2MuDstDT = cms.EDProducer("B2DstMuDecayTreeProducer",
-        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
+        trgMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
         verbose = cms.int32(0)
 )
 
@@ -126,7 +118,6 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 
 
 process.p = cms.Path(
-                    process.trgBPH +
                     process.trgF +
                     process.B2MuDstDT +
                     process.B2MuDstDTFilter+

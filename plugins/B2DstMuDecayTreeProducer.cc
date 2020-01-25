@@ -87,7 +87,6 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
     edm::Handle<vector<pat::Muon>> trgMuonsHandle;
     iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
-    auto trgMu = (*trgMuonsHandle)[0];
 
     // Output collection
     unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
@@ -96,241 +95,183 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     int n_K = 0, n_pi = 0, n_D0 = 0, n_pis = 0, n_Dst = 0, n_B = 0;
 
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
-    //######## Require muon quality ##################
-    if(!qualityMuonID(trgMu, primaryVtx)) {
-      (*outputNtuplizer)["n_B"] = 0;
-      iEvent.put(move(outputNtuplizer), "outputNtuplizer");
-      iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");
-      return;
-    }
-
-    /*
-    ############################################################################
-                              Look for the K+ (321)
-    ############################################################################
-    */
-    for(uint i_K = 0; i_K < N_pfCand; ++i_K) {
-      const pat::PackedCandidate & K = (*pfCandHandle)[i_K];
-      if (!K.hasTrackDetails()) continue;
-      //Require a positive charged hadron
-      if (K.pdgId() != 211 ) continue;
-      if (K.pt() < __pThad_min__) continue;
-      // Require to be close to the trigger muon;
-      auto K_tk = K.bestTrack();
-      if (fabs(K_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
-      if (vtxu::dR(K.phi(), trgMu.phi(), K.eta(), trgMu.eta()) > __dRMax__) continue;
-      // Require significant impact parameter
-      auto dxy = K_tk->dxy(primaryVtx.position());
-      auto sigdxy_K_PV = fabs(dxy)/K_tk->dxyError();
-      auto K_norm_chi2 = K_tk->normalizedChi2();
-      auto K_N_valid_hits = K_tk->numberOfValidHits();
-      if (sigdxy_K_PV < __sigIPpfCand_min__) continue;
-
-      n_K++;
-
+    for(uint i_trgMu = 0; i_trgMu < trgMuonsHandle->size(); i_trgMu++) {
+      //######## Require muon quality ##################
+      auto trgMu = (*trgMuonsHandle)[i_trgMu];
+      if (trgMu.innerTrack().isNull()) continue;
+      if (!trgMu.isSoftMuon(primaryVtx)) continue;
       /*
       ############################################################################
-                               Look for the pi- (-211)
+                                Look for the K+ (321)
       ############################################################################
       */
-      for(uint i_pi = 0; i_pi < N_pfCand; ++i_pi) {
-        if(i_pi==i_K) continue;
-
-        const pat::PackedCandidate & pi = (*pfCandHandle)[i_pi];
-        if (!pi.hasTrackDetails()) continue;
-        //Require a negative charged hadron
-        if (pi.pdgId() != -211 ) continue;
-        //Require a minimum pt
-        if(pi.pt() < __pThad_min__) continue;
+      for(uint i_K = 0; i_K < N_pfCand; ++i_K) {
+        const pat::PackedCandidate & K = (*pfCandHandle)[i_K];
+        if (!K.hasTrackDetails()) continue;
+        //Require a positive charged hadron
+        if (K.pdgId() != 211 ) continue;
+        if (K.pt() < __pThad_min__) continue;
         // Require to be close to the trigger muon;
-        auto pi_tk = pi.bestTrack();
-        if (fabs(pi_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
-        if (vtxu::dR(pi.phi(), trgMu.phi(), pi.eta(), trgMu.eta()) > __dRMax__) continue;
+        auto K_tk = K.bestTrack();
+        if (fabs(K_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+        if (vtxu::dR(K.phi(), trgMu.phi(), K.eta(), trgMu.eta()) > __dRMax__) continue;
         // Require significant impact parameter
-        auto dxy = pi_tk->dxy(primaryVtx.position());
-        auto sigdxy_pi_PV = fabs(dxy)/pi.dxyError();
-        auto pi_norm_chi2 = pi_tk->normalizedChi2();
-        auto pi_N_valid_hits = pi_tk->numberOfValidHits();
-        if (sigdxy_pi_PV < __sigIPpfCand_min__) continue;
+        auto dxy = K_tk->dxy(primaryVtx.position());
+        auto sigdxy_K_PV = fabs(dxy)/K_tk->dxyError();
+        auto K_norm_chi2 = K_tk->normalizedChi2();
+        auto K_N_valid_hits = K_tk->numberOfValidHits();
+        if (sigdxy_K_PV < __sigIPpfCand_min__) continue;
 
-        n_pi++;
-
-        //Fit the vertex
-        auto D0KinTree = vtxu::FitD0(iSetup, pi, K, false);
-        auto res_piK = vtxu::fitQuality(D0KinTree, __PvalChi2Vtx_min__);
-        if(!res_piK.isGood) continue;
-
-        D0KinTree->movePointerToTheTop();
-        auto mass_piK = D0KinTree->currentParticle()->currentState().mass();
-        if (fabs(mass_piK - mass_D0) > __dmD0_max__) continue;
-
-        auto D0 = D0KinTree->currentParticle();
-        auto vtxD0 = D0KinTree->currentDecayVertex();
-
-        auto cos_D0_PV = vtxu::computePointingCos(primaryVtx, vtxD0, D0);
-        auto cosT_D0_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxD0, D0);
-        auto d_vtxD0_PV = vtxu::vtxsDistance(primaryVtx, vtxD0);
-        auto sigd_vtxD0_PV = d_vtxD0_PV.first/d_vtxD0_PV.second;
-        auto dxy_vtxD0_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxD0);
-        auto sigdxy_vtxD0_PV = dxy_vtxD0_PV.first/dxy_vtxD0_PV.second;
-
-        if(sigdxy_vtxD0_PV < __sigdxy_vtx_PV_min__) continue;
-        n_D0++;
+        n_K++;
 
         /*
         ############################################################################
-                         Look for the soft pion to make a Dst-
+                                 Look for the pi- (-211)
         ############################################################################
         */
-        for(uint i_pis = 0; i_pis < N_pfCand; ++i_pis) {
-          if(i_pis==i_K || i_pis==i_pi) continue;
+        for(uint i_pi = 0; i_pi < N_pfCand; ++i_pi) {
+          if(i_pi==i_K) continue;
 
-          const pat::PackedCandidate & pis = (*pfCandHandle)[i_pis];
-          if (!pis.hasTrackDetails()) continue;
+          const pat::PackedCandidate & pi = (*pfCandHandle)[i_pi];
+          if (!pi.hasTrackDetails()) continue;
           //Require a negative charged hadron
-          if (pis.pdgId() != -211 ) continue;
-
+          if (pi.pdgId() != -211 ) continue;
+          //Require a minimum pt
+          if(pi.pt() < __pThad_min__) continue;
           // Require to be close to the trigger muon;
-          auto pis_tk = pis.bestTrack();
-          if (fabs(pis_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
-          if (vtxu::dR(pis.phi(), trgMu.phi(), pis.eta(), trgMu.eta()) > __dRMax__) continue;
+          auto pi_tk = pi.bestTrack();
+          if (fabs(pi_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+          if (vtxu::dR(pi.phi(), trgMu.phi(), pi.eta(), trgMu.eta()) > __dRMax__) continue;
           // Require significant impact parameter
-          auto dxy = pis_tk->dxy(primaryVtx.position());
-          auto sigdxy_pis_PV = fabs(dxy)/pis.dxyError();
-          auto pis_norm_chi2 = pis_tk->normalizedChi2();
-          auto pis_N_valid_hits = pis_tk->numberOfValidHits();
-          if (sigdxy_pis_PV < __sigIPpfCand_min__) continue;
+          auto dxy = pi_tk->dxy(primaryVtx.position());
+          auto sigdxy_pi_PV = fabs(dxy)/pi.dxyError();
+          auto pi_norm_chi2 = pi_tk->normalizedChi2();
+          auto pi_N_valid_hits = pi_tk->numberOfValidHits();
+          if (sigdxy_pi_PV < __sigIPpfCand_min__) continue;
 
-          n_pis++;
+          n_pi++;
 
-          // Fit the Dst vertex
-          auto DstKinTree = vtxu::FitDst(iSetup, pis, D0, false);
-          auto res_D0pis = vtxu::fitQuality(DstKinTree, __PvalChi2Vtx_min__);
-          if(!res_D0pis.isGood) continue;
+          //Fit the vertex
+          auto D0KinTree = vtxu::FitD0(iSetup, pi, K, false);
+          auto res_piK = vtxu::fitQuality(D0KinTree, __PvalChi2Vtx_min__);
+          if(!res_piK.isGood) continue;
 
-          DstKinTree->movePointerToTheTop();
-          auto mass_D0pis = DstKinTree->currentParticle()->currentState().mass();
-          if (fabs(mass_D0pis - mass_Dst) > __dmDst_max__) continue;
+          D0KinTree->movePointerToTheTop();
+          auto mass_piK = D0KinTree->currentParticle()->currentState().mass();
+          if (fabs(mass_piK - mass_D0) > __dmD0_max__) continue;
 
-          auto Dst = DstKinTree->currentParticle();
-          auto vtxDst = DstKinTree->currentDecayVertex();
+          auto D0 = D0KinTree->currentParticle();
+          auto vtxD0 = D0KinTree->currentDecayVertex();
 
-          auto cos_Dst_PV = vtxu::computePointingCos(primaryVtx, vtxDst, Dst);
-          auto cosT_Dst_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxDst, Dst);
-          auto d_vtxDst_PV = vtxu::vtxsDistance(primaryVtx, vtxDst);
-          auto sigd_vtxDst_PV = d_vtxDst_PV.first/d_vtxDst_PV.second;
-          auto dxy_vtxDst_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxDst);
-          auto sigdxy_vtxDst_PV = dxy_vtxDst_PV.first/dxy_vtxDst_PV.second;
+          auto cos_D0_PV = vtxu::computePointingCos(primaryVtx, vtxD0, D0);
+          auto cosT_D0_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxD0, D0);
+          auto d_vtxD0_PV = vtxu::vtxsDistance(primaryVtx, vtxD0);
+          auto sigd_vtxD0_PV = d_vtxD0_PV.first/d_vtxD0_PV.second;
+          auto dxy_vtxD0_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxD0);
+          auto sigdxy_vtxD0_PV = dxy_vtxD0_PV.first/dxy_vtxD0_PV.second;
 
-          n_Dst++;
-          if (verbose) {cout << "D* found\n";}
-
-          // Vertex fitting from B and Dst products
-          auto BKinTree = vtxu::FitB_D0pismu(iSetup, D0, pis, trgMu);
-          auto res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
-          if(!res.isGood) continue;
-          BKinTree->movePointerToTheTop();
-          auto mass_D0pismu = BKinTree->currentParticle()->currentState().mass();
-          if (mass_D0pismu > __mass_D0pismu_max__) continue; // Last cut! from now on always save
-          if (verbose) {cout << "B->D* mu found\n";}
-
-          (*outputVecNtuplizer)["chi2_D0pismu"].push_back(res.chi2);
-          (*outputVecNtuplizer)["dof_D0pismu"].push_back(res.dof);
-          (*outputVecNtuplizer)["pval_D0pismu"].push_back(res.pval);
-          (*outputVecNtuplizer)["mass_D0pismu"].push_back(mass_D0pismu);
-
-          auto D0pismu = BKinTree->currentParticle();
-          auto vtxB = BKinTree->currentDecayVertex();
-
-          BKinTree->movePointerToTheFirstChild();
-          auto refit_D0 = BKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_D0), string("D0_refitD0pismu"), &(*outputVecNtuplizer));
-          BKinTree->movePointerToTheNextChild();
-          auto refit_pis = BKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_pis), string("pis_refitD0pismu"), &(*outputVecNtuplizer));
-          BKinTree->movePointerToTheNextChild();
-          auto refit_mu = BKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_mu), string("mu_refitD0pismu"), &(*outputVecNtuplizer));
-
-          auto p4_Dst_refitD0pismu = vtxu::getTLVfromKinPart(refit_pis) + vtxu::getTLVfromKinPart(refit_D0);
-          (*outputVecNtuplizer)["mass_D0pis_refitD0pismu"].push_back(p4_Dst_refitD0pismu.M());
-          AddTLVToOut(p4_Dst_refitD0pismu, string("Dst_refitD0pismu"), &(*outputVecNtuplizer));
-
-          auto cos_D0pismu_PV = vtxu::computePointingCos(primaryVtx, vtxB, D0pismu);
-          auto cosT_D0pismu_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxB, D0pismu);
-          auto d_vtxD0pismu_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
-          auto sigd_vtxD0pismu_PV = d_vtxD0pismu_PV.first/d_vtxD0pismu_PV.second;
-          auto dxy_vtxD0pismu_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
-          auto sigdxy_vtxD0pismu_PV = dxy_vtxD0pismu_PV.first/dxy_vtxD0pismu_PV.second;
-          (*outputVecNtuplizer)["cos_D0pismu_PV"].push_back(cos_D0pismu_PV);
-          (*outputVecNtuplizer)["cosT_D0pismu_PV"].push_back(cosT_D0pismu_PV);
-          (*outputVecNtuplizer)["d_vtxD0pismu_PV"].push_back(d_vtxD0pismu_PV.first);
-          (*outputVecNtuplizer)["sigd_vtxD0pismu_PV"].push_back(sigd_vtxD0pismu_PV);
-          (*outputVecNtuplizer)["dxy_vtxD0pismu_PV"].push_back(dxy_vtxD0pismu_PV.first);
-          (*outputVecNtuplizer)["sigdxy_vtxD0pismu_PV"].push_back(sigdxy_vtxD0pismu_PV);
+          if(sigdxy_vtxD0_PV < __sigdxy_vtx_PV_min__) continue;
+          n_D0++;
 
           /*
           ############################################################################
-                                Compute analysis variables
+                           Look for the soft pion to make a Dst-
           ############################################################################
           */
-          auto p4_vis = vtxu::getTLVfromKinPart(D0pismu);
-          TLorentzVector p4_Dst = p4_Dst_refitD0pismu;
-          auto p4_mu = vtxu::getTLVfromKinPart(refit_mu);
+          for(uint i_pis = 0; i_pis < N_pfCand; ++i_pis) {
+            if(i_pis==i_K || i_pis==i_pi) continue;
 
-          // // ------------- Transverse Approx ------------------
-          double pt_B_reco = p4_vis.Pt() * mass_B0/ p4_vis.M();
-          TVector3 flightB(vtxB->position().x() - primaryVtx.position().x(),
-                           vtxB->position().y() - primaryVtx.position().y(),
-                           vtxB->position().z() - primaryVtx.position().z()
-                          );
-          auto B_vect = flightB * ( pt_B_reco / flightB.Perp() );
-          TLorentzVector p4_B;
-          p4_B.SetVectM(B_vect, mass_B0);
+            const pat::PackedCandidate & pis = (*pfCandHandle)[i_pis];
+            if (!pis.hasTrackDetails()) continue;
+            //Require a negative charged hadron
+            if (pis.pdgId() != -211 ) continue;
 
-          auto M2_miss = (p4_B - p4_vis).M2();
-          auto q2 = (p4_B - p4_Dst).M2();
+            // Require to be close to the trigger muon;
+            auto pis_tk = pis.bestTrack();
+            if (fabs(pis_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+            if (vtxu::dR(pis.phi(), trgMu.phi(), pis.eta(), trgMu.eta()) > __dRMax__) continue;
+            // Require significant impact parameter
+            auto dxy = pis_tk->dxy(primaryVtx.position());
+            auto sigdxy_pis_PV = fabs(dxy)/pis.dxyError();
+            auto pis_norm_chi2 = pis_tk->normalizedChi2();
+            auto pis_N_valid_hits = pis_tk->numberOfValidHits();
+            if (sigdxy_pis_PV < __sigIPpfCand_min__) continue;
 
-          TLorentzVector p4st_mu(p4_mu);
-          p4st_mu.Boost(-1*p4_B.BoostVector());
-          auto Est_mu = p4st_mu.E();
+            n_pis++;
 
-          AddTLVToOut(p4_B, string("B_D0pismu"), &(*outputVecNtuplizer));
-          (*outputVecNtuplizer)["M2_miss_D0pismu"].push_back(M2_miss);
-          (*outputVecNtuplizer)["q2_D0pismu"].push_back(q2);
-          (*outputVecNtuplizer)["Est_mu_D0pismu"].push_back(Est_mu);
-          /*
-          ############################################################################
-          */
+            // Fit the Dst vertex
+            auto DstKinTree = vtxu::FitDst(iSetup, pis, D0, false);
+            auto res_D0pis = vtxu::fitQuality(DstKinTree, __PvalChi2Vtx_min__);
+            if(!res_D0pis.isGood) continue;
 
+            DstKinTree->movePointerToTheTop();
+            auto mass_D0pis = DstKinTree->currentParticle()->currentState().mass();
+            if (fabs(mass_D0pis - mass_Dst) > __dmDst_max__) continue;
 
-          //  Look for the Dst- and trigger muon to make a vertex
-          BKinTree = vtxu::FitVtxMuDst(iSetup, Dst, trgMu);
-          res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
-          if(res.isValid) {
-            (*outputVecNtuplizer)["isGood_Dstmu"].push_back(res.isGood);
-            (*outputVecNtuplizer)["chi2_Dstmu"].push_back(res.chi2);
-            (*outputVecNtuplizer)["dof_Dstmu"].push_back(res.dof);
-            (*outputVecNtuplizer)["pval_Dstmu"].push_back(res.pval);
+            auto Dst = DstKinTree->currentParticle();
+            auto vtxDst = DstKinTree->currentDecayVertex();
 
+            auto cos_Dst_PV = vtxu::computePointingCos(primaryVtx, vtxDst, Dst);
+            auto cosT_Dst_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxDst, Dst);
+            auto d_vtxDst_PV = vtxu::vtxsDistance(primaryVtx, vtxDst);
+            auto sigd_vtxDst_PV = d_vtxDst_PV.first/d_vtxDst_PV.second;
+            auto dxy_vtxDst_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxDst);
+            auto sigdxy_vtxDst_PV = dxy_vtxDst_PV.first/dxy_vtxDst_PV.second;
+
+            n_Dst++;
+            if (verbose) {cout << "D* found\n";}
+
+            // Vertex fitting from B and Dst products
+            auto BKinTree = vtxu::FitB_D0pismu(iSetup, D0, pis, trgMu);
+            auto res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+            if(!res.isGood) continue;
             BKinTree->movePointerToTheTop();
-            auto Dstmu = BKinTree->currentParticle();
-            (*outputVecNtuplizer)["mass_Dstmu"].push_back(Dstmu->currentState().mass());
+            auto mass_D0pismu = BKinTree->currentParticle()->currentState().mass();
+            if (mass_D0pismu > __mass_D0pismu_max__) continue; // Last cut! from now on always save
+            if (verbose) {cout << "B->D* mu found\n";}
 
+            (*outputVecNtuplizer)["chi2_D0pismu"].push_back(res.chi2);
+            (*outputVecNtuplizer)["dof_D0pismu"].push_back(res.dof);
+            (*outputVecNtuplizer)["pval_D0pismu"].push_back(res.pval);
+            (*outputVecNtuplizer)["mass_D0pismu"].push_back(mass_D0pismu);
+
+            auto D0pismu = BKinTree->currentParticle();
             auto vtxB = BKinTree->currentDecayVertex();
 
-            auto cos_Dstmu_PV = vtxu::computePointingCos(primaryVtx, vtxB, Dstmu);
-            auto cosT_Dstmu_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxB, Dstmu);
-            (*outputVecNtuplizer)["cos_Dstmu_PV"].push_back(cos_Dstmu_PV);
-            (*outputVecNtuplizer)["cosT_Dstmu_PV"].push_back(cosT_Dstmu_PV);
-
             BKinTree->movePointerToTheFirstChild();
-            auto refit_mu = BKinTree->currentParticle();
+            auto refit_D0 = BKinTree->currentParticle();
+            AddTLVToOut(vtxu::getTLVfromKinPart(refit_D0), string("D0_refitD0pismu"), &(*outputVecNtuplizer));
             BKinTree->movePointerToTheNextChild();
-            auto refit_Dst = BKinTree->currentParticle();
+            auto refit_pis = BKinTree->currentParticle();
+            AddTLVToOut(vtxu::getTLVfromKinPart(refit_pis), string("pis_refitD0pismu"), &(*outputVecNtuplizer));
+            BKinTree->movePointerToTheNextChild();
+            auto refit_mu = BKinTree->currentParticle();
+            AddTLVToOut(vtxu::getTLVfromKinPart(refit_mu), string("mu_refitD0pismu"), &(*outputVecNtuplizer));
 
-            auto p4_vis = vtxu::getTLVfromKinPart(Dstmu);
-            auto p4_Dst = vtxu::getTLVfromKinPart(refit_Dst);
+            auto p4_Dst_refitD0pismu = vtxu::getTLVfromKinPart(refit_pis) + vtxu::getTLVfromKinPart(refit_D0);
+            (*outputVecNtuplizer)["mass_D0pis_refitD0pismu"].push_back(p4_Dst_refitD0pismu.M());
+            AddTLVToOut(p4_Dst_refitD0pismu, string("Dst_refitD0pismu"), &(*outputVecNtuplizer));
+
+            auto cos_D0pismu_PV = vtxu::computePointingCos(primaryVtx, vtxB, D0pismu);
+            auto cosT_D0pismu_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxB, D0pismu);
+            auto d_vtxD0pismu_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
+            auto sigd_vtxD0pismu_PV = d_vtxD0pismu_PV.first/d_vtxD0pismu_PV.second;
+            auto dxy_vtxD0pismu_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
+            auto sigdxy_vtxD0pismu_PV = dxy_vtxD0pismu_PV.first/dxy_vtxD0pismu_PV.second;
+            (*outputVecNtuplizer)["cos_D0pismu_PV"].push_back(cos_D0pismu_PV);
+            (*outputVecNtuplizer)["cosT_D0pismu_PV"].push_back(cosT_D0pismu_PV);
+            (*outputVecNtuplizer)["d_vtxD0pismu_PV"].push_back(d_vtxD0pismu_PV.first);
+            (*outputVecNtuplizer)["sigd_vtxD0pismu_PV"].push_back(sigd_vtxD0pismu_PV);
+            (*outputVecNtuplizer)["dxy_vtxD0pismu_PV"].push_back(dxy_vtxD0pismu_PV.first);
+            (*outputVecNtuplizer)["sigdxy_vtxD0pismu_PV"].push_back(sigdxy_vtxD0pismu_PV);
+
+            /*
+            ############################################################################
+                                  Compute analysis variables
+            ############################################################################
+            */
+            auto p4_vis = vtxu::getTLVfromKinPart(D0pismu);
+            TLorentzVector p4_Dst = p4_Dst_refitD0pismu;
             auto p4_mu = vtxu::getTLVfromKinPart(refit_mu);
 
             // // ------------- Transverse Approx ------------------
@@ -350,189 +291,224 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             p4st_mu.Boost(-1*p4_B.BoostVector());
             auto Est_mu = p4st_mu.E();
 
-            AddTLVToOut(p4_B, string("B_Dstmu"), &(*outputVecNtuplizer));
-            (*outputVecNtuplizer)["M2_miss_Dstmu"].push_back(M2_miss);
-            (*outputVecNtuplizer)["q2_Dstmu"].push_back(q2);
-            (*outputVecNtuplizer)["Est_mu_Dstmu"].push_back(Est_mu);
+            AddTLVToOut(p4_B, string("B_D0pismu"), &(*outputVecNtuplizer));
+            (*outputVecNtuplizer)["M2_miss_D0pismu"].push_back(M2_miss);
+            (*outputVecNtuplizer)["q2_D0pismu"].push_back(q2);
+            (*outputVecNtuplizer)["Est_mu_D0pismu"].push_back(Est_mu);
+            /*
+            ############################################################################
+            */
+
+            /*
+            //  Look for the Dst- and trigger muon to make a vertex
+            BKinTree = vtxu::FitVtxMuDst(iSetup, Dst, trgMu);
+            res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+            if(res.isValid) {
+              (*outputVecNtuplizer)["isGood_Dstmu"].push_back(res.isGood);
+              (*outputVecNtuplizer)["chi2_Dstmu"].push_back(res.chi2);
+              (*outputVecNtuplizer)["dof_Dstmu"].push_back(res.dof);
+              (*outputVecNtuplizer)["pval_Dstmu"].push_back(res.pval);
+
+              BKinTree->movePointerToTheTop();
+              auto Dstmu = BKinTree->currentParticle();
+              (*outputVecNtuplizer)["mass_Dstmu"].push_back(Dstmu->currentState().mass());
+
+              auto vtxB = BKinTree->currentDecayVertex();
+
+              auto cos_Dstmu_PV = vtxu::computePointingCos(primaryVtx, vtxB, Dstmu);
+              auto cosT_Dstmu_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxB, Dstmu);
+              (*outputVecNtuplizer)["cos_Dstmu_PV"].push_back(cos_Dstmu_PV);
+              (*outputVecNtuplizer)["cosT_Dstmu_PV"].push_back(cosT_Dstmu_PV);
+
+              BKinTree->movePointerToTheFirstChild();
+              auto refit_mu = BKinTree->currentParticle();
+              BKinTree->movePointerToTheNextChild();
+              auto refit_Dst = BKinTree->currentParticle();
+
+              auto p4_vis = vtxu::getTLVfromKinPart(Dstmu);
+              auto p4_Dst = vtxu::getTLVfromKinPart(refit_Dst);
+              auto p4_mu = vtxu::getTLVfromKinPart(refit_mu);
+
+              // // ------------- Transverse Approx ------------------
+              double pt_B_reco = p4_vis.Pt() * mass_B0/ p4_vis.M();
+              TVector3 flightB(vtxB->position().x() - primaryVtx.position().x(),
+                               vtxB->position().y() - primaryVtx.position().y(),
+                               vtxB->position().z() - primaryVtx.position().z()
+                              );
+              auto B_vect = flightB * ( pt_B_reco / flightB.Perp() );
+              TLorentzVector p4_B;
+              p4_B.SetVectM(B_vect, mass_B0);
+
+              auto M2_miss = (p4_B - p4_vis).M2();
+              auto q2 = (p4_B - p4_Dst).M2();
+
+              TLorentzVector p4st_mu(p4_mu);
+              p4st_mu.Boost(-1*p4_B.BoostVector());
+              auto Est_mu = p4st_mu.E();
+
+              AddTLVToOut(p4_B, string("B_Dstmu"), &(*outputVecNtuplizer));
+              (*outputVecNtuplizer)["M2_miss_Dstmu"].push_back(M2_miss);
+              (*outputVecNtuplizer)["q2_Dstmu"].push_back(q2);
+              (*outputVecNtuplizer)["Est_mu_Dstmu"].push_back(Est_mu);
+            }
+            else {
+              (*outputVecNtuplizer)["isGood_Dstmu"].push_back(-1);
+              (*outputVecNtuplizer)["chi2_Dstmu"].push_back(-1);
+              (*outputVecNtuplizer)["dof_Dstmu"].push_back(-1);
+              (*outputVecNtuplizer)["pval_Dstmu"].push_back(-1);
+              (*outputVecNtuplizer)["mass_Dstmu"].push_back(-1);
+              (*outputVecNtuplizer)["cos_Dstmu_PV"].push_back(-1);
+              (*outputVecNtuplizer)["cosT_Dstmu_PV"].push_back(-1);
+              TLorentzVector void_p4;
+              AddTLVToOut(void_p4, string("B_Dstmu"), &(*outputVecNtuplizer));
+              (*outputVecNtuplizer)["M2_miss_Dstmu"].push_back(-1);
+              (*outputVecNtuplizer)["q2_Dstmu"].push_back(-1);
+              (*outputVecNtuplizer)["Est_mu_Dstmu"].push_back(-1);
+            }
+            */
+
+            /*
+            ############################################################################
+                    Veto the presence of additional tracks in the D* mu vertex
+            ############################################################################
+            */
+            uint N_compatible_tk = 0;
+            vector<double> tksAdd_massHad = {};
+            vector<double> tksAdd_massVis = {};
+            vector<double> tksAdd_pval = {};
+            vector<double> tksAdd_pt = {};
+            vector<double> tksAdd_sigdca_vtxB = {};
+            if(verbose) {cout << "Looking for additional tracks" << endl;}
+            for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
+              // Pion different from the pion from D0
+              if( i_tk==i_K || i_tk==i_pi || i_tk==i_pis) continue;
+
+              const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
+              if (!ptk.hasTrackDetails()) continue;
+              //Require a positive charged hadron
+              if (abs(ptk.pdgId()) != 211 ) continue;
+              if (ptk.pt() < __pTaddTracks_min__) continue;
+              // Require to be close to the trigger muon;
+              auto tk = ptk.bestTrack();
+              if (fabs(tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+              if (vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta()) > __dRMax__) continue;
+
+              GlobalPoint auxp(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
+              auto dca = vtxu::computeDCA(iSetup, ptk, auxp);
+
+              // Check if it makes a consistent vertex
+              auto kinTree = vtxu::Fit_D0pismupi(iSetup, D0, pis, trgMu, ptk);
+              auto res = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
+              if(!res.isGood) continue;
+              cout << N_compatible_tk << Form(": pval=%.3f", res.pval) << endl;
+              if (verbose) {cout << Form("Trk pars: pt=%.2f eta=%.2f phi=%.2f\n", ptk.pt(), ptk.eta(), ptk.phi());}
+
+              kinTree->movePointerToTheTop();
+              auto p_vis = kinTree->currentParticle();
+              auto m_vis = p_vis->currentState().mass();
+              if (m_vis > __mass_D0pismupi_max__) continue;
+
+              kinTree->movePointerToTheFirstChild();
+              auto refit_D0 = kinTree->currentParticle();
+              kinTree->movePointerToTheNextChild();
+              auto refit_pis = kinTree->currentParticle();
+              kinTree->movePointerToTheNextChild();
+              auto refit_mu = kinTree->currentParticle();
+              kinTree->movePointerToTheNextChild();
+              auto refit_pi = kinTree->currentParticle();
+
+              auto p4_D0pispi = vtxu::getTLVfromKinPart(refit_pis) + vtxu::getTLVfromKinPart(refit_D0) + vtxu::getTLVfromKinPart(refit_pi);
+              auto m_D0pispi = p4_D0pispi.M();
+
+              tksAdd_massVis.push_back(m_vis);
+              tksAdd_massHad.push_back(m_D0pispi);
+              tksAdd_pval.push_back(res.pval);
+              tksAdd_pt.push_back(ptk.pt());
+              tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
+              N_compatible_tk++;
+            }
+            (*outputVecNtuplizer)["nTksAdd"].push_back(N_compatible_tk);
+            if(verbose) {cout << "Compatible tracks: " << N_compatible_tk << endl;}
+            (*outputVecNtuplizer)["tksAdd_massVis"] = {};
+            (*outputVecNtuplizer)["tksAdd_massHad"] = {};
+            (*outputVecNtuplizer)["tksAdd_pval"] = {};
+            (*outputVecNtuplizer)["tksAdd_pt"] = {};
+            (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
+            for(uint i = 0; i < N_compatible_tk; i++){
+              (*outputVecNtuplizer)["tksAdd_massVis"].push_back(tksAdd_massVis[i]);
+              (*outputVecNtuplizer)["tksAdd_massHad"].push_back(tksAdd_massHad[i]);
+              (*outputVecNtuplizer)["tksAdd_pval"].push_back(tksAdd_pval[i]);
+              (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
+              (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
+            }
+            if(N_compatible_tk != (*outputVecNtuplizer)["tksAdd_massVis"].size()){
+              cout << "Number of tracks and tracks details lenght not matching" << endl;
+              assert(false);
+            }
+
+
+            n_B++;
+
+            (*outputVecNtuplizer)["mu_trgMu_idx"].push_back(i_trgMu);
+            AddTLVToOut(vtxu::getTLVfromMuon(trgMu, mass_Mu), string("mu"), &(*outputVecNtuplizer));
+            (*outputVecNtuplizer)["sigdxy_K_PV"].push_back(sigdxy_K_PV);
+            (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
+            (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
+            AddTLVToOut(vtxu::getTLVfromCand(K, mass_K), string("K"), &(*outputVecNtuplizer));
+            (*outputVecNtuplizer)["sigdxy_pi_PV"].push_back(sigdxy_pi_PV);
+            (*outputVecNtuplizer)["pi_norm_chi2"].push_back(pi_norm_chi2);
+            (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
+            AddTLVToOut(vtxu::getTLVfromCand(pi, mass_pi), string("pi"), &(*outputVecNtuplizer));
+            double m = (vtxu::getTLVfromCand(pi, mass_pi) + vtxu::getTLVfromCand(K, mass_K)).M();
+            (*outputVecNtuplizer)["massb_piK"].push_back(m);
+            m = (vtxu::getTLVfromCand(pi, mass_K) + vtxu::getTLVfromCand(K, mass_K)).M();
+            (*outputVecNtuplizer)["massb_KK"].push_back(m);
+            m = (vtxu::getTLVfromCand(pi, mass_K) + vtxu::getTLVfromCand(K, mass_pi)).M();
+            (*outputVecNtuplizer)["massb_Kpi_conj"].push_back(m);
+
+            (*outputVecNtuplizer)["chi2_piK"].push_back(res_piK.chi2);
+            (*outputVecNtuplizer)["dof_piK"].push_back(res_piK.dof);
+            (*outputVecNtuplizer)["pval_piK"].push_back(res_piK.pval);
+            (*outputVecNtuplizer)["mass_piK"].push_back(mass_piK);
+            AddTLVToOut(vtxu::getTLVfromKinPart(D0), string("D0"), &(*outputVecNtuplizer));
+            D0KinTree->movePointerToTheFirstChild();
+            auto refit_K = D0KinTree->currentParticle();
+            AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("K_refitpiK"), &(*outputVecNtuplizer));
+            D0KinTree->movePointerToTheNextChild();
+            auto refit_pi = D0KinTree->currentParticle();
+            AddTLVToOut(vtxu::getTLVfromKinPart(refit_pi), string("pi_refitpiK"), &(*outputVecNtuplizer));
+            (*outputVecNtuplizer)["cos_D0_PV"].push_back(cos_D0_PV);
+            (*outputVecNtuplizer)["cosT_D0_PV"].push_back(cosT_D0_PV);
+            (*outputVecNtuplizer)["d_vtxD0_PV"].push_back(d_vtxD0_PV.first);
+            (*outputVecNtuplizer)["sigd_vtxD0_PV"].push_back(sigd_vtxD0_PV);
+            (*outputVecNtuplizer)["dxy_vtxD0_PV"].push_back(dxy_vtxD0_PV.first);
+            (*outputVecNtuplizer)["sigdxy_vtxD0_PV"].push_back(sigdxy_vtxD0_PV);
+
+            (*outputVecNtuplizer)["sigdxy_pis_PV"].push_back(sigdxy_pis_PV);
+            (*outputVecNtuplizer)["pis_norm_chi2"].push_back(pis_norm_chi2);
+            (*outputVecNtuplizer)["pis_N_valid_hits"].push_back(pis_N_valid_hits);
+            AddTLVToOut(vtxu::getTLVfromCand(pis, mass_pi), string("pis"), &(*outputVecNtuplizer));
+
+            (*outputVecNtuplizer)["chi2_D0pis"].push_back(res_D0pis.chi2);
+            (*outputVecNtuplizer)["dof_D0pis"].push_back(res_D0pis.dof);
+            (*outputVecNtuplizer)["pval_D0pis"].push_back(res_D0pis.pval);
+            (*outputVecNtuplizer)["mass_D0pis"].push_back(mass_D0pis);
+            (*outputVecNtuplizer)["cos_Dst_PV"].push_back(cos_Dst_PV);
+            (*outputVecNtuplizer)["cosT_Dst_PV"].push_back(cosT_Dst_PV);
+            (*outputVecNtuplizer)["d_vtxDst_PV"].push_back(d_vtxDst_PV.first);
+            (*outputVecNtuplizer)["sigd_vtxDst_PV"].push_back(sigd_vtxDst_PV);
+            (*outputVecNtuplizer)["dxy_vtxDst_PV"].push_back(dxy_vtxDst_PV.first);
+            (*outputVecNtuplizer)["sigdxy_vtxDst_PV"].push_back(sigdxy_vtxDst_PV);
+
+            DstKinTree->movePointerToTheFirstChild();
+            auto refitD0pis_pis = DstKinTree->currentParticle();
+            AddTLVToOut(vtxu::getTLVfromKinPart(refitD0pis_pis), string("pis_refitD0pis"), &(*outputVecNtuplizer));
+            DstKinTree->movePointerToTheNextChild();
+            auto refitD0pis_D0 = DstKinTree->currentParticle();
+            AddTLVToOut(vtxu::getTLVfromKinPart(refitD0pis_D0), string("D0_refitD0pis"), &(*outputVecNtuplizer));
           }
-          else {
-            (*outputVecNtuplizer)["isGood_Dstmu"].push_back(-1);
-            (*outputVecNtuplizer)["chi2_Dstmu"].push_back(-1);
-            (*outputVecNtuplizer)["dof_Dstmu"].push_back(-1);
-            (*outputVecNtuplizer)["pval_Dstmu"].push_back(-1);
-            (*outputVecNtuplizer)["mass_Dstmu"].push_back(-1);
-            (*outputVecNtuplizer)["cos_Dstmu_PV"].push_back(-1);
-            (*outputVecNtuplizer)["cosT_Dstmu_PV"].push_back(-1);
-            TLorentzVector void_p4;
-            AddTLVToOut(void_p4, string("B_Dstmu"), &(*outputVecNtuplizer));
-            (*outputVecNtuplizer)["M2_miss_Dstmu"].push_back(-1);
-            (*outputVecNtuplizer)["q2_Dstmu"].push_back(-1);
-            (*outputVecNtuplizer)["Est_mu_Dstmu"].push_back(-1);
-          }
-
-          /*
-          ############################################################################
-                  Veto the presence of additional tracks in the D* mu vertex
-          ############################################################################
-          */
-          uint N_compatible_tk = 0;
-          vector<double> tksAdd_massHad = {};
-          vector<double> tksAdd_massVis = {};
-          vector<double> tksAdd_pval = {};
-          vector<double> tksAdd_pt = {};
-          vector<double> tksAdd_sigdca_vtxB = {};
-          if(verbose) {cout << "Looking for additional tracks" << endl;}
-          for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
-            // Pion different from the pion from D0
-            if( i_tk==i_K || i_tk==i_pi || i_tk==i_pis) continue;
-
-            const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
-            if (!ptk.hasTrackDetails()) continue;
-            //Require a positive charged hadron
-            if (abs(ptk.pdgId()) != 211 ) continue;
-            if (ptk.pt() < __pTaddTracks_min__) continue;
-            // Require to be close to the trigger muon;
-            auto tk = ptk.bestTrack();
-            if (fabs(tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
-            if (vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta()) > __dRMax__) continue;
-
-            GlobalPoint auxp(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
-            auto dca = vtxu::computeDCA(iSetup, ptk, auxp);
-
-            // Check if it makes a consistent vertex
-            auto kinTree = vtxu::Fit_D0pismupi(iSetup, D0, pis, trgMu, ptk);
-            auto res = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
-            if(!res.isGood) continue;
-            cout << N_compatible_tk << Form(": pval=%.3f", res.pval) << endl;
-            if (verbose) {cout << Form("Trk pars: pt=%.2f eta=%.2f phi=%.2f\n", ptk.pt(), ptk.eta(), ptk.phi());}
-
-            kinTree->movePointerToTheTop();
-            auto p_vis = kinTree->currentParticle();
-            auto m_vis = p_vis->currentState().mass();
-            if (m_vis > __mass_D0pismupi_max__) continue;
-
-            kinTree->movePointerToTheFirstChild();
-            auto refit_D0 = kinTree->currentParticle();
-            kinTree->movePointerToTheNextChild();
-            auto refit_pis = kinTree->currentParticle();
-            kinTree->movePointerToTheNextChild();
-            auto refit_mu = kinTree->currentParticle();
-            kinTree->movePointerToTheNextChild();
-            auto refit_pi = kinTree->currentParticle();
-
-            auto p4_D0pispi = vtxu::getTLVfromKinPart(refit_pis) + vtxu::getTLVfromKinPart(refit_D0) + vtxu::getTLVfromKinPart(refit_pi);
-            auto m_D0pispi = p4_D0pispi.M();
-
-            tksAdd_massVis.push_back(m_vis);
-            tksAdd_massHad.push_back(m_D0pispi);
-            tksAdd_pval.push_back(res.pval);
-            tksAdd_pt.push_back(ptk.pt());
-            tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
-            N_compatible_tk++;
-          }
-          (*outputVecNtuplizer)["nTksAdd"].push_back(N_compatible_tk);
-          if(verbose) {cout << "Compatible tracks: " << N_compatible_tk << endl;}
-          (*outputVecNtuplizer)["tksAdd_massVis"] = {};
-          (*outputVecNtuplizer)["tksAdd_massHad"] = {};
-          (*outputVecNtuplizer)["tksAdd_pval"] = {};
-          (*outputVecNtuplizer)["tksAdd_pt"] = {};
-          (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
-          for(uint i = 0; i < N_compatible_tk; i++){
-            (*outputVecNtuplizer)["tksAdd_massVis"].push_back(tksAdd_massVis[i]);
-            (*outputVecNtuplizer)["tksAdd_massHad"].push_back(tksAdd_massHad[i]);
-            (*outputVecNtuplizer)["tksAdd_pval"].push_back(tksAdd_pval[i]);
-            (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
-            (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
-          }
-          if(N_compatible_tk != (*outputVecNtuplizer)["tksAdd_massVis"].size()){
-            cout << "Number of tracks and tracks details lenght not matching" << endl;
-            assert(false);
-          }
-
-
-          n_B++;
-
-          (*outputVecNtuplizer)["sigdxy_K_PV"].push_back(sigdxy_K_PV);
-          (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
-          (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
-          AddTLVToOut(vtxu::getTLVfromCand(K, mass_K), string("K"), &(*outputVecNtuplizer));
-          (*outputVecNtuplizer)["sigdxy_pi_PV"].push_back(sigdxy_pi_PV);
-          (*outputVecNtuplizer)["pi_norm_chi2"].push_back(pi_norm_chi2);
-          (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
-          AddTLVToOut(vtxu::getTLVfromCand(pi, mass_pi), string("pi"), &(*outputVecNtuplizer));
-          double m = (vtxu::getTLVfromCand(pi, mass_pi) + vtxu::getTLVfromCand(K, mass_K)).M();
-          (*outputVecNtuplizer)["massb_piK"].push_back(m);
-          m = (vtxu::getTLVfromCand(pi, mass_K) + vtxu::getTLVfromCand(K, mass_K)).M();
-          (*outputVecNtuplizer)["massb_KK"].push_back(m);
-          m = (vtxu::getTLVfromCand(pi, mass_K) + vtxu::getTLVfromCand(K, mass_pi)).M();
-          (*outputVecNtuplizer)["massb_Kpi_conj"].push_back(m);
-
-          (*outputVecNtuplizer)["chi2_piK"].push_back(res_piK.chi2);
-          (*outputVecNtuplizer)["dof_piK"].push_back(res_piK.dof);
-          (*outputVecNtuplizer)["pval_piK"].push_back(res_piK.pval);
-          (*outputVecNtuplizer)["mass_piK"].push_back(mass_piK);
-          AddTLVToOut(vtxu::getTLVfromKinPart(D0), string("D0"), &(*outputVecNtuplizer));
-          D0KinTree->movePointerToTheFirstChild();
-          auto refit_K = D0KinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("K_refitpiK"), &(*outputVecNtuplizer));
-          D0KinTree->movePointerToTheNextChild();
-          auto refit_pi = D0KinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_pi), string("pi_refitpiK"), &(*outputVecNtuplizer));
-          (*outputVecNtuplizer)["cos_D0_PV"].push_back(cos_D0_PV);
-          (*outputVecNtuplizer)["cosT_D0_PV"].push_back(cosT_D0_PV);
-          (*outputVecNtuplizer)["d_vtxD0_PV"].push_back(d_vtxD0_PV.first);
-          (*outputVecNtuplizer)["sigd_vtxD0_PV"].push_back(sigd_vtxD0_PV);
-          (*outputVecNtuplizer)["dxy_vtxD0_PV"].push_back(dxy_vtxD0_PV.first);
-          (*outputVecNtuplizer)["sigdxy_vtxD0_PV"].push_back(sigdxy_vtxD0_PV);
-
-          (*outputVecNtuplizer)["sigdxy_pis_PV"].push_back(sigdxy_pis_PV);
-          (*outputVecNtuplizer)["pis_norm_chi2"].push_back(pis_norm_chi2);
-          (*outputVecNtuplizer)["pis_N_valid_hits"].push_back(pis_N_valid_hits);
-          AddTLVToOut(vtxu::getTLVfromCand(pis, mass_pi), string("pis"), &(*outputVecNtuplizer));
-
-          (*outputVecNtuplizer)["chi2_D0pis"].push_back(res_D0pis.chi2);
-          (*outputVecNtuplizer)["dof_D0pis"].push_back(res_D0pis.dof);
-          (*outputVecNtuplizer)["pval_D0pis"].push_back(res_D0pis.pval);
-          (*outputVecNtuplizer)["mass_D0pis"].push_back(mass_D0pis);
-          (*outputVecNtuplizer)["cos_Dst_PV"].push_back(cos_Dst_PV);
-          (*outputVecNtuplizer)["cosT_Dst_PV"].push_back(cosT_Dst_PV);
-          (*outputVecNtuplizer)["d_vtxDst_PV"].push_back(d_vtxDst_PV.first);
-          (*outputVecNtuplizer)["sigd_vtxDst_PV"].push_back(sigd_vtxDst_PV);
-          (*outputVecNtuplizer)["dxy_vtxDst_PV"].push_back(dxy_vtxDst_PV.first);
-          (*outputVecNtuplizer)["sigdxy_vtxDst_PV"].push_back(sigdxy_vtxDst_PV);
-
-          DstKinTree->movePointerToTheFirstChild();
-          auto refitD0pis_pis = DstKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refitD0pis_pis), string("pis_refitD0pis"), &(*outputVecNtuplizer));
-          DstKinTree->movePointerToTheNextChild();
-          auto refitD0pis_D0 = DstKinTree->currentParticle();
-          AddTLVToOut(vtxu::getTLVfromKinPart(refitD0pis_D0), string("D0_refitD0pis"), &(*outputVecNtuplizer));
-
-          // DstKinTree->movePointerToTheFirstChild();
-          // auto refit_pis = DstKinTree->currentParticle();
-          // AddTLVToOut(vtxu::getTLVfromKinPart(refit_pis), string("pis"), &(*outputVecNtuplizer));
-          // DstKinTree->movePointerToTheNextChild();
-          // auto refit_D0 = DstKinTree->currentParticle();
-          // AddTLVToOut(vtxu::getTLVfromKinPart(refit_D0), string("D0"), &(*outputVecNtuplizer));
-          //
-          // (*outputVecNtuplizer)["chi2_MuDst"].push_back(chi2_MuDst);
-          // (*outputVecNtuplizer)["mass_MuDst"].push_back(mass_MuDst);
-          // (*outputVecNtuplizer)["cos_MuDst_PV"].push_back(cos_MuDst_PV);
-          // (*outputVecNtuplizer)["d_vtxB_PV"].push_back(d_vtxB_PV.first);
-          // (*outputVecNtuplizer)["sigd_vtxB_PV"].push_back(sigd_vtxB_PV);
-          //
-          // AddTLVToOut(p4_Dst, string("Dst"), &(*outputVecNtuplizer));
-          // AddTLVToOut(p4_mu, string("mu"), &(*outputVecNtuplizer));
-          // AddTLVToOut(p4_B, string("B"), &(*outputVecNtuplizer));
-          //
-          // (*outputVecNtuplizer)["M2_miss"].push_back(M2_miss);
-          // (*outputVecNtuplizer)["q2"].push_back(q2);
-          // (*outputVecNtuplizer)["Est_mu"].push_back(Est_mu);
         }
-
-
       }
-
     }
 
     (*outputNtuplizer)["Run"] = iEvent.run();

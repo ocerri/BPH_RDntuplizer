@@ -74,7 +74,6 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
       cout << "\t" << Form("id:%d  pt:%.1f  eta:%.1f  phi:%.1f softID:%d", muon.pdgId(), muon.pt(), muon.eta(), muon.phi(), muon.isSoftMuon(primaryVtx)) << endl;
     }
     if(!muon.triggered("HLT_Mu*_IP*_part*_v*")) continue;
-    if(muon.innerTrack().isNull()) continue;
     trgMuonsMatched->push_back(muon);
 
     for(auto tag : triggerTag) {
@@ -86,11 +85,18 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
     (*outputVecNtuplizer)["trgMu_eta"].push_back(muon.eta());
     (*outputVecNtuplizer)["trgMu_phi"].push_back(muon.phi());
     (*outputVecNtuplizer)["trgMu_charge"].push_back(muon.charge());
-    auto tk = muon.innerTrack();
-    auto dxy = tk->dxy(primaryVtx.position());
-    (*outputVecNtuplizer)["trgMu_dz"].push_back(tk->dz(primaryVtx.position()));
-    (*outputVecNtuplizer)["trgMu_dxy"].push_back(dxy);
-    (*outputVecNtuplizer)["trgMu_sigdxy"].push_back(fabs(dxy)/tk->dxyError());
+    if(!muon.innerTrack().isNull()) {
+      auto tk = muon.innerTrack();
+      auto dxy = tk->dxy(primaryVtx.position());
+      (*outputVecNtuplizer)["trgMu_dz"].push_back(tk->dz(primaryVtx.position()));
+      (*outputVecNtuplizer)["trgMu_dxy"].push_back(dxy);
+      (*outputVecNtuplizer)["trgMu_sigdxy"].push_back(fabs(dxy)/tk->dxyError());
+    }
+    else {
+      (*outputVecNtuplizer)["trgMu_dz"].push_back(-999);
+      (*outputVecNtuplizer)["trgMu_dxy"].push_back(-999);
+      (*outputVecNtuplizer)["trgMu_sigdxy"].push_back(-999);
+    }
   }
   bool acceptEvent = trgMuonsMatched->size() > 0;
   (*outputNtuplizer)["N_trgMu"] = trgMuonsMatched->size();

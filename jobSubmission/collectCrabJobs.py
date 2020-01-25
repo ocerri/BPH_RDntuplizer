@@ -4,10 +4,9 @@ import argparse
 import humanfriendly
 
 parser = argparse.ArgumentParser()
-
 parser.add_argument ('inputDir', help='list of directories', nargs='+')
-
 args = parser.parse_args()
+# example: python collectCrabJobs.py /mnt/hadoop/store/user/ocerri/ParkingBPH*/ParkingBPH*_Run2018D-*_RDntuplizer_B2JpsiKst_200123
 
 for dir in args.inputDir:
     print 20*'#' + 50*'-' + 20*'#'

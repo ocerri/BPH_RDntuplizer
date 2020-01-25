@@ -610,6 +610,12 @@ TLorentzVector vtxu::getTLVfromCand(pat::PackedCandidate p, double mass) {
   return out;
 }
 
+TLorentzVector vtxu::getTLVfromMuon(pat::Muon p, double mass) {
+  TLorentzVector out;
+  out.SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), mass);
+  return out;
+}
+
 double vtxu::dPhi(double p1, double p2) {
   double dPhi = p1 - p2;
   double pi = 3.14159265358979323846;

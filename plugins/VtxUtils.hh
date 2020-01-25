@@ -47,6 +47,7 @@ namespace vtxu {
   TLorentzVector getTLVfromKinPart(const RefCountedKinematicParticle);
   TLorentzVector getTLVfromTrack(reco::Track, double);
   TLorentzVector getTLVfromCand(pat::PackedCandidate, double);
+  TLorentzVector getTLVfromMuon(pat::Muon, double);
   double dPhi(double, double);
   double dR(double, double, double, double);
   double computeIP(reco::Candidate::Point, reco::Candidate::Point, reco::Candidate::Vector, bool);
