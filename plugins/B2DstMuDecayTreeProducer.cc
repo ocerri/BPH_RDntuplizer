@@ -92,7 +92,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
     unique_ptr<map<string, vector<float>>> outputVecNtuplizer(new map<string, vector<float>>);
 
-    int n_K = 0, n_pi = 0, n_D0 = 0, n_pis = 0, n_Dst = 0, n_B = 0;
+    int n_mu = 0, n_K = 0, n_pi = 0, n_D0 = 0, n_pis = 0, n_Dst = 0, n_B = 0;
 
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
     for(uint i_trgMu = 0; i_trgMu < trgMuonsHandle->size(); i_trgMu++) {
@@ -100,6 +100,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       auto trgMu = (*trgMuonsHandle)[i_trgMu];
       if (trgMu.innerTrack().isNull()) continue;
       if (!trgMu.isSoftMuon(primaryVtx)) continue;
+      n_mu++;
       /*
       ############################################################################
                                 Look for the K+ (321)
@@ -515,6 +516,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     (*outputNtuplizer)["LumiBlock"] = iEvent.luminosityBlock();
     (*outputNtuplizer)["eventNumber"] = iEvent.id().event();
 
+    (*outputNtuplizer)["n_mu"] = n_mu;
     (*outputNtuplizer)["n_K"] = n_K;
     (*outputNtuplizer)["n_pi"] = n_pi;
     (*outputNtuplizer)["n_D0"] = n_D0;
