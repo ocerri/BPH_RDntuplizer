@@ -98,6 +98,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     for(uint i_trgMu = 0; i_trgMu < trgMuonsHandle->size(); i_trgMu++) {
       //######## Require muon quality ##################
       auto trgMu = (*trgMuonsHandle)[i_trgMu];
+      if (trgMu.charge() != 1) continue;
       if (trgMu.innerTrack().isNull()) continue;
       if (!trgMu.isSoftMuon(primaryVtx)) continue;
       n_mu++;
@@ -507,9 +508,14 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             DstKinTree->movePointerToTheNextChild();
             auto refitD0pis_D0 = DstKinTree->currentParticle();
             AddTLVToOut(vtxu::getTLVfromKinPart(refitD0pis_D0), string("D0_refitD0pis"), &(*outputVecNtuplizer));
+
+            if(n_B > 100) break;
           }
+          if(n_B > 100) break;
         }
+        if(n_B > 100) break;
       }
+      if(n_B > 100) break;
     }
 
     (*outputNtuplizer)["Run"] = iEvent.run();

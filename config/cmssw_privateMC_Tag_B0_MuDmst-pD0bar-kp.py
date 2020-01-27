@@ -50,8 +50,11 @@ elif args.inputFiles:
     else:
         flist = args.inputFiles
 else:
-    print 'No input provided'
-    raise
+    fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
+    fdefault += 'inputFiles_BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3.txt'
+    with open(fdefault) as f:
+        flist = [l[:-1] for l in f.readlines()]
+    flist = flist[:10]
 
 for i in range(len(flist)):
     if os.path.isfile(flist[i]):
@@ -87,21 +90,13 @@ process.TFileService = cms.Service("TFileService",
 #################   Sequence    ####################
 '''
 
-process.trgBPH = cms.EDProducer("BPHTriggerPathProducer",
-        muonCollection = cms.InputTag("slimmedMuons","", ""),
-        vertexCollection = cms.InputTag("offlineSlimmedPrimaryVertices","", ""),
-        triggerObjects = cms.InputTag("slimmedPatTrigger"),
-        triggerBits = cms.InputTag("TriggerResults","","HLT"),
+process.trgF = cms.EDFilter("TriggerMuonsFilter",
         muon_charge = cms.int32(1),
         verbose = cms.int32(0)
 )
 
-process.trgF = cms.EDFilter("BPHTriggerPathFilter",
-        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", "")
-)
-
 process.B2MuDstDT = cms.EDProducer("B2DstMuDecayTreeProducer",
-        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
+        trgMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
         verbose = cms.int32(0)
 )
 
@@ -110,8 +105,8 @@ process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
 )
 
 process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
-        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
-        verbose = cms.int32(0)
+        decayTreeVecOut = cms.InputTag("B2MuDstDT","outputVecNtuplizer", ""),
+        verbose = cms.int32(1)
 )
 
 process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
@@ -134,7 +129,6 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 
 
 process.p = cms.Path(
-                    process.trgBPH +
                     process.trgF +
                     process.B2MuDstDT +
                     process.B2MuDstDTFilter+

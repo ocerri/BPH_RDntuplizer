@@ -85,7 +85,7 @@ config.General.transferLogs = True
     fout.write('\n')
     fout.write("config.Site.storageSite = 'T2_US_Caltech'")
     fout.write('\n')
-    fout.write("config.Site.whitelist = ['T2_US_*', 'T2_IT_*', 'T2_CH_*']")
+    fout.write("config.Site.whitelist = ['T2_US_*', 'T2_IT_*', 'T2_CH_*', , 'T2_DE_*']")
     fout.write('\n')
     fout.close()
 

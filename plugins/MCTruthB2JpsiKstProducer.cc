@@ -38,7 +38,7 @@ private:
     edm::EDGetTokenT<vector<pat::PackedGenParticle>> PackedParticlesSrc_;
     edm::EDGetTokenT<vector<pat::PackedCandidate>> PFCandSrc_;
 
-    edm::EDGetTokenT<map<string, vector<float>>> B2DstKDecayTreeOutSrc_;
+    edm::EDGetTokenT<map<string, vector<float>>> decayTreeOutSrc_;
     edm::EDGetTokenT<vector<pat::Muon>> trgMuonSrc_;
     int verbose = 0;
 };
@@ -51,7 +51,7 @@ MCTruthB2JpsiKstProducer::MCTruthB2JpsiKstProducer(const edm::ParameterSet &iCon
     PrunedParticlesSrc_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
     PackedParticlesSrc_ = consumes<vector<pat::PackedGenParticle>>(edm::InputTag("packedGenParticles"));
     PFCandSrc_ = consumes<vector<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"));
-    B2DstKDecayTreeOutSrc_ = consumes<map<string, vector<float>>>(iConfig.getParameter<edm::InputTag>( "decayTreeVecOut" ));
+    decayTreeOutSrc_ = consumes<map<string, vector<float>>>(iConfig.getParameter<edm::InputTag>( "decayTreeVecOut" ));
     trgMuonSrc_ = consumes<vector<pat::Muon>>(iConfig.getParameter<edm::InputTag>( "triggerMuons" ));
 
     produces<int>("indexBmc");
@@ -78,10 +78,8 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
     // Get output from decay tree producer
     edm::Handle<map<string, vector<float>>> outMapHandle;
-    iEvent.getByToken(B2DstKDecayTreeOutSrc_, outMapHandle);
-    vector<float> reco_B_pt;
-    vector<float> reco_B_eta;
-    vector<float> reco_B_phi;
+    iEvent.getByToken(decayTreeOutSrc_, outMapHandle);
+    vector<float> reco_B_pt, reco_B_eta, reco_B_phi;
     for( auto const& kv : (*outMapHandle) ) {
       if (kv.first == "B_mumupiK_pt") reco_B_pt = kv.second;
       if (kv.first == "B_mumupiK_eta") reco_B_eta = kv.second;

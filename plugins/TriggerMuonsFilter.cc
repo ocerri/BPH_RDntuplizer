@@ -73,6 +73,7 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
     if (verbose) {
       cout << "\t" << Form("id:%d  pt:%.1f  eta:%.1f  phi:%.1f softID:%d", muon.pdgId(), muon.pt(), muon.eta(), muon.phi(), muon.isSoftMuon(primaryVtx)) << endl;
     }
+    if(muonCharge_ != 0 && muon.charge() != muonCharge_) continue;
     if(!muon.triggered("HLT_Mu*_IP*_part*_v*")) continue;
     trgMuonsMatched->push_back(muon);
 
