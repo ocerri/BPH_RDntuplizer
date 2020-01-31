@@ -128,6 +128,7 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
     vector<reco::GenParticle> genMuons;  //Used later to match trigger muons
     map<string, TLorentzVector> p4;
     int i_B = -1;
+    int i_cand = -1;
     int nB02JpsiKst = 0;
     float best_dR = 1e9, best_dPt = 1e9;
     reco::Candidate::Point interactionPoint(-9999999999, -999, -999);
@@ -150,27 +151,24 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
         if(verbose) {cout << Form("%d (B0->JpsiKst): pt:%.2f eta:%.2f phi:%.2f", i, p.pt(), p.eta(), p.phi()) << endl;}
 
-        float dR = 1e9, dPt = 1e9;
         for(uint j = 0; j < reco_B_pt.size(); j++) {
-          float aux_dR = vtxu::dR(p.phi(), reco_B_phi[j], p.eta(), reco_B_eta[j]);
-          float aux_dPt = fabs(reco_B_pt[j] - p.pt())/p.pt();
-          if(verbose) {cout << Form("%.2e %.2e", aux_dR, aux_dPt) << endl;}
-          if(aux_dR < dR && aux_dPt < dPt) {
-            dR = aux_dR;
-            dPt = aux_dPt;
+          float dR = vtxu::dR(p.phi(), reco_B_phi[j], p.eta(), reco_B_eta[j]);
+          float dPt = fabs(reco_B_pt[j] - p.pt())/p.pt();
+          if(verbose) {cout << Form("%.2e %.2e", dR, dPt) << endl;}
+          if(dR  < best_dR && dPt < best_dPt) {
+            best_dR = dR;
+            best_dPt = dPt;
+            i_B = i;
+            i_cand = j;
+            if(verbose) {cout << "selected" << endl;}
           }
-        }
-        if(dR  < best_dR && dPt < best_dPt) {
-          best_dR = dR;
-          best_dPt = dPt;
-          i_B = i;
-          if(verbose) {cout << "selected" << endl;}
         }
       }
       else if (abs(p.pdgId()) ==  13) genMuons.push_back(p);
     }
     (*indexBmc) = i_B;
     (*outputNtuplizer)["MC_nB02JpsiKst"] = nB02JpsiKst;
+    (*outputNtuplizer)["MC_idxCand"] = i_cand;
 
     p4["B"] = TLorentzVector();
     p4["Jpsi"] = TLorentzVector();
