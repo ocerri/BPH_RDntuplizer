@@ -48,16 +48,16 @@ else:
     fdefault += 'inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:10]
+    flist = flist[:5]
 
 print 'Trying to get a local copy'
 for i in range(len(flist)):
     if flist[i].startswith('file:'):
         print 'Already set to local'
         continue
-    print 'Looking for: /mnt/hadoop' + flist[i]
+    # print 'Looking for: /mnt/hadoop' + flist[i]
     if os.path.isfile('/mnt/hadoop' + flist[i]):
-        print 'Found'
+        # print 'Found'
         flist[i] = 'file:/mnt/hadoop' + flist[i]
 
 process.source = cms.Source("PoolSource",
@@ -91,19 +91,13 @@ process.TFileService = cms.Service("TFileService",
 #################   Sequence    ####################
 '''
 
-process.trgBPH = cms.EDProducer("TagAndProbeProducer",
-        muon_charge = cms.int32(1),
-        verbose = cms.int32(1)
-)
-
-process.trgF = cms.EDFilter("BPHTriggerPathFilter",
-        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", "")
+process.TnP = cms.EDFilter("TagAndProbeProducer",
+        verbose = cms.int32(0)
 )
 
 
 process.p = cms.Path(
-                    process.trgBPH +
-                    process.trgF
+                    process.TnP
                     )
 
 
