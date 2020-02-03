@@ -6,15 +6,11 @@
 #include "TLorentzVector.h"
 #include "TTree.h"
 
-
-
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/stream/EDFilter.h"
-
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
-
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/StreamID.h"
 
@@ -23,6 +19,8 @@
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
+
+#include "VtxUtils.hh"
 
 using namespace std;
 
@@ -91,11 +89,12 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
         pTag.SetPtEtaPhiM(mTag.pt(), mTag.eta(), mTag.phi(), massMu);
         pProbe.SetPtEtaPhiM(mProbe.pt(), mProbe.eta(), mProbe.phi(), massMu);
 
-        if( fabs((pTag + pProbe).M() - massJpsi) > 1. ) continue;
+        if( fabs((pTag + pProbe).M() - massJpsi) > 0.7 ) continue;
 
         outMap["mTag_pt"] = mTag.pt();
         outMap["mTag_eta"] = mTag.eta();
         outMap["mTag_phi"] = mTag.phi();
+        outMap["mTag_hasInnerTrk"] = !mProbe.innerTrack().isNull();
         outMap["mProbe_pt"] = mProbe.pt();
         outMap["mProbe_eta"] = mProbe.eta();
         outMap["mProbe_phi"] = mProbe.phi();
@@ -113,11 +112,33 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
           outMap["mProbe_dz"] = tk->dz(primaryVtx.position());
           outMap["mProbe_dxy"] = dxy;
           outMap["mProbe_sigdxy"] = fabs(dxy)/tk->dxyError();
+
+          if(!mProbe.innerTrack().isNull()) {
+            auto kinTree = vtxu::FitJpsi_mumu(iSetup, mTag, mProbe, false);
+            auto res = vtxu::fitQuality(kinTree, 0.1);
+            outMap["vtx_isValid"] = res.isValid;
+            outMap["vtx_chi2"] = res.chi2;
+            outMap["vtx_dof"] = res.dof;
+            outMap["vtx_pval"] = res.pval;
+            outMap["vtx_isGood"] = res.isGood;
+          }
+          else {
+            outMap["vtx_isValid"] = 0;
+            outMap["vtx_chi2"] = -1;
+            outMap["vtx_dof"] = -1;
+            outMap["vtx_pval"] = -1;
+            outMap["vtx_isGood"] = 0;
+          }
         }
         else {
           outMap["mProbe_dz"] = 0;
           outMap["mProbe_dxy"] = 0;
           outMap["mProbe_sigdxy"] = 0;
+          outMap["vtx_isValid"] = 0;
+          outMap["vtx_chi2"] = -1;
+          outMap["vtx_dof"] = -1;
+          outMap["vtx_pval"] = -1;
+          outMap["vtx_isGood"] = 0;
         }
         addToTree();
     }
