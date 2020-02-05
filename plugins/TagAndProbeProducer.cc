@@ -2,6 +2,7 @@
 #include <memory>
 #include <iostream>
 #include <string>
+#include <regex>
 
 #include "TLorentzVector.h"
 #include "TTree.h"
@@ -14,6 +15,8 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/StreamID.h"
 
+#include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 
@@ -34,6 +37,7 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
       void addToTree();
 
       // ----------member data ---------------------------
+      edm::EDGetTokenT<edm::TriggerResults> triggerBitsSrc_;
       edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
       edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
 
@@ -49,6 +53,7 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
 
 
 TagAndProbeProducer::TagAndProbeProducer(const edm::ParameterSet& iConfig):
+  triggerBitsSrc_(consumes<edm::TriggerResults>( edm::InputTag("TriggerResults","","HLT") )),
   muonSrc_( consumes<vector<pat::Muon>> ( edm::InputTag("slimmedMuons") ) ),
   vtxSrc_( consumes<vector<reco::Vertex>> ( edm::InputTag("offlineSlimmedPrimaryVertices") ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
@@ -58,6 +63,9 @@ TagAndProbeProducer::TagAndProbeProducer(const edm::ParameterSet& iConfig):
 }
 
 bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+  edm::Handle<edm::TriggerResults> triggerBits;
+  iEvent.getByToken(triggerBitsSrc_, triggerBits);
+
   edm::Handle<vector<pat::Muon>> muonHandle;
   iEvent.getByToken(muonSrc_, muonHandle);
   uint nMuons = muonHandle->size();
@@ -77,6 +85,21 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   }
 
   vector<string> triggerTag = {"Mu12_IP6", "Mu9_IP5", "Mu7_IP4", "Mu9_IP4", "Mu8_IP5", "Mu8_IP6", "Mu9_IP6", "Mu8_IP3"};
+  for(auto tag : triggerTag) outMap["wasrun" + tag] = -1;
+
+  const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
+  regex txt_regex_path("HLT_Mu[0-9]+_IP[0-9]_part[0-9]_v[0-9]");
+  if (verbose) { cout << "\n == TRIGGER PATHS == \n";}
+  for (unsigned int i = 0; i < triggerBits->size(); ++i) {
+      auto n =  names.triggerName(i);
+      if(!regex_match(n, txt_regex_path)) continue;
+      for(auto tag : triggerTag) {
+        if(n.substr(4, tag.size()) == tag) {
+          outMap["wasrun" + tag] = triggerBits->wasrun(i);
+          if(verbose) {cout << tag << "\t" << n << "\t" << triggerBits->wasrun(i) << endl;}
+        }
+      }
+  }
 
   for(uint i=0; i < nMuons-1; i++) {
     auto mTag = (*muonHandle)[i];
@@ -89,7 +112,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
         pTag.SetPtEtaPhiM(mTag.pt(), mTag.eta(), mTag.phi(), massMu);
         pProbe.SetPtEtaPhiM(mProbe.pt(), mProbe.eta(), mProbe.phi(), massMu);
 
-        if( fabs((pTag + pProbe).M() - massJpsi) > 0.7 ) continue;
+        if( fabs((pTag + pProbe).M() - massJpsi) > 0.5 ) continue;
 
         outMap["mTag_pt"] = mTag.pt();
         outMap["mTag_eta"] = mTag.eta();
