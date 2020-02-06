@@ -17,6 +17,7 @@
 
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
+#include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 
@@ -38,6 +39,7 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
 
       // ----------member data ---------------------------
       edm::EDGetTokenT<edm::TriggerResults> triggerBitsSrc_;
+      edm::EDGetTokenT <pat::PackedTriggerPrescales> triggerPrescales_;
       edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
       edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
 
@@ -54,6 +56,7 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
 
 TagAndProbeProducer::TagAndProbeProducer(const edm::ParameterSet& iConfig):
   triggerBitsSrc_(consumes<edm::TriggerResults>( edm::InputTag("TriggerResults","","HLT") )),
+  triggerPrescales_(consumes<pat::PackedTriggerPrescales>( edm::InputTag("patTrigger") )),
   muonSrc_( consumes<vector<pat::Muon>> ( edm::InputTag("slimmedMuons") ) ),
   vtxSrc_( consumes<vector<reco::Vertex>> ( edm::InputTag("offlineSlimmedPrimaryVertices") ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
@@ -65,6 +68,9 @@ TagAndProbeProducer::TagAndProbeProducer(const edm::ParameterSet& iConfig):
 bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   edm::Handle<edm::TriggerResults> triggerBits;
   iEvent.getByToken(triggerBitsSrc_, triggerBits);
+
+  edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
+  iEvent.getByToken(triggerPrescales_, triggerPrescales);
 
   edm::Handle<vector<pat::Muon>> muonHandle;
   iEvent.getByToken(muonSrc_, muonHandle);
@@ -85,7 +91,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   }
 
   vector<string> triggerTag = {"Mu12_IP6", "Mu9_IP5", "Mu7_IP4", "Mu9_IP4", "Mu8_IP5", "Mu8_IP6", "Mu9_IP6", "Mu8_IP3"};
-  for(auto tag : triggerTag) outMap["wasrun" + tag] = -1;
+  for(auto tag : triggerTag) outMap["prescale" + tag] = -1;
 
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
   regex txt_regex_path("HLT_Mu[0-9]+_IP[0-9]_part[0-9]_v[0-9]");
@@ -95,8 +101,8 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       if(!regex_match(n, txt_regex_path)) continue;
       for(auto tag : triggerTag) {
         if(n.substr(4, tag.size()) == tag) {
-          outMap["wasrun" + tag] = triggerBits->wasrun(i);
-          if(verbose) {cout << tag << "\t" << n << "\t" << triggerBits->wasrun(i) << endl;}
+          outMap["prescale" + tag] = triggerPrescales->getPrescaleForIndex(i);
+          if(verbose) {cout << tag << "\t" << n << "\t" << triggerBits->wasrun(i) << "\t" << triggerPrescales->getPrescaleForIndex(i) << endl;}
         }
       }
   }
