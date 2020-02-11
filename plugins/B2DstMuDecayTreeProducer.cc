@@ -100,6 +100,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       auto trgMu = (*trgMuonsHandle)[i_trgMu];
       if (trgMu.charge() != 1) continue;
       if (trgMu.innerTrack().isNull()) continue;
+      if (fabs(trgMu.eta()) > 1.5) continue;
       if (!trgMu.isSoftMuon(primaryVtx)) continue;
       n_mu++;
       /*
@@ -276,12 +277,14 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             TLorentzVector p4_Dst = p4_Dst_refitD0pismu;
             auto p4_mu = vtxu::getTLVfromKinPart(refit_mu);
 
-            // // ------------- Transverse Approx ------------------
-            double pt_B_reco = p4_vis.Pt() * mass_B0/ p4_vis.M();
             TVector3 flightB(vtxB->position().x() - primaryVtx.position().x(),
                              vtxB->position().y() - primaryVtx.position().y(),
                              vtxB->position().z() - primaryVtx.position().z()
                             );
+
+            // // ------------- Transverse Approx ------------------
+            double pt_B_reco = p4_vis.Pt() * mass_B0/ p4_vis.M();
+
             auto B_vect = flightB * ( pt_B_reco / flightB.Perp() );
             TLorentzVector p4_B;
             p4_B.SetVectM(B_vect, mass_B0);
@@ -297,6 +300,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["M2_miss_D0pismu"].push_back(M2_miss);
             (*outputVecNtuplizer)["q2_D0pismu"].push_back(q2);
             (*outputVecNtuplizer)["Est_mu_D0pismu"].push_back(Est_mu);
+
             /*
             ############################################################################
             */
