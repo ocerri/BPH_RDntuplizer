@@ -406,7 +406,6 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               auto kinTree = vtxu::Fit_D0pismupi(iSetup, D0, pis, trgMu, ptk);
               auto res = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
               if(!res.isGood) continue;
-              cout << N_compatible_tk << Form(": pval=%.3f", res.pval) << endl;
               if (verbose) {cout << Form("Trk pars: pt=%.2f eta=%.2f phi=%.2f\n", ptk.pt(), ptk.eta(), ptk.phi());}
 
               kinTree->movePointerToTheTop();
@@ -433,13 +432,15 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
               N_compatible_tk++;
             }
+            if ( (*outputVecNtuplizer)["nTksAdd"].size() == 0 ) {
+              (*outputVecNtuplizer)["tksAdd_massVis"] = {};
+              (*outputVecNtuplizer)["tksAdd_massHad"] = {};
+              (*outputVecNtuplizer)["tksAdd_pval"] = {};
+              (*outputVecNtuplizer)["tksAdd_pt"] = {};
+              (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
+            }
             (*outputVecNtuplizer)["nTksAdd"].push_back(N_compatible_tk);
             if(verbose) {cout << "Compatible tracks: " << N_compatible_tk << endl;}
-            (*outputVecNtuplizer)["tksAdd_massVis"] = {};
-            (*outputVecNtuplizer)["tksAdd_massHad"] = {};
-            (*outputVecNtuplizer)["tksAdd_pval"] = {};
-            (*outputVecNtuplizer)["tksAdd_pt"] = {};
-            (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
             for(uint i = 0; i < N_compatible_tk; i++){
               (*outputVecNtuplizer)["tksAdd_massVis"].push_back(tksAdd_massVis[i]);
               (*outputVecNtuplizer)["tksAdd_massHad"].push_back(tksAdd_massHad[i]);
@@ -447,7 +448,10 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
               (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
             }
-            if(N_compatible_tk != (*outputVecNtuplizer)["tksAdd_massVis"].size()){
+
+            int auxC = 0;
+            for(auto auxN : (*outputVecNtuplizer)["nTksAdd"]) auxC += auxN;
+            if( auxC != int ((*outputVecNtuplizer)["tksAdd_massVis"].size()) ){
               cout << "Number of tracks and tracks details lenght not matching" << endl;
               assert(false);
             }

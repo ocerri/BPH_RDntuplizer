@@ -259,7 +259,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputNtuplizer)["MC_idxCand"] = i_cand;
     (*indexBmc) = i_B;
 
-    assert(i_B >= 0);
+    // assert(i_B >= 0);
 
     float recoMuon_match_BMuon = 0;
     map<string, TLorentzVector> p4;
