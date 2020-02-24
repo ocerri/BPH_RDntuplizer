@@ -64,6 +64,18 @@ samples:
     parts:
       - /storage/user/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU20_10-2-3/jobs_out/out_MINIAODSIM_*.root
 
+  B0_JpsiKstFSR_PU20:
+    isMC: True
+    dataset: BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgenFSR_SVV_PU20_10-2-3
+    parts:
+      - /storage/user/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgenFSR_SVV_PU20_10-2-3/jobs_out/out_MINIAODSIM_*.root
+
+  B0_JpsiKst_PU35:
+    isMC: True
+    dataset: BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU35_10-2-3
+    parts:
+      - /storage/user/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU35_10-2-3/jobs_out/out_MINIAODSIM_*.root
+
   B0_MuNuDmst_PU0:
     isMC: True
     dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU0_10-2-3

@@ -3,7 +3,7 @@ import os
 import datetime
 from glob import glob
 
-forceMC = False
+forceMC = True
 prod_samples = yaml.load(open('samples.yml'))
 
 for k, d in prod_samples['samples'].iteritems():

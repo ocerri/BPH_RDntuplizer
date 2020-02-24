@@ -98,6 +98,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   if (verbose) { cout << "\n == TRIGGER PATHS == \n";}
   for (unsigned int i = 0; i < triggerBits->size(); ++i) {
       auto n =  names.triggerName(i);
+      if (verbose && triggerBits->accept(i)) {cout << n << ": PASS" << endl;}
       if(!regex_match(n, txt_regex_path)) continue;
       for(auto tag : triggerTag) {
         if(n.substr(4, tag.size()) == tag) {
@@ -107,10 +108,18 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       }
   }
 
+  vector<uint> idxTriggeringMuons;
+  for(uint i=0; i < nMuons; i++) {
+    auto m = (*muonHandle)[i];
+    if(m.triggered("HLT_Mu*_IP*")) idxTriggeringMuons.push_back(i);
+  }
+  if(idxTriggeringMuons.size() == 0) return false;
+
   for(uint i=0; i < nMuons-1; i++) {
     auto mTag = (*muonHandle)[i];
-    if(!mTag.isTightMuon(primaryVtx)) continue;
+    if(!mTag.isSoftMuon(primaryVtx)) continue;
     for(uint j=i+1; j < nMuons; j++) {
+        if(idxTriggeringMuons.size() == 1 && idxTriggeringMuons[0] == j) continue;
         auto mProbe = (*muonHandle)[j];
         if(mTag.charge()*mProbe.charge() != -1) continue;
 

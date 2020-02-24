@@ -54,6 +54,8 @@ python jobSubmission/submitCMSSWCondorJobs.py -i /storage/user/ocerri/BPhysics/d
 
 
 ----------------------------------- DATA -------------------------------------------
-python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt -o /storage/user/ocerri/BPhysics/data/cmsRD/ParkingBPH1/Run2018D-05May2019promptD-v1_RDntuplizer_JpsiKst_`date +%y%m%d`/out_CAND.root -c config/cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py --maxtime 2h -N 5 --nMaxJobs 100
+part=1
 
-python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt -o /storage/user/ocerri/BPhysics/data/cmsRD/ParkingBPH1/Run2018D-05May2019promptD-v1_TagAndProbe_`date +%y%m%d`/out_CAND.root -c config/cmssw_cmsRD2018_TagAndProbe.py --maxtime 30m -N 20 --nMaxJobs 500
+python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH${part}_Run2018D-05May2019promptD-v1_MINIAOD.txt -o /storage/user/ocerri/BPhysics/data/cmsRD/ParkingBPH${part}/Run2018D-05May2019promptD-v1_RDntuplizer_JpsiKst_`date +%y%m%d`/out_CAND.root -c config/cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py --maxtime 2h -N 5 --nMaxJobs 100
+
+python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH${part}_Run2018D-05May2019promptD-v1_MINIAOD.txt -o /storage/user/ocerri/BPhysics/data/cmsRD/ParkingBPH${part}/Run2018D-05May2019promptD-v1_TagAndProbe_`date +%y%m%d`/out_CAND.root -c config/cmssw_cmsRD2018_TagAndProbe.py --maxtime 30m -N 20 --nMaxJobs 500
