@@ -65,6 +65,16 @@ for k, d in prod_samples['samples'].iteritems():
                         condition *= not '191205_195222/0002/out_MINIAODSIM_2764.root' in line
                         if condition:
                             f.write(line)
+            elif p == '/cmsMC_private/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3-c21dec93027231dc6f615dfe5c662834/USER':
+                print "Removing corrupted files"
+                with open(fname, 'r') as f:
+                    lines = f.readlines()
+                with open(fname, 'w') as f:
+                    for line in lines:
+                        condition = not '191119_023455/0001/out_MINIAODSIM_1273.root' in line
+                        condition *= not '191119_023455/0001/out_MINIAODSIM_1082.root' in line
+                        if condition:
+                            f.write(line)
 
         print '\nTotal number of files:'
         os.system('cat '+fname+' | wc -l')
