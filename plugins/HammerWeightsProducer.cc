@@ -98,7 +98,7 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
       centralValuesOpt += Form("%s: %f, ", elem.first.c_str(), elem.second[0]);
     }
     centralValuesOpt += "}";
-    if (verbose) {cout << "[Hmmer]: Central values\n\t" << centralValuesOpt << endl;}
+    if (verbose) {cout << "[Hammer]: Central values\n\t" << centralValuesOpt << endl;}
     hammer.setOptions(centralValuesOpt);
 
     produces<map<string, float>>("outputNtuplizer");
