@@ -101,7 +101,21 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       if (trgMu.charge() != 1) continue;
       if (trgMu.innerTrack().isNull()) continue;
       if (fabs(trgMu.eta()) > 1.5) continue;
-      if (!trgMu.isSoftMuon(primaryVtx)) continue;
+
+      vector<reco::Vertex> possibleVtxs = {};
+      // bool softMuForPV = false;
+      for(uint i_vtx = 0; i_vtx<vtxHandle->size(); i_vtx++) {
+        auto vtx = (*vtxHandle)[i_vtx];
+        if(vtx.normalizedChi2() > 1.5) continue;
+        bool isSoft = trgMu.isSoftMuon(vtx);
+        if(isSoft){
+          possibleVtxs.push_back(vtx);
+          // if (i_vtx==0) softMuForPV = true;
+        }
+      }
+      if (possibleVtxs.size() == 0) continue;
+
+      // if (!trgMu.isSoftMuon(primaryVtx)) continue;
       n_mu++;
       /*
       ############################################################################
@@ -255,11 +269,23 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["mass_D0pis_refitD0pismu"].push_back(p4_Dst_refitD0pismu.M());
             AddTLVToOut(p4_Dst_refitD0pismu, string("Dst_refitD0pismu"), &(*outputVecNtuplizer));
 
-            auto cos_D0pismu_PV = vtxu::computePointingCos(primaryVtx, vtxB, D0pismu);
-            auto cosT_D0pismu_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxB, D0pismu);
-            auto d_vtxD0pismu_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
+            // Looking for the best vertex to associate it with
+            uint i_best = 0;
+            auto maxCos = vtxu::computePointingCos(possibleVtxs[0], vtxB, D0pismu);
+            for(uint i_vtx = 1; i_vtx < possibleVtxs.size(); i_vtx++) {
+              auto auxCos = vtxu::computePointingCos(possibleVtxs[i_vtx], vtxB, D0pismu);
+              if(auxCos > maxCos) {
+                maxCos = auxCos;
+                i_best = i_vtx;
+              }
+            }
+            auto bestVtx = possibleVtxs[i_best];
+
+            auto cos_D0pismu_PV = vtxu::computePointingCos(bestVtx, vtxB, D0pismu);
+            auto cosT_D0pismu_PV = vtxu::computePointingCosTransverse(bestVtx, vtxB, D0pismu);
+            auto d_vtxD0pismu_PV = vtxu::vtxsDistance(bestVtx, vtxB);
             auto sigd_vtxD0pismu_PV = d_vtxD0pismu_PV.first/d_vtxD0pismu_PV.second;
-            auto dxy_vtxD0pismu_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
+            auto dxy_vtxD0pismu_PV = vtxu::vtxsDistance(bestVtx, vtxB);
             auto sigdxy_vtxD0pismu_PV = dxy_vtxD0pismu_PV.first/dxy_vtxD0pismu_PV.second;
             (*outputVecNtuplizer)["cos_D0pismu_PV"].push_back(cos_D0pismu_PV);
             (*outputVecNtuplizer)["cosT_D0pismu_PV"].push_back(cosT_D0pismu_PV);
@@ -277,9 +303,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             TLorentzVector p4_Dst = p4_Dst_refitD0pismu;
             auto p4_mu = vtxu::getTLVfromKinPart(refit_mu);
 
-            TVector3 flightB(vtxB->position().x() - primaryVtx.position().x(),
-                             vtxB->position().y() - primaryVtx.position().y(),
-                             vtxB->position().z() - primaryVtx.position().z()
+            TVector3 flightB(vtxB->position().x() - bestVtx.position().x(),
+                             vtxB->position().y() - bestVtx.position().y(),
+                             vtxB->position().z() - bestVtx.position().z()
                             );
 
             // // ------------- Transverse Approx ------------------
@@ -321,8 +347,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
               auto vtxB = BKinTree->currentDecayVertex();
 
-              auto cos_Dstmu_PV = vtxu::computePointingCos(primaryVtx, vtxB, Dstmu);
-              auto cosT_Dstmu_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxB, Dstmu);
+              auto cos_Dstmu_PV = vtxu::computePointingCos(bestVtx, vtxB, Dstmu);
+              auto cosT_Dstmu_PV = vtxu::computePointingCosTransverse(bestVtx, vtxB, Dstmu);
               (*outputVecNtuplizer)["cos_Dstmu_PV"].push_back(cos_Dstmu_PV);
               (*outputVecNtuplizer)["cosT_Dstmu_PV"].push_back(cosT_Dstmu_PV);
 
@@ -337,9 +363,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
               // // ------------- Transverse Approx ------------------
               double pt_B_reco = p4_vis.Pt() * mass_B0/ p4_vis.M();
-              TVector3 flightB(vtxB->position().x() - primaryVtx.position().x(),
-                               vtxB->position().y() - primaryVtx.position().y(),
-                               vtxB->position().z() - primaryVtx.position().z()
+              TVector3 flightB(vtxB->position().x() - bestVtx.position().x(),
+                               vtxB->position().y() - bestVtx.position().y(),
+                               vtxB->position().z() - bestVtx.position().z()
                               );
               auto B_vect = flightB * ( pt_B_reco / flightB.Perp() );
               TLorentzVector p4_B;
@@ -384,6 +410,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             vector<double> tksAdd_pval = {};
             vector<double> tksAdd_pt = {};
             vector<double> tksAdd_sigdca_vtxB = {};
+            vector<double> tksAdd_cos_PV = {};
             if(verbose) {cout << "Looking for additional tracks" << endl;}
             for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
               // Pion different from the pion from D0
@@ -425,11 +452,14 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               auto p4_D0pispi = vtxu::getTLVfromKinPart(refit_pis) + vtxu::getTLVfromKinPart(refit_D0) + vtxu::getTLVfromKinPart(refit_pi);
               auto m_D0pispi = p4_D0pispi.M();
 
+
+
               tksAdd_massVis.push_back(m_vis);
               tksAdd_massHad.push_back(m_D0pispi);
               tksAdd_pval.push_back(res.pval);
               tksAdd_pt.push_back(ptk.pt());
               tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
+              tksAdd_cos_PV.push_back(vtxu::computePointingCos(bestVtx, vtxB, refit_pi));
               N_compatible_tk++;
             }
             if ( (*outputVecNtuplizer)["nTksAdd"].size() == 0 ) {
@@ -447,6 +477,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_pval"].push_back(tksAdd_pval[i]);
               (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
               (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
+              (*outputVecNtuplizer)["tksAdd_cos_PV"].push_back(tksAdd_cos_PV[i]);
             }
 
             int auxC = 0;
