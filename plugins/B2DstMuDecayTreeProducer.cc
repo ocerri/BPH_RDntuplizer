@@ -468,6 +468,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_pval"] = {};
               (*outputVecNtuplizer)["tksAdd_pt"] = {};
               (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
+              (*outputVecNtuplizer)["tksAdd_cos_PV"] = {};
             }
             (*outputVecNtuplizer)["nTksAdd"].push_back(N_compatible_tk);
             if(verbose) {cout << "Compatible tracks: " << N_compatible_tk << endl;}
