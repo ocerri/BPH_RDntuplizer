@@ -44,7 +44,7 @@ public:
     void updateCounter(int, vector<bool>&);
 
     ~B2DstMuDecayTreeProducer() {
-      cout << Form("B2DstMuDecayTreeProducer counters:%d\n", counters.size());
+      cout << Form("B2DstMuDecayTreeProducer counters:%d\n", (int)counters.size());
       for(auto v : counters) {
         cout << v << endl;
       }
