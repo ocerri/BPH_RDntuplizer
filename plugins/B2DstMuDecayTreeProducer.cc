@@ -41,8 +41,15 @@ public:
     explicit B2DstMuDecayTreeProducer(const edm::ParameterSet &iConfig);
     void AddTLVToOut(TLorentzVector, string, map<string, vector<float>>*);
     bool qualityMuonID(pat::Muon, reco::Vertex);
+    void updateCounter(int, vector<bool>&);
 
-    ~B2DstMuDecayTreeProducer() override {};
+    ~B2DstMuDecayTreeProducer() {
+      cout << "B2DstMuDecayTreeProducer counters:\n";
+      for(auto v : counters) {
+        cout << v << endl;
+      }
+      cout << "\n\n";
+    };
 
 private:
     virtual void produce(edm::Event&, const edm::EventSetup&);
@@ -60,6 +67,8 @@ private:
     double mass_B0  = 5.27963;
 
     int verbose = 0;
+
+    vector<uint> counters;
 };
 
 
@@ -73,6 +82,7 @@ B2DstMuDecayTreeProducer::B2DstMuDecayTreeProducer(const edm::ParameterSet &iCon
 
     produces<map<string, float>>("outputNtuplizer");
     produces<map<string, vector<float>>>("outputVecNtuplizer");
+    for(uint i=0; i<13; i++) counters.push_back(0);
 }
 
 
@@ -95,12 +105,15 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     int n_mu = 0, n_K = 0, n_pi = 0, n_D0 = 0, n_pis = 0, n_Dst = 0, n_B = 0;
 
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
+    vector<bool> countersFlag(counters.size(), false);
+    counters[0]++;
     for(uint i_trgMu = 0; i_trgMu < trgMuonsHandle->size(); i_trgMu++) {
       //######## Require muon quality ##################
       auto trgMu = (*trgMuonsHandle)[i_trgMu];
       if (trgMu.charge() != 1) continue;
       if (trgMu.innerTrack().isNull()) continue;
       if (fabs(trgMu.eta()) > 1.5) continue;
+      updateCounter(1, countersFlag);
 
       vector<reco::Vertex> possibleVtxs = {};
       // bool softMuForPV = false;
@@ -114,6 +127,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         }
       }
       if (possibleVtxs.size() == 0) continue;
+      updateCounter(2, countersFlag);
 
       // if (!trgMu.isSoftMuon(primaryVtx)) continue;
       n_mu++;
@@ -138,6 +152,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         auto K_norm_chi2 = K_tk->normalizedChi2();
         auto K_N_valid_hits = K_tk->numberOfValidHits();
         if (sigdxy_K_PV < __sigIPpfCand_min__) continue;
+        updateCounter(3, countersFlag);
 
         n_K++;
 
@@ -165,6 +180,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           auto pi_norm_chi2 = pi_tk->normalizedChi2();
           auto pi_N_valid_hits = pi_tk->numberOfValidHits();
           if (sigdxy_pi_PV < __sigIPpfCand_min__) continue;
+          updateCounter(4, countersFlag);
 
           n_pi++;
 
@@ -172,10 +188,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           auto D0KinTree = vtxu::FitD0(iSetup, pi, K, false);
           auto res_piK = vtxu::fitQuality(D0KinTree, __PvalChi2Vtx_min__);
           if(!res_piK.isGood) continue;
+          updateCounter(5, countersFlag);
 
           D0KinTree->movePointerToTheTop();
           auto mass_piK = D0KinTree->currentParticle()->currentState().mass();
           if (fabs(mass_piK - mass_D0) > __dmD0_max__) continue;
+          updateCounter(6, countersFlag);
 
           auto D0 = D0KinTree->currentParticle();
           auto vtxD0 = D0KinTree->currentDecayVertex();
@@ -188,6 +206,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           auto sigdxy_vtxD0_PV = dxy_vtxD0_PV.first/dxy_vtxD0_PV.second;
 
           if(sigdxy_vtxD0_PV < __sigdxy_vtx_PV_min__) continue;
+          updateCounter(7, countersFlag);
+
           n_D0++;
 
           /*
@@ -213,6 +233,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             auto pis_norm_chi2 = pis_tk->normalizedChi2();
             auto pis_N_valid_hits = pis_tk->numberOfValidHits();
             if (sigdxy_pis_PV < __sigIPpfCand_min__) continue;
+            updateCounter(8, countersFlag);
 
             n_pis++;
 
@@ -220,10 +241,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             auto DstKinTree = vtxu::FitDst(iSetup, pis, D0, false);
             auto res_D0pis = vtxu::fitQuality(DstKinTree, __PvalChi2Vtx_min__);
             if(!res_D0pis.isGood) continue;
+            updateCounter(9, countersFlag);
 
             DstKinTree->movePointerToTheTop();
             auto mass_D0pis = DstKinTree->currentParticle()->currentState().mass();
             if (fabs(mass_D0pis - mass_Dst) > __dmDst_max__) continue;
+            updateCounter(10, countersFlag);
 
             auto Dst = DstKinTree->currentParticle();
             auto vtxDst = DstKinTree->currentDecayVertex();
@@ -242,9 +265,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             auto BKinTree = vtxu::FitB_D0pismu(iSetup, D0, pis, trgMu);
             auto res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
             if(!res.isGood) continue;
+            updateCounter(11, countersFlag);
+
             BKinTree->movePointerToTheTop();
             auto mass_D0pismu = BKinTree->currentParticle()->currentState().mass();
             if (mass_D0pismu > __mass_D0pismu_max__) continue; // Last cut! from now on always save
+            updateCounter(12, countersFlag);
             if (verbose) {cout << "B->D* mu found\n";}
 
             (*outputVecNtuplizer)["chi2_D0pismu"].push_back(res.chi2);
@@ -599,6 +625,14 @@ bool B2DstMuDecayTreeProducer::qualityMuonID(pat::Muon m, reco::Vertex pVtx) {
   if (sigdxy < 2) return false;
 
   return true;
+}
+
+void B2DstMuDecayTreeProducer::updateCounter(int idx, vector<bool> &cF) {
+  if(!cF[idx]) {
+    cF[idx] = true;
+    counters[idx]++;
+  }
+  return;
 }
 
 DEFINE_FWK_MODULE(B2DstMuDecayTreeProducer);

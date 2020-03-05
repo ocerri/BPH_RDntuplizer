@@ -7,6 +7,9 @@
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/stream/EDFilter.h"
 
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 
@@ -23,6 +26,9 @@ class TriggerMuonsFilter : public edm::stream::EDFilter<> {
       explicit TriggerMuonsFilter(const edm::ParameterSet&);
       ~TriggerMuonsFilter() {
         cout << Form("Muons trigger filter efficiency: %d/%d = %1.2e", N_passed_events, N_analyzed_events, (double)N_passed_events/N_analyzed_events) << endl;
+
+        edm::Service<TFileService> fs;
+        fs->make<TNamed>("TriggerMuonsFilterEfficiency", Form("%d/%d", N_passed_events, N_analyzed_events));
       };
 
    private:

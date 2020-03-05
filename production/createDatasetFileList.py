@@ -3,7 +3,7 @@ import os
 import datetime
 from glob import glob
 
-forceMC = True
+forceMC = False
 prod_samples = yaml.load(open('samples.yml'))
 
 for k, d in prod_samples['samples'].iteritems():
@@ -53,8 +53,9 @@ for k, d in prod_samples['samples'].iteritems():
                     for line in lines:
                         if not '/191005_' in line:
                             f.write(line)
-            elif p == '/cmsMC_private/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER':
+            elif 'ocerri-BPH_Tag-B0_TauNuDmst' in p:
                 print "Removing corrupted files"
+                removed = 0
                 with open(fname, 'r') as f:
                     lines = f.readlines()
                 with open(fname, 'w') as f:
@@ -65,6 +66,8 @@ for k, d in prod_samples['samples'].iteritems():
                         condition *= not '191205_195222/0002/out_MINIAODSIM_2764.root' in line
                         if condition:
                             f.write(line)
+                        else: removed += 1
+                print 'Removed', removed
             elif p == '/cmsMC_private/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3-c21dec93027231dc6f615dfe5c662834/USER':
                 print "Removing corrupted files"
                 with open(fname, 'r') as f:
@@ -73,6 +76,15 @@ for k, d in prod_samples['samples'].iteritems():
                     for line in lines:
                         condition = not '191119_023455/0001/out_MINIAODSIM_1273.root' in line
                         condition *= not '191119_023455/0001/out_MINIAODSIM_1082.root' in line
+                        if condition:
+                            f.write(line)
+            elif p == '/cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_200117-c21dec93027231dc6f615dfe5c662834/USER':
+                print "Removing corrupted files"
+                with open(fname, 'r') as f:
+                    lines = f.readlines()
+                with open(fname, 'w') as f:
+                    for line in lines:
+                        condition = not '200118_025132/0002/out_MINIAODSIM_2393.root' in line
                         if condition:
                             f.write(line)
 
