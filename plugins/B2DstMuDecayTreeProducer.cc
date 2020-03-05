@@ -23,10 +23,10 @@
 #define __dzMax__ 1.0
 #define __dRMax__ 2.0
 #define __sigIPpfCand_min__ 2. // loose cut
-#define __PvalChi2Vtx_min__ 0.05 // loose cut
+#define __PvalChi2Vtx_min__ 0.01 // loose cut
 #define __dmD0_max__ 0.1 // loose cut
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
-#define __dmDst_max__ 0.10 // loose cut
+#define __dmDst_max__ 0.50 // loose cut
 #define __mass_D0pismu_max__ 10.0 // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
 #define __mass_D0pismupi_max__ 10.0 // Some reasonable cut on the mass
