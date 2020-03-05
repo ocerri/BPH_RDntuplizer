@@ -26,7 +26,7 @@
 #define __PvalChi2Vtx_min__ 0.05 // loose cut
 #define __dmD0_max__ 0.1 // loose cut
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
-#define __dmDst_max__ 0.050 // loose cut
+#define __dmDst_max__ 0.10 // loose cut
 #define __mass_D0pismu_max__ 10.0 // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
 #define __mass_D0pismupi_max__ 10.0 // Some reasonable cut on the mass
@@ -44,7 +44,7 @@ public:
     void updateCounter(int, vector<bool>&);
 
     ~B2DstMuDecayTreeProducer() {
-      cout << "B2DstMuDecayTreeProducer counters:\n";
+      cout << Form("B2DstMuDecayTreeProducer counters:%d\n", counters.size());
       for(auto v : counters) {
         cout << v << endl;
       }
