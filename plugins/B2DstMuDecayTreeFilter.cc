@@ -12,6 +12,9 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/StreamID.h"
 
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+
 using namespace std;
 
 class B2DstMuDecayTreeFilter : public edm::stream::EDFilter<> {
@@ -19,6 +22,9 @@ class B2DstMuDecayTreeFilter : public edm::stream::EDFilter<> {
       explicit B2DstMuDecayTreeFilter(const edm::ParameterSet&);
       ~B2DstMuDecayTreeFilter() {
         cout << Form("B2DstMuDecay filter efficiency: %d/%d = %1.2e", N_passed_events, N_analyzed_events, (double)N_passed_events/N_analyzed_events) << endl;
+
+        edm::Service<TFileService> fs;
+        fs->make<TNamed>("B2DstMuDecayFilterEfficiency", Form("%d/%d", N_passed_events, N_analyzed_events));
       };
 
    private:

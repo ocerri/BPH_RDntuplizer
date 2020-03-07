@@ -11,6 +11,10 @@
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+#include "TTree.h"
+
 #include <iostream>
 #include <string>
 #include <map>
@@ -29,7 +33,58 @@ public:
 
     explicit HammerWeightsProducer(const edm::ParameterSet &iConfig);
 
-    ~HammerWeightsProducer() override {};
+    ~HammerWeightsProducer() {
+      if(verbose) { cout << "[Hammer]: Computing rates" << endl;}
+      vector<string> processes = {"B0D*-MuNu", "B0D*-TauNu"};
+      // Getting overall rates
+      for(auto proc : processes) {
+        map<string, double> outRate;
+        if(verbose) { cout << "Process: " << proc << endl;}
+        outRate["den"] = hammer.getDenominatorRate(proc);
+        if(outRate["den"] == 0) {
+          if(verbose) { cout << "Not evaluated, skipping" << endl;}
+          continue;
+        }
+        if(verbose) { cout << Form("Denominator rate: %1.3e", outRate["den"]) << endl;}
+
+        map<string, double> settings;
+        for(auto pars: paramsCLN) {
+          string name = "delta_" + pars.first;
+          settings[name] = 0;
+        }
+        hammer.setFFEigenvectors("BtoD*", "CLNVar", settings);
+        outRate["Central"] = hammer.getRate(proc, "SchmeCLN");
+        if(verbose) { cout << Form("Central rate: %1.3e (ratio = %.3f)", outRate["Central"], outRate["Central"]/outRate["den"]) << endl;}
+
+        for(auto elem: paramsCLN) {
+          for(int i=1; i <= 2; i++) {
+            map<string, double> settings;
+            for(auto pars: paramsCLN) {
+              string name = "delta_" + pars.first;
+              if(pars.first == elem.first) {
+                settings[name] = paramsCLN[pars.first][i];
+              }
+              else settings[name] = 0;
+            }
+            hammer.setFFEigenvectors("BtoD*", "CLNVar", settings);
+            auto rate = hammer.getRate(proc, "SchmeCLN");
+            string var_name = elem.first;
+            var_name += i==1? "Up" : "Down";
+            outRate[var_name] = rate;
+            if(verbose) {cout << var_name << Form(": %1.3e", rate) << endl;}
+          }
+        }
+
+        edm::Service<TFileService> fs;
+        TTree* tree = fs->make<TTree>( "Trate", Form("Rates from Hammer for %s", proc.c_str()));
+        for(auto& kv : outRate) {
+          auto k = kv.first;
+          tree->Branch(k.c_str(), &(outRate[k]));
+        }
+        tree->Fill();
+        break;
+      }
+    };
 
 private:
 
@@ -220,6 +275,13 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     hammer.addProcess(B2DstLNu_Dst2DPi);
     hammer.processEvent();
 
+
+    map<string, double> settings;
+    for(auto pars: paramsCLN) {
+      string name = "delta_" + pars.first;
+      settings[name] = 0;
+    }
+    hammer.setFFEigenvectors("BtoD*", "CLNVar", settings);
     auto weights = hammer.getWeights("SchmeCLN");
     if(weights.empty()) return;
     else N_evets_weights_produced++;

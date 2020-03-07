@@ -12,6 +12,9 @@
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+
 #include <iostream>
 #include <string>
 #include <map>
@@ -49,6 +52,12 @@ public:
         cout << v << endl;
       }
       cout << "\n\n";
+
+      edm::Service<TFileService> fs;
+      TH1I* hCounters;
+      int nC = counters.size();
+      hCounters = fs->make<TH1I>("hB2DstMuDecayCounters", "hB2DstMuDecayCounters", nC, 0, nC);
+      for(int i=0; i < nC; i++) hCounters->SetBinContent(i+1, counters[i]);
     };
 
 private:
