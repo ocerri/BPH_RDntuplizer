@@ -27,7 +27,6 @@ class TriggerMuonsFilter : public edm::stream::EDFilter<> {
       ~TriggerMuonsFilter() {
         cout << Form("Muons trigger filter efficiency: %d/%d = %1.2e", N_passed_events, N_analyzed_events, (double)N_passed_events/N_analyzed_events) << endl;
 
-        edm::Service<TFileService> fs;
         fs->make<TNamed>("TriggerMuonsFilterEfficiency", Form("%d/%d", N_passed_events, N_analyzed_events));
       };
 
@@ -39,6 +38,10 @@ class TriggerMuonsFilter : public edm::stream::EDFilter<> {
       // ----------member data ---------------------------
       edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
       edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
+
+      edm::Service<TFileService> fs;
+      TH1I* hAllNvts;
+
       int N_analyzed_events = 0;
       int N_passed_events = 0;
       int muonCharge_ = 0;
@@ -55,6 +58,7 @@ TriggerMuonsFilter::TriggerMuonsFilter(const edm::ParameterSet& iConfig):
   produces<vector<pat::Muon>>("trgMuonsMatched");
   produces<map<string, float>>("outputNtuplizer");
   produces<map<string, vector<float>>>("outputVecNtuplizer");
+  hAllNvts = fs->make<TH1I>("hAllNvts", "Number of vertexes from all the MINIAOD events", 101, -0.5, 100.5);
 }
 
 bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -66,6 +70,7 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
   edm::Handle<vector<reco::Vertex>> vtxHandle;
   iEvent.getByToken(vtxSrc_, vtxHandle);
   auto primaryVtx = (*vtxHandle)[0];
+  hAllNvts->Fill((int)vtxHandle->size());
 
   // Output collection
   unique_ptr<vector<pat::Muon>> trgMuonsMatched( new vector<pat::Muon> );
