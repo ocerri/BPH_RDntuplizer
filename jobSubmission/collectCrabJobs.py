@@ -31,7 +31,7 @@ for dir in args.inputDir:
     outname = dlist[i_BPH+1].replace(dlist[i_BPH]+'_', '')
     outpath += '/' + outname
 
-    inputFiles = glob(dir + '*/*/*.root')
+    inputFiles = glob(dir + '*/*/*_CAND_*.root')
     print 'Files to be merged: ', len(inputFiles)
     size_bytes = 0
     for f in inputFiles:
@@ -43,7 +43,7 @@ for dir in args.inputDir:
     outpath += '_' + lbname[-2] + '.root'
     print 'Output:', outpath
 
-    cmd = 'hadd ' + outpath + ' ' + dir + '*/*/*.root'
+    cmd = 'hadd -f ' + outpath + ' ' + dir + '*/*/*_CAND_*.root'
     cmd += ' &> merge_' + dlist[i_BPH+1] + '.log &'
     print 'Running:', cmd
     os.system(cmd)
