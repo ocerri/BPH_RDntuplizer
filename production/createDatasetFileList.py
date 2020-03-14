@@ -81,7 +81,7 @@ for k, d in prod_samples['samples'].iteritems():
                         condition *= not '200225_164158/0008/out_MINIAODSIM_8664.root' in line
                         if condition:
                             f.write(line)
-            elif p == '/cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_200117-c21dec93027231dc6f615dfe5c662834/USER':
+            elif 'ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar' in p:
                 print "Removing corrupted files"
                 with open(fname, 'r') as f:
                     lines = f.readlines()

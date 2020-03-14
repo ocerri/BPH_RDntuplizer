@@ -528,6 +528,10 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
             (*outputVecNtuplizer)["mu_trgMu_idx"].push_back(i_trgMu);
             AddTLVToOut(vtxu::getTLVfromMuon(trgMu, mass_Mu), string("mu"), &(*outputVecNtuplizer));
+            GlobalPoint auxp(vtxDst->position().x(), vtxDst->position().y(), vtxDst->position().z());
+            auto dca = vtxu::computeDCA(iSetup, trgMu, auxp);
+            (*outputVecNtuplizer)["mu_dca_vtxDst"].push_back(dca.first);
+
             (*outputVecNtuplizer)["sigdxy_K_PV"].push_back(sigdxy_K_PV);
             (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
             (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
