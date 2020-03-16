@@ -115,6 +115,7 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
   if(verbose) {cout << "\nTriggered muons: " << trgMuonsMatched->size() << endl;}
 
   (*outputNtuplizer)["N_vertexes"] = vtxHandle->size();
+  if(verbose) {cout << "\nNumber of vertices: " << vtxHandle->size() << endl;}
   (*outputNtuplizer)["primaryVtx_x"] = primaryVtx.x();
   (*outputNtuplizer)["primaryVtx_y"] = primaryVtx.y();
   (*outputNtuplizer)["primaryVtx_z"] = primaryVtx.z();

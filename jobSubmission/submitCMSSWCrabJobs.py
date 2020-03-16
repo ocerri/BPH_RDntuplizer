@@ -5,8 +5,15 @@ import datetime
 
 import argparse
 
+cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
+       'B2DstK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py',
+       'B2JpsiKst': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py',
+       'CombDstMum': 'cmssw_cmsRD2018_Tag_MumDmst-pD0bar-kp.py',
+       'probeB2DstMu': 'cmssw_cmsRD2018_Probe_B0_MuDmst.py'
+       }
+
 parser = argparse.ArgumentParser()
-parser.add_argument ('tag', type=str, choices=['B2DstMu', 'B2DstK', 'B2JpsiKst', 'CombDstMum'], help='Tag identifying the production')
+parser.add_argument ('tag', type=str, choices=cfg.keys(), help='Tag identifying the production')
 
 parser.add_argument ('-e', '--eras', type=str, default=['A', 'B', 'C', 'D'], help='Eras to run on', nargs='+')
 parser.add_argument ('-p', '--parts', type=int, default=[1, 2, 3, 4, 5, 6], help='Parts to run on', nargs='+')
@@ -15,12 +22,6 @@ parser.add_argument ('--wait', default=False, action='store_true')
 args = parser.parse_args()
 
 tag = args.tag
-
-cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
-       'B2DstK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py',
-       'B2JpsiKst': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py',
-       'CombDstMum': 'cmssw_cmsRD2018_Tag_MumDmst-pD0bar-kp.py'
-       }
 
 date = datetime.datetime.today()
 date_str = '{}{:02}{:02}'.format(date.year%100, date.month, date.day)
@@ -69,6 +70,7 @@ config.General.transferLogs = False
     fout.write('\n')
     fout.write("config.Data.unitsPerJob = {}".format(60*int(settings['common']['data']['unitsPerJob'])))
     fout.write('\n')
+    
     fout.write("config.Data.publishDBS = 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter/'")
     fout.write('\n')
     fout.write("config.Data.splitting = 'Automatic'")
