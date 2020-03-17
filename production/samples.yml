@@ -150,9 +150,11 @@ samples:
     parts:
       - /storage/user/ocerri/BPhysics/data/cmsMC_private/BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3/jobs_out/out_MINIAODSIM_*.root
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200314-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200315-c21dec93027231dc6f615dfe5c662834/USER
 
   p_B0_TauNuDst_PUc0:
     dataset: BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
       - /storage/user/ocerri/BPhysics/data/cmsMC_private/BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3/jobs_out/out_MINIAODSIM_*.root
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200314-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200315-c21dec93027231dc6f615dfe5c662834/USER
