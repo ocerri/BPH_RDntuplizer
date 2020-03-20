@@ -27,12 +27,12 @@
 #define __dRMax__ 2.0
 #define __sigIPpfCand_min__ 2. // loose cut
 #define __PvalChi2Vtx_min__ 0.05 // loose cut
-#define __dmD0_max__ 0.1 // loose cut
+#define __dmD0_max__ 0.5 // loose cut
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
-#define __dmDst_max__ 0.050 // loose cut
-#define __mass_D0pismu_max__ 10.0 // Some reasonable cut on the mass
+#define __dmDst_max__ 0.5 // loose cut
+#define __mass_D0pismu_max__ 50. // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
-#define __mass_D0pismupi_max__ 10.0 // Some reasonable cut on the mass
+#define __mass_D0pismupi_max__ 20. // Some reasonable cut on the mass
 
 
 using namespace std;
@@ -68,6 +68,11 @@ private:
     edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
     edm::EDGetTokenT<vector<pat::Muon>> TrgMuonSrc_;
 
+    int charge_muon = +1;
+    int charge_K = +1;
+    int charge_pi = -1;
+    int charge_pis = -1;
+
     double mass_Mu  = 0.10565;
     double mass_pi  = 0.13957;
     double mass_K   = 0.49367;
@@ -84,10 +89,22 @@ private:
 
 B2DstMuDecayTreeProducer::B2DstMuDecayTreeProducer(const edm::ParameterSet &iConfig)
 {
-    verbose = iConfig.getParameter<int>( "verbose" );
     PFCandSrc_ = consumes<vector<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"));
     vtxSrc_ = consumes<vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"));
     TrgMuonSrc_ = consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "trgMuons" ) );
+
+    charge_muon = iConfig.getParameter<int>( "charge_muon" );
+    charge_K = iConfig.getParameter<int>( "charge_K" );
+    charge_pi = iConfig.getParameter<int>( "charge_pi" );
+    charge_pis = iConfig.getParameter<int>( "charge_pis" );
+
+    cout << "charge_muon " << charge_muon << endl;
+    cout << "charge_K " << charge_K << endl;
+    cout << "charge_pi " << charge_pi << endl;
+    cout << "charge_pis " << charge_pis << endl;
+
+    verbose = iConfig.getParameter<int>( "verbose" );
+
 
     produces<map<string, float>>("outputNtuplizer");
     produces<map<string, vector<float>>>("outputVecNtuplizer");
@@ -119,7 +136,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     for(uint i_trgMu = 0; i_trgMu < trgMuonsHandle->size(); i_trgMu++) {
       //######## Require muon quality ##################
       auto trgMu = (*trgMuonsHandle)[i_trgMu];
-      if (trgMu.charge() != 1) continue;
+      if (trgMu.charge() != charge_muon) continue;
       if (trgMu.innerTrack().isNull()) continue;
       if (fabs(trgMu.eta()) > 1.5) continue;
       updateCounter(1, countersFlag);
@@ -148,8 +165,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       for(uint i_K = 0; i_K < N_pfCand; ++i_K) {
         const pat::PackedCandidate & K = (*pfCandHandle)[i_K];
         if (!K.hasTrackDetails()) continue;
-        //Require a positive charged hadron
-        if (K.pdgId() != 211 ) continue;
+        if (K.pdgId() != charge_K*211 ) continue;
         if (K.pt() < __pThad_min__) continue;
         // Require to be close to the trigger muon;
         auto K_tk = K.bestTrack();
@@ -175,8 +191,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
           const pat::PackedCandidate & pi = (*pfCandHandle)[i_pi];
           if (!pi.hasTrackDetails()) continue;
-          //Require a negative charged hadron
-          if (pi.pdgId() != -211 ) continue;
+          if (pi.pdgId() != charge_pi*211 ) continue;
           //Require a minimum pt
           if(pi.pt() < __pThad_min__) continue;
           // Require to be close to the trigger muon;
@@ -229,9 +244,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
             const pat::PackedCandidate & pis = (*pfCandHandle)[i_pis];
             if (!pis.hasTrackDetails()) continue;
-            //Require a negative charged hadron
-            if (pis.pdgId() != -211 ) continue;
-
+            if (pis.pdgId() != charge_pis*211 ) continue;
             // Require to be close to the trigger muon;
             auto pis_tk = pis.bestTrack();
             if (fabs(pis_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;

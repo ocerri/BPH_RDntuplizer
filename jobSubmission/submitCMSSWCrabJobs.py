@@ -8,7 +8,8 @@ import argparse
 cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
        'B2DstK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_KDmst-pD0bar-kp.py',
        'B2JpsiKst': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py',
-       'CombDstMum': 'cmssw_cmsRD2018_Tag_MumDmst-pD0bar-kp.py',
+       'combDmstMum': 'cmssw_cmsRD2018_Tag_MumDmst-pD0bar-kp.py',
+       'combMupPipD0bar': 'cmssw_cmsRD2018_Tag_MupPipD0bar.py',
        'probeB2DstMu': 'cmssw_cmsRD2018_Probe_B0_MuDmst.py'
        }
 
@@ -70,7 +71,7 @@ config.General.transferLogs = False
     fout.write('\n')
     fout.write("config.Data.unitsPerJob = {}".format(60*int(settings['common']['data']['unitsPerJob'])))
     fout.write('\n')
-    
+
     fout.write("config.Data.publishDBS = 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter/'")
     fout.write('\n')
     fout.write("config.Data.splitting = 'Automatic'")

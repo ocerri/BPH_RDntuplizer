@@ -48,7 +48,7 @@ else:
     fdefault += 'inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:10]
+    flist = flist[:5]
 
 print 'Trying to get a local copy'
 for i in range(len(flist)):
@@ -74,9 +74,9 @@ if args.useLocalLumiList:
 #####################   Output   ###################
 '''
 if args.outputFile == '.root':
-    outname = 'CombDstMum_CAND.root'
+    outname = 'combDmstMum_CAND.root'
 elif args.outputFile.startswith('_numEvent'):
-    outname = 'CombDstMum_CAND' + args.outputFile
+    outname = 'combDmstMum_CAND' + args.outputFile
 else:
     outname = args.outputFile
 
@@ -91,22 +91,18 @@ process.TFileService = cms.Service("TFileService",
 #################   Sequence    ####################
 '''
 
-process.trgBPH = cms.EDProducer("BPHTriggerPathProducer",
-        muonCollection = cms.InputTag("slimmedMuons","", ""),
-        vertexCollection = cms.InputTag("offlineSlimmedPrimaryVertices","", ""),
-        triggerObjects = cms.InputTag("slimmedPatTrigger"),
-        triggerBits = cms.InputTag("TriggerResults","","HLT"),
+process.trgF = cms.EDFilter("TriggerMuonsFilter",
         muon_charge = cms.int32(-1),
         verbose = cms.int32(0)
 )
 
-process.trgF = cms.EDFilter("BPHTriggerPathFilter",
-        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", "")
-)
-
 
 process.B2MuDstDT = cms.EDProducer("B2DstMuDecayTreeProducer",
-        trgMuons = cms.InputTag("trgBPH","trgMuonsMatched", ""),
+        trgMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
+        charge_muon = cms.int32(-1),
+        charge_K = cms.int32(+1),
+        charge_pi = cms.int32(-1),
+        charge_pis = cms.int32(-1),
         verbose = cms.int32(0)
 )
 
@@ -126,7 +122,6 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 
 
 process.p = cms.Path(
-                    process.trgBPH +
                     process.trgF +
                     process.B2MuDstDT +
                     process.B2MuDstDTFilter+
