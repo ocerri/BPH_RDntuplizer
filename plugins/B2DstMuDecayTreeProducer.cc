@@ -27,12 +27,12 @@
 #define __dRMax__ 2.0
 #define __sigIPpfCand_min__ 2. // loose cut
 #define __PvalChi2Vtx_min__ 0.05 // loose cut
-#define __dmD0_max__ 0.5 // loose cut
+#define __dmD0_max__ 0.7 // loose cut
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
 #define __dmDst_max__ 0.5 // loose cut
 #define __mass_D0pismu_max__ 50. // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
-#define __mass_D0pismupi_max__ 20. // Some reasonable cut on the mass
+#define __mass_D0pismupi_max__ 10. // Some reasonable cut on the mass
 
 
 using namespace std;
@@ -47,6 +47,7 @@ public:
     void updateCounter(int, vector<bool>&);
 
     ~B2DstMuDecayTreeProducer() {
+      cout << Form("Total number of fit crashed %u", fitCrash) << endl;
       cout << Form("B2DstMuDecayTreeProducer counters:%d\n", (int)counters.size());
       for(auto v : counters) {
         cout << v << endl;
@@ -83,6 +84,7 @@ private:
     int verbose = 0;
 
     vector<uint> counters;
+    uint fitCrash = 0;
 };
 
 
@@ -97,11 +99,6 @@ B2DstMuDecayTreeProducer::B2DstMuDecayTreeProducer(const edm::ParameterSet &iCon
     charge_K = iConfig.getParameter<int>( "charge_K" );
     charge_pi = iConfig.getParameter<int>( "charge_pi" );
     charge_pis = iConfig.getParameter<int>( "charge_pis" );
-
-    cout << "charge_muon " << charge_muon << endl;
-    cout << "charge_K " << charge_K << endl;
-    cout << "charge_pi " << charge_pi << endl;
-    cout << "charge_pis " << charge_pis << endl;
 
     verbose = iConfig.getParameter<int>( "verbose" );
 
@@ -178,7 +175,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         auto K_N_valid_hits = K_tk->numberOfValidHits();
         if (sigdxy_K_PV < __sigIPpfCand_min__) continue;
         updateCounter(3, countersFlag);
-
+        if (verbose) {cout << Form("K%s found at %u\n", charge_K>0?"+":"-", i_K);}
         n_K++;
 
         /*
@@ -205,18 +202,20 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           auto pi_N_valid_hits = pi_tk->numberOfValidHits();
           if (sigdxy_pi_PV < __sigIPpfCand_min__) continue;
           updateCounter(4, countersFlag);
-
+          if (verbose) {cout << Form("pi%s found at %u\n", charge_pi>0?"+":"-", i_pi);}
           n_pi++;
 
           //Fit the vertex
           auto D0KinTree = vtxu::FitD0(iSetup, pi, K, false);
           auto res_piK = vtxu::fitQuality(D0KinTree, __PvalChi2Vtx_min__);
           if(!res_piK.isGood) continue;
+          if (verbose) {cout << "pi-K vertex fit good\n";}
           updateCounter(5, countersFlag);
 
           D0KinTree->movePointerToTheTop();
           auto mass_piK = D0KinTree->currentParticle()->currentState().mass();
           if (fabs(mass_piK - mass_D0) > __dmD0_max__) continue;
+          if (verbose) {cout << "pi-K mass cut passed\n";}
           updateCounter(6, countersFlag);
 
           auto D0 = D0KinTree->currentParticle();
@@ -230,8 +229,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           auto sigdxy_vtxD0_PV = dxy_vtxD0_PV.first/dxy_vtxD0_PV.second;
 
           if(sigdxy_vtxD0_PV < __sigdxy_vtx_PV_min__) continue;
+          if (verbose) {cout << "pi-K vertex displacement passed\n";}
           updateCounter(7, countersFlag);
-
+          if (verbose) {cout << "D0 candidate\n";}
           n_D0++;
 
           /*
@@ -256,13 +256,22 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             auto pis_N_valid_hits = pis_tk->numberOfValidHits();
             if (sigdxy_pis_PV < __sigIPpfCand_min__) continue;
             updateCounter(8, countersFlag);
-
+            if (verbose) {cout << Form("pis%s found at %u\n", charge_pis>0?"+":"-", i_pis);}
             n_pis++;
 
             // Fit the Dst vertex
-            auto DstKinTree = vtxu::FitDst(iSetup, pis, D0, false);
+            RefCountedKinematicTree DstKinTree;
+            // try {
+            DstKinTree = vtxu::FitDst(iSetup, pis, D0, false);
+            // }
+            // catch(...) {
+            //   if (verbose) {cout << "Fit crushed...\n";}
+            //   fitCrash++;
+            //   continue;
+            // }
             auto res_D0pis = vtxu::fitQuality(DstKinTree, __PvalChi2Vtx_min__);
             if(!res_D0pis.isGood) continue;
+            if (verbose) {cout << "D0-pis vertex fit good\n";}
             updateCounter(9, countersFlag);
 
             DstKinTree->movePointerToTheTop();

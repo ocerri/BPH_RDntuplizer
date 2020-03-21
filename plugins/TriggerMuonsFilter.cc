@@ -63,6 +63,7 @@ TriggerMuonsFilter::TriggerMuonsFilter(const edm::ParameterSet& iConfig):
 
 bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   N_analyzed_events++;
+  if (verbose) {cout << "Event " << N_analyzed_events << endl;}
 
   edm::Handle<vector<pat::Muon>> muonHandle;
   iEvent.getByToken(muonSrc_, muonHandle);
