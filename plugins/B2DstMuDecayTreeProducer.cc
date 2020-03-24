@@ -30,7 +30,7 @@
 #define __dmD0_max__ 0.7 // loose cut
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
 #define __dmDst_max__ 0.5 // loose cut
-#define __mass_D0pismu_max__ 50. // Some reasonable cut on the mass
+#define __mass_D0pismu_max__ 1000. // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
 #define __mass_D0pismupi_max__ 10. // Some reasonable cut on the mass
 
