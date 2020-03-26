@@ -27,7 +27,7 @@
 #define __dRMax__ 2.0
 #define __sigIPpfCand_min__ 2. // loose cut
 #define __PvalChi2Vtx_min__ 0.05 // loose cut
-#define __dmD0_max__ 0.7 // loose cut
+#define __dmD0_max__ 0.5 // loose cut
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
 #define __dmDst_max__ 0.5 // loose cut
 #define __mass_D0pismu_max__ 1000. // Some reasonable cut on the mass
@@ -45,6 +45,7 @@ public:
     void AddTLVToOut(TLorentzVector, string, map<string, vector<float>>*);
     bool qualityMuonID(pat::Muon, reco::Vertex);
     void updateCounter(int, vector<bool>&);
+    double Mass_varM(TLorentzVector, double, TLorentzVector, double);
 
     ~B2DstMuDecayTreeProducer() {
       cout << Form("Total number of fit crashed %u", fitCrash) << endl;
@@ -575,11 +576,15 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["mass_piK"].push_back(mass_piK);
             AddTLVToOut(vtxu::getTLVfromKinPart(D0), string("D0"), &(*outputVecNtuplizer));
             D0KinTree->movePointerToTheFirstChild();
-            auto refit_K = D0KinTree->currentParticle();
-            AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("K_refitpiK"), &(*outputVecNtuplizer));
+            auto refit_K = vtxu::getTLVfromKinPart(D0KinTree->currentParticle());
+            AddTLVToOut(refit_K, string("K_refitpiK"), &(*outputVecNtuplizer));
             D0KinTree->movePointerToTheNextChild();
-            auto refit_pi = D0KinTree->currentParticle();
-            AddTLVToOut(vtxu::getTLVfromKinPart(refit_pi), string("pi_refitpiK"), &(*outputVecNtuplizer));
+            auto refit_pi = vtxu::getTLVfromKinPart(D0KinTree->currentParticle());
+            AddTLVToOut(refit_pi, string("pi_refitpiK"), &(*outputVecNtuplizer));
+            (*outputVecNtuplizer)["mass_piK_hKK"].push_back(Mass_varM(refit_pi, mass_K, refit_K, mass_K));
+            (*outputVecNtuplizer)["mass_piK_hpipi"].push_back(Mass_varM(refit_pi, mass_pi, refit_K, mass_pi));
+            (*outputVecNtuplizer)["mass_piK_hKpi"].push_back(Mass_varM(refit_pi, mass_K, refit_K, mass_pi));
+            
             (*outputVecNtuplizer)["cos_D0_PV"].push_back(cos_D0_PV);
             (*outputVecNtuplizer)["cosT_D0_PV"].push_back(cosT_D0_PV);
             (*outputVecNtuplizer)["d_vtxD0_PV"].push_back(d_vtxD0_PV.first);
@@ -668,6 +673,16 @@ void B2DstMuDecayTreeProducer::updateCounter(int idx, vector<bool> &cF) {
     counters[idx]++;
   }
   return;
+}
+
+double B2DstMuDecayTreeProducer::Mass_varM(TLorentzVector p1, double m1, TLorentzVector p2, double m2){
+    double E1 = hypot(m1, p1.P());
+    double E2 = hypot(m2, p2.P());
+    double p1p2 = p1.Pt()*p2.Pt();
+    p1p2 *= cos(p1.Phi() - p2.Phi()) + sinh(p1.Eta())*sinh(p2.Eta());
+
+    double M = m1*m1 + m2*m2 + 2*(E1*E2 - p1p2);
+    return sqrt(M);
 }
 
 DEFINE_FWK_MODULE(B2DstMuDecayTreeProducer);
