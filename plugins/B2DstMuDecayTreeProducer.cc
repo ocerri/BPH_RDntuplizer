@@ -465,6 +465,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             uint N_compatible_tk = 0;
             vector<double> tksAdd_massHad = {};
             vector<double> tksAdd_massVis = {};
+            vector<double> tksAdd_massMuTk = {};
             vector<double> tksAdd_pval = {};
             vector<double> tksAdd_pt = {};
             vector<double> tksAdd_sigdca_vtxB = {};
@@ -499,21 +500,20 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               if (m_vis > __mass_D0pismupi_max__) continue;
 
               kinTree->movePointerToTheFirstChild();
-              auto refit_D0 = kinTree->currentParticle();
+              auto refit_D0 = vtxu::getTLVfromKinPart(kinTree->currentParticle());
               kinTree->movePointerToTheNextChild();
-              auto refit_pis = kinTree->currentParticle();
+              auto refit_pis = vtxu::getTLVfromKinPart(kinTree->currentParticle());
               kinTree->movePointerToTheNextChild();
-              auto refit_mu = kinTree->currentParticle();
+              auto refit_mu = vtxu::getTLVfromKinPart(kinTree->currentParticle());
               kinTree->movePointerToTheNextChild();
-              auto refit_pi = kinTree->currentParticle();
+              auto refit_pi = vtxu::getTLVfromKinPart(kinTree->currentParticle());
 
-              auto p4_D0pispi = vtxu::getTLVfromKinPart(refit_pis) + vtxu::getTLVfromKinPart(refit_D0) + vtxu::getTLVfromKinPart(refit_pi);
-              auto m_D0pispi = p4_D0pispi.M();
-
-
+              auto m_D0pispi = (refit_pis + refit_D0 + refit_pi).M();
+              auto m_MuTk = (refit_pi + refit_mu).M();
 
               tksAdd_massVis.push_back(m_vis);
               tksAdd_massHad.push_back(m_D0pispi);
+              tksAdd_massMuTk.push_back(m_MuTk);
               tksAdd_pval.push_back(res.pval);
               tksAdd_pt.push_back(ptk.pt());
               tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
@@ -523,6 +523,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             if ( (*outputVecNtuplizer)["nTksAdd"].size() == 0 ) {
               (*outputVecNtuplizer)["tksAdd_massVis"] = {};
               (*outputVecNtuplizer)["tksAdd_massHad"] = {};
+              (*outputVecNtuplizer)["tksAdd_massMuTk"] = {};
               (*outputVecNtuplizer)["tksAdd_pval"] = {};
               (*outputVecNtuplizer)["tksAdd_pt"] = {};
               (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
@@ -533,6 +534,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             for(uint i = 0; i < N_compatible_tk; i++){
               (*outputVecNtuplizer)["tksAdd_massVis"].push_back(tksAdd_massVis[i]);
               (*outputVecNtuplizer)["tksAdd_massHad"].push_back(tksAdd_massHad[i]);
+              (*outputVecNtuplizer)["tksAdd_massMuTk"].push_back(tksAdd_massMuTk[i]);
               (*outputVecNtuplizer)["tksAdd_pval"].push_back(tksAdd_pval[i]);
               (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
               (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
@@ -584,7 +586,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["mass_piK_hKK"].push_back(Mass_varM(refit_pi, mass_K, refit_K, mass_K));
             (*outputVecNtuplizer)["mass_piK_hpipi"].push_back(Mass_varM(refit_pi, mass_pi, refit_K, mass_pi));
             (*outputVecNtuplizer)["mass_piK_hKpi"].push_back(Mass_varM(refit_pi, mass_K, refit_K, mass_pi));
-            
+
             (*outputVecNtuplizer)["cos_D0_PV"].push_back(cos_D0_PV);
             (*outputVecNtuplizer)["cosT_D0_PV"].push_back(cosT_D0_PV);
             (*outputVecNtuplizer)["d_vtxD0_PV"].push_back(d_vtxD0_PV.first);
