@@ -506,10 +506,11 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               kinTree->movePointerToTheNextChild();
               auto refit_mu = vtxu::getTLVfromKinPart(kinTree->currentParticle());
               kinTree->movePointerToTheNextChild();
-              auto refit_pi = vtxu::getTLVfromKinPart(kinTree->currentParticle());
+              auto refit_pi = kinTree->currentParticle();
+              auto refit_pi_p4 = vtxu::getTLVfromKinPart(refit_pi);
 
-              auto m_D0pispi = (refit_pis + refit_D0 + refit_pi).M();
-              auto m_MuTk = (refit_pi + refit_mu).M();
+              auto m_D0pispi = (refit_pis + refit_D0 + refit_pi_p4).M();
+              auto m_MuTk = (refit_pi_p4 + refit_mu).M();
 
               tksAdd_massVis.push_back(m_vis);
               tksAdd_massHad.push_back(m_D0pispi);
