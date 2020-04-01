@@ -44,7 +44,7 @@ for dir in args.inputDir:
     print 'Output:', outpath
 
     cmd = 'hadd -f ' + outpath + ' ' + dir + '*/*/*_CAND_*.root'
-    cmd += ' &> merge_' + dlist[i_BPH+1] + '.log &; echo DONE'
+    cmd += ' &> merge_' + dlist[i_BPH+1] + '.log &'
     print 'Running:', cmd
     os.system(cmd)
     print 20*'#' + 50*'-' + 20*'#' + '\n\n'

@@ -27,9 +27,9 @@
 #define __dRMax__ 2.0
 #define __sigIPpfCand_min__ 2. // loose cut
 #define __PvalChi2Vtx_min__ 0.05 // loose cut
-#define __dmD0_max__ 0.5 // loose cut
+#define __dmD0_max__ 0.15 // loose cut
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
-#define __dmDst_max__ 0.5 // loose cut
+#define __dmDst_max__ 0.15 // loose cut
 #define __mass_D0pismu_max__ 1000. // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
 #define __mass_D0pismupi_max__ 10. // Some reasonable cut on the mass
@@ -468,6 +468,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             vector<double> tksAdd_massMuTk = {};
             vector<double> tksAdd_pval = {};
             vector<double> tksAdd_pt = {};
+            vector<double> tksAdd_eta = {};
+            vector<double> tksAdd_phi = {};
             vector<double> tksAdd_sigdca_vtxB = {};
             vector<double> tksAdd_cos_PV = {};
             if(verbose) {cout << "Looking for additional tracks" << endl;}
@@ -516,7 +518,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               tksAdd_massHad.push_back(m_D0pispi);
               tksAdd_massMuTk.push_back(m_MuTk);
               tksAdd_pval.push_back(res.pval);
-              tksAdd_pt.push_back(ptk.pt());
+              tksAdd_pt.push_back(refit_pi_p4.Pt());
+              tksAdd_eta.push_back(refit_pi_p4.Eta());
+              tksAdd_phi.push_back(refit_pi_p4.Phi());
               tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
               tksAdd_cos_PV.push_back(vtxu::computePointingCos(bestVtx, vtxB, refit_pi));
               N_compatible_tk++;
@@ -527,6 +531,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_massMuTk"] = {};
               (*outputVecNtuplizer)["tksAdd_pval"] = {};
               (*outputVecNtuplizer)["tksAdd_pt"] = {};
+              (*outputVecNtuplizer)["tksAdd_eta"] = {};
+              (*outputVecNtuplizer)["tksAdd_phi"] = {};
               (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
               (*outputVecNtuplizer)["tksAdd_cos_PV"] = {};
             }
@@ -538,6 +544,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_massMuTk"].push_back(tksAdd_massMuTk[i]);
               (*outputVecNtuplizer)["tksAdd_pval"].push_back(tksAdd_pval[i]);
               (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
+              (*outputVecNtuplizer)["tksAdd_eta"].push_back(tksAdd_eta[i]);
+              (*outputVecNtuplizer)["tksAdd_phi"].push_back(tksAdd_phi[i]);
               (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
               (*outputVecNtuplizer)["tksAdd_cos_PV"].push_back(tksAdd_cos_PV[i]);
             }
