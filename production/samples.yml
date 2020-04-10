@@ -144,6 +144,11 @@ samples:
       - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_191202-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_200117-c21dec93027231dc6f615dfe5c662834/USER
 
+  B0_DmstHc_PUc0:
+    dataset: BP_Tag_B0_DmstHc_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DmstHc_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+
   Bp_MuNuDstst_PU0:
     dataset: BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU0_10-2-3
     parts:
@@ -155,6 +160,11 @@ samples:
       - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191202-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200117-c21dec93027231dc6f615dfe5c662834/USER
 
+  Bp_MuNuDstst_PUc0:
+    dataset: BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200327-c21dec93027231dc6f615dfe5c662834/USER
+
 ##### Probe side samples ##########
   p_B0_MuNuDst_PUc0:
     dataset: BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
@@ -163,9 +173,29 @@ samples:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200314-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200315-c21dec93027231dc6f615dfe5c662834/USER
 
+  p_B0_MuNuDst_PUc1:
+    dataset: BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc1_10-2-3
+    parts:
+      - /cmsMC_private_PUc1_10-2-3/ocerri-BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+
   p_B0_TauNuDst_PUc0:
     dataset: BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
       - /storage/user/ocerri/BPhysics/data/cmsMC_private/BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3/jobs_out/out_MINIAODSIM_*.root
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200314-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200315-c21dec93027231dc6f615dfe5c662834/USER
+
+  p_B0_TauNuDst_PUc1:
+    dataset: BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc1_10-2-3
+    parts:
+      - /cmsMC_private_PUc1_10-2-3/ocerri-BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+
+  p_B0_DmstHc_PUc1:
+    dataset: BP_Probe_B0_DmstHc_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc1_10-2-3
+    parts:
+      - /cmsMC_private_PUc1_10-2-3/ocerri-BP_Probe_B0_DmstHc_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+
+  p_Bp_MuNuDstst_PUc1:
+    dataset: BP_Probe_Bp_MuNuDstst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc1_10-2-3
+    parts:
+      - /cmsMC_private_PUc1_10-2-3/ocerri-BP_Probe_Bp_MuNuDstst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200327-c21dec93027231dc6f615dfe5c662834/USER

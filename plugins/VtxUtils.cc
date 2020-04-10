@@ -47,13 +47,13 @@ using namespace std;
 #define _KstMass_ 0.89166
 #define _KstMassErr_ 0.00011
 #define _PhiMass_ 1.020
-#define _D0Mass_ 1.86484
+#define _D0Mass_ 1.86483
 #define _D0MassErr_ 0.00017
-#define _DstMass_ 2.01027
+#define _DstMass_ 2.01026
 #define _DstMassErr_ 0.00017
-#define _JpsiMass_ 3.09691
+#define _JpsiMass_ 3.096916
 #define _JpsiMassErr_ 0.00001
-#define _B0Mass_ 5.27955
+#define _B0Mass_ 5.27963
 #define _B0MassErr_ 0.00026
 
 RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constraint) {

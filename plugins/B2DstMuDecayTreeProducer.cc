@@ -75,9 +75,9 @@ private:
     int charge_pi = -1;
     int charge_pis = -1;
 
-    double mass_Mu  = 0.10565;
-    double mass_pi  = 0.13957;
-    double mass_K   = 0.49367;
+    double mass_Mu  = 0.105658;
+    double mass_pi  = 0.139570;
+    double mass_K   = 0.493677;
     double mass_D0  = 1.86483;
     double mass_Dst = 2.01026;
     double mass_B0  = 5.27963;
