@@ -2,7 +2,7 @@ common:
   data:
     lumimask : https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions18/13TeV/ReReco/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt
     globaltag: 102X_dataRun2_v11
-    unitsPerJob: 8 #If Automatic represent target runtime in hours
+    unitsPerJob: 12 #If Automatic represent target runtime in hours
     # maxRunTime: 14 #in hours (unused in Automatic)
   mc:
     splitting: 1
@@ -100,6 +100,8 @@ samples:
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200325-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200408-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200411-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_MuNuDmst_HQETcentral_PU0:
     dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3

@@ -103,7 +103,6 @@ B2DstMuDecayTreeProducer::B2DstMuDecayTreeProducer(const edm::ParameterSet &iCon
 
     verbose = iConfig.getParameter<int>( "verbose" );
 
-
     produces<map<string, float>>("outputNtuplizer");
     produces<map<string, vector<float>>>("outputVecNtuplizer");
     for(uint i=0; i<13; i++) counters.push_back(0);
