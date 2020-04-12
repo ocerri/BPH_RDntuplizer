@@ -97,6 +97,7 @@ process.trgF = cms.EDFilter("TriggerMuonsFilter",
 )
 
 process.B2MuDstDT = cms.EDProducer("TagAndProbeB2DstPiProducer",
+        trgMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
         charge_K = cms.int32(+1),
         charge_pi = cms.int32(-1),
         charge_pih = cms.int32(+1),
