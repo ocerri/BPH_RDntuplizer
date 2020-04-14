@@ -7,6 +7,7 @@ import argparse
 #Example: python submitCMSSWCrabJobs.py B2DstMu -e D C
 cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
        'combDmstMum': 'cmssw_cmsRD2018_Tag_MumDmst-pD0bar-kp.py',
+       'TagAndProbe_B2DstPi': 'cmssw_cmsRD2018_TagAndProbe_B0_Dmstpi.py',
        'B2JpsiKst': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py',
        # 'probeB2DstMu': 'cmssw_cmsRD2018_Probe_B0_MuDmst.py'
        }
