@@ -5,6 +5,7 @@ import humanfriendly
 
 parser = argparse.ArgumentParser()
 parser.add_argument ('inputDir', help='list of directories', nargs='+')
+parser.add_argument ('-k', '--keepGoing', help='Skip corrupted files', action='store_true')
 args = parser.parse_args()
 # example: python collectCrabJobs.py /mnt/hadoop/store/user/ocerri/ParkingBPH*/ParkingBPH*_Run2018D-*_RDntuplizer_B2JpsiKst_200123
 
@@ -43,7 +44,10 @@ for dir in args.inputDir:
     outpath += '_' + lbname[-2] + '.root'
     print 'Output:', outpath
 
-    cmd = 'hadd -f ' + outpath + ' ' + dir + '*/*/*_CAND_*.root'
+    cmd = 'hadd -f '
+    if args.keepGoing:
+        cmd += '-k '
+    cmd += outpath + ' ' + dir + '*/*/*_CAND_*.root'
     cmd += ' &> merge_' + dlist[i_BPH+1] + '.log &'
     print 'Running:', cmd
     os.system(cmd)

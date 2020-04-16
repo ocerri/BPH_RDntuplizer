@@ -30,7 +30,7 @@
 #define __sigIPpfCand_min__ 2. // loose cut
 #define __PvalChi2Vtx_min__ 0.05 // loose cut
 #define __dmD0_max__ 0.05 // loose cut
-#define __sigdxy_vtx_PV_min__ 2.0 // loose cut
+#define __sigdxy_vtx_PV_min__ 3.0 // loose cut
 #define __dmDst_max__ 0.050 // loose cut
 #define __mass_D0pismu_max__ 10.0 // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
@@ -244,7 +244,7 @@ void TagAndProbeB2DstPiProducer::produce(edm::Event& iEvent, const edm::EventSet
           //Require a positive charged hadron
           if (pih.pdgId() != charge_pih*211 ) continue;
           //Require a minimum pt
-          if(pih.pt() < 6.5) continue;
+          if(pih.pt() < 5) continue;
 
           auto pih_tk = pih.bestTrack();
           if (fabs(pih_tk->dz(primaryVtx.position()) - K_tk->dz(primaryVtx.position())) > __dzMax__) continue;
@@ -279,7 +279,7 @@ void TagAndProbeB2DstPiProducer::produce(edm::Event& iEvent, const edm::EventSet
 
           auto p4_D0pih_scaledDst = p4_exp_Dst + p4_refit_pih;
           auto mass_D0pih_scaledDst = p4_D0pih_scaledDst.M();
-          if (mass_D0pih_scaledDst < 4.) continue;
+          if (mass_D0pih_scaledDst < 4.3) continue;
           if (mass_D0pih_scaledDst > 7.) continue;
           updateCounter(9, countersFlag);
 
@@ -306,6 +306,7 @@ void TagAndProbeB2DstPiProducer::produce(edm::Event& iEvent, const edm::EventSet
 
           if(cos_D0pih_PV < 0.9) continue;
           n_B++;
+
           if (verbose) {cout << "B->D* pi candidate found\n";}
           updateCounter(10, countersFlag);
 
@@ -361,6 +362,43 @@ void TagAndProbeB2DstPiProducer::produce(edm::Event& iEvent, const edm::EventSet
           AddTLVToOut(p4_D0pih_scaledDst, string("D0pih_sDst"), &(*outputVecNtuplizer));
           AddTLVToOut(vtxu::getTLVfromKinPart(D0pih), string("D0pih"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["dphi_trgMu_D0pih_sDst"].push_back(vtxu::dPhi(trgMu.phi(), p4_D0pih_scaledDst.Phi()));
+
+          auto D0pihKinTree_wD0mass = vtxu::FitDst_fitD0wMassConstraint(iSetup, pih, pi, K, false, 0);
+          auto res_D0pih_wD0mass = vtxu::fitQuality(D0pihKinTree_wD0mass, __PvalChi2Vtx_min__);
+          if(res_D0pih_wD0mass.isGood) {
+            (*outputVecNtuplizer)["chi2_D0pih_wD0mass"].push_back(res_D0pih_wD0mass.chi2);
+            (*outputVecNtuplizer)["dof_D0pih_wD0mass"].push_back(res_D0pih_wD0mass.dof);
+            (*outputVecNtuplizer)["pval_D0pih_wD0mass"].push_back(res_D0pih_wD0mass.pval);
+
+            D0pihKinTree_wD0mass->movePointerToTheFirstChild();
+            auto refit_pih = D0pihKinTree_wD0mass->currentParticle();
+            auto p4_refit_pih = vtxu::getTLVfromKinPart(refit_pih);
+            D0pihKinTree_wD0mass->movePointerToTheNextChild();
+            auto refit_D0 = D0pihKinTree_wD0mass->currentParticle();
+            auto p4_refit_D0 = vtxu::getTLVfromKinPart(refit_D0);
+
+            double exp_pt = (mass_Dst/mass_D0)*p4_refit_D0.Pt();
+            double exp_M = mass_piK + (mass_Dst - mass_D0);
+            TLorentzVector p4_exp_Dst;
+            p4_exp_Dst.SetPtEtaPhiM(exp_pt, p4_refit_D0.Eta(), p4_refit_D0.Phi(), exp_M);
+
+            auto p4_D0pih_scaledDst = p4_exp_Dst + p4_refit_pih;
+            auto mass_D0pih_scaledDst = p4_D0pih_scaledDst.M();
+            (*outputVecNtuplizer)["mass_D0pih_wD0mass_scaledDst"].push_back(mass_D0pih_scaledDst);
+
+
+            D0pihKinTree_wD0mass->movePointerToTheTop();
+            auto D0pih = D0pihKinTree_wD0mass->currentParticle();
+            auto mass_D0pih_wD0mass = D0pih->currentState().mass();
+            (*outputVecNtuplizer)["mass_D0pih_wD0mass"].push_back(mass_D0pih_wD0mass);
+          }
+          else {
+            (*outputVecNtuplizer)["chi2_D0pih_wD0mass"].push_back(-1);
+            (*outputVecNtuplizer)["dof_D0pih_wD0mass"].push_back(-1);
+            (*outputVecNtuplizer)["pval_D0pih_wD0mass"].push_back(-1);
+            (*outputVecNtuplizer)["mass_D0pih_wD0mass_scaledDst"].push_back(-1);
+            (*outputVecNtuplizer)["mass_D0pih_wD0mass"].push_back(-1);
+          }
 
           /*
           ############################################################################

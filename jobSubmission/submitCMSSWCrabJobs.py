@@ -8,6 +8,7 @@ import argparse
 cfg = {'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
        'combDmstMum': 'cmssw_cmsRD2018_Tag_MumDmst-pD0bar-kp.py',
        'TagAndProbe_B2DstPi': 'cmssw_cmsRD2018_TagAndProbe_B0_Dmstpi.py',
+       'TagAndProbe_Bp2DmstPipPip': 'cmssw_cmsRD2018_TagAndProbe_Bp_DmstPipPip.py',
        'B2JpsiKst': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py',
        # 'probeB2DstMu': 'cmssw_cmsRD2018_Probe_B0_MuDmst.py'
        }

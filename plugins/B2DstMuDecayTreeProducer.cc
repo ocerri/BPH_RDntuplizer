@@ -478,7 +478,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
               const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
               if (!ptk.hasTrackDetails()) continue;
-              //Require a positive charged hadron
+              //Require a charged hadron
               if (abs(ptk.pdgId()) != 211 ) continue;
               if (ptk.pt() < __pTaddTracks_min__) continue;
               // Require to be close to the trigger muon;
@@ -555,7 +555,6 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               cout << "Number of tracks and tracks details lenght not matching" << endl;
               assert(false);
             }
-
 
             n_B++;
 
