@@ -386,78 +386,6 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
             /*
             ############################################################################
-            */
-
-            /*
-            //  Look for the Dst- and trigger muon to make a vertex
-            BKinTree = vtxu::FitVtxMuDst(iSetup, Dst, trgMu);
-            res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
-            if(res.isValid) {
-              (*outputVecNtuplizer)["isGood_Dstmu"].push_back(res.isGood);
-              (*outputVecNtuplizer)["chi2_Dstmu"].push_back(res.chi2);
-              (*outputVecNtuplizer)["dof_Dstmu"].push_back(res.dof);
-              (*outputVecNtuplizer)["pval_Dstmu"].push_back(res.pval);
-
-              BKinTree->movePointerToTheTop();
-              auto Dstmu = BKinTree->currentParticle();
-              (*outputVecNtuplizer)["mass_Dstmu"].push_back(Dstmu->currentState().mass());
-
-              auto vtxB = BKinTree->currentDecayVertex();
-
-              auto cos_Dstmu_PV = vtxu::computePointingCos(bestVtx, vtxB, Dstmu);
-              auto cosT_Dstmu_PV = vtxu::computePointingCosTransverse(bestVtx, vtxB, Dstmu);
-              (*outputVecNtuplizer)["cos_Dstmu_PV"].push_back(cos_Dstmu_PV);
-              (*outputVecNtuplizer)["cosT_Dstmu_PV"].push_back(cosT_Dstmu_PV);
-
-              BKinTree->movePointerToTheFirstChild();
-              auto refit_mu = BKinTree->currentParticle();
-              BKinTree->movePointerToTheNextChild();
-              auto refit_Dst = BKinTree->currentParticle();
-
-              auto p4_vis = vtxu::getTLVfromKinPart(Dstmu);
-              auto p4_Dst = vtxu::getTLVfromKinPart(refit_Dst);
-              auto p4_mu = vtxu::getTLVfromKinPart(refit_mu);
-
-              // // ------------- Transverse Approx ------------------
-              double pt_B_reco = p4_vis.Pt() * mass_B0/ p4_vis.M();
-              TVector3 flightB(vtxB->position().x() - bestVtx.position().x(),
-                               vtxB->position().y() - bestVtx.position().y(),
-                               vtxB->position().z() - bestVtx.position().z()
-                              );
-              auto B_vect = flightB * ( pt_B_reco / flightB.Perp() );
-              TLorentzVector p4_B;
-              p4_B.SetVectM(B_vect, mass_B0);
-
-              auto M2_miss = (p4_B - p4_vis).M2();
-              auto q2 = (p4_B - p4_Dst).M2();
-
-              TLorentzVector p4st_mu(p4_mu);
-              p4st_mu.Boost(-1*p4_B.BoostVector());
-              auto Est_mu = p4st_mu.E();
-
-              AddTLVToOut(p4_B, string("B_Dstmu"), &(*outputVecNtuplizer));
-              (*outputVecNtuplizer)["M2_miss_Dstmu"].push_back(M2_miss);
-              (*outputVecNtuplizer)["q2_Dstmu"].push_back(q2);
-              (*outputVecNtuplizer)["Est_mu_Dstmu"].push_back(Est_mu);
-            }
-            else {
-              (*outputVecNtuplizer)["isGood_Dstmu"].push_back(-1);
-              (*outputVecNtuplizer)["chi2_Dstmu"].push_back(-1);
-              (*outputVecNtuplizer)["dof_Dstmu"].push_back(-1);
-              (*outputVecNtuplizer)["pval_Dstmu"].push_back(-1);
-              (*outputVecNtuplizer)["mass_Dstmu"].push_back(-1);
-              (*outputVecNtuplizer)["cos_Dstmu_PV"].push_back(-1);
-              (*outputVecNtuplizer)["cosT_Dstmu_PV"].push_back(-1);
-              TLorentzVector void_p4;
-              AddTLVToOut(void_p4, string("B_Dstmu"), &(*outputVecNtuplizer));
-              (*outputVecNtuplizer)["M2_miss_Dstmu"].push_back(-1);
-              (*outputVecNtuplizer)["q2_Dstmu"].push_back(-1);
-              (*outputVecNtuplizer)["Est_mu_Dstmu"].push_back(-1);
-            }
-            */
-
-            /*
-            ############################################################################
                     Veto the presence of additional tracks in the D* mu vertex
             ############################################################################
             */
@@ -466,6 +394,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             vector<double> tksAdd_massVis = {};
             vector<double> tksAdd_massMuTk = {};
             vector<double> tksAdd_pval = {};
+            vector<double> tksAdd_charge = {};
             vector<double> tksAdd_pt = {};
             vector<double> tksAdd_eta = {};
             vector<double> tksAdd_phi = {};
@@ -517,6 +446,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               tksAdd_massHad.push_back(m_D0pispi);
               tksAdd_massMuTk.push_back(m_MuTk);
               tksAdd_pval.push_back(res.pval);
+              tksAdd_charge.push_back(ptk.pdgId()/211);
               tksAdd_pt.push_back(refit_pi_p4.Pt());
               tksAdd_eta.push_back(refit_pi_p4.Eta());
               tksAdd_phi.push_back(refit_pi_p4.Phi());
@@ -529,6 +459,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_massHad"] = {};
               (*outputVecNtuplizer)["tksAdd_massMuTk"] = {};
               (*outputVecNtuplizer)["tksAdd_pval"] = {};
+              (*outputVecNtuplizer)["tksAdd_charge"] = {};
               (*outputVecNtuplizer)["tksAdd_pt"] = {};
               (*outputVecNtuplizer)["tksAdd_eta"] = {};
               (*outputVecNtuplizer)["tksAdd_phi"] = {};
@@ -542,6 +473,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_massHad"].push_back(tksAdd_massHad[i]);
               (*outputVecNtuplizer)["tksAdd_massMuTk"].push_back(tksAdd_massMuTk[i]);
               (*outputVecNtuplizer)["tksAdd_pval"].push_back(tksAdd_pval[i]);
+              (*outputVecNtuplizer)["tksAdd_charge"].push_back(tksAdd_charge[i]);
               (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
               (*outputVecNtuplizer)["tksAdd_eta"].push_back(tksAdd_eta[i]);
               (*outputVecNtuplizer)["tksAdd_phi"].push_back(tksAdd_phi[i]);

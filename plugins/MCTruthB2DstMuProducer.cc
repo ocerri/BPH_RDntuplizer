@@ -283,6 +283,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       auto p = (*PrunedGenParticlesHandle)[i_B];
       vtx["B"] = p.vertex();
       p4["B"].SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
+      (*outputVecNtuplizer)["MC_decay"].push_back(p.mother()->pdgId());
       (*outputVecNtuplizer)["MC_decay"].push_back(p.pdgId());
 
       for(auto d : p.daughterRefVector()) {
