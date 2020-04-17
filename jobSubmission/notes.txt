@@ -49,6 +49,8 @@ process=BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen
 
 process=BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU35_10-2-3
 
+process=BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+
 python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_B2DstMu/out_CAND.root -c config/cmssw_privateMC_Tag_B0_MuDmst-pD0bar-kp.py --maxtime 30m -N 50 -f
 
 ##### python jobSubmission/submitCMSSWCondorJobs.py -i /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/jobs_out/out_MINIAODSIM_*.root -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/jobs_B2DstMu/out_CAND.root -c config/cmssw_privateMC_Tag_B0_MuDmst-pD0bar-kp.py --maxtime 20m -N 20 -f ####
@@ -68,3 +70,5 @@ python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBP
 python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH${part}_Run2018D-05May2019promptD-v1_MINIAOD.txt -o /storage/user/ocerri/BPhysics/data/cmsRD/ParkingBPH${part}/Run2018D-05May2019promptD-v1_TagAndProbe_`date +%y%m%d`/out_CAND.root -c config/cmssw_cmsRD2018_TagAndProbe.py --maxtime 30m -N 10
 
 python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH${part}_Run2018D-05May2019promptD-v1_MINIAOD.txt -o /storage/user/ocerri/BPhysics/data/cmsRD/ParkingBPH${part}/Run2018D-05May2019promptD-v1_TagAndProbe_B0_Dmstpi_`date +%y%m%d`/out_CAND.root -c config/cmssw_cmsRD2018_TagAndProbe_B0_Dmstpi.py --maxtime 30m -N 10
+
+python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_ParkingBPH${part}_Run2018D-05May2019promptD-v1_MINIAOD.txt -o /storage/user/ocerri/BPhysics/data/cmsRD/ParkingBPH${part}/Run2018D-05May2019promptD-v1_PrescaleVertices_`date +%y%m%d`/out_CAND.root -c config/cmssw_cmsRD2018_PrescaleVertices.py --maxtime 30m -N 10

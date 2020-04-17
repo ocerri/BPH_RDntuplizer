@@ -2,7 +2,7 @@ common:
   data:
     lumimask : https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions18/13TeV/ReReco/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt
     globaltag: 102X_dataRun2_v11
-    unitsPerJob: 12 #If Automatic represent target runtime in hours
+    unitsPerJob: 7 #If Automatic represent target runtime in hours
     # maxRunTime: 14 #in hours (unused in Automatic)
   mc:
     splitting: 1
@@ -166,6 +166,11 @@ samples:
     dataset: BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200327-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_DmstPi0MuNu:
+    dataset: BP_Tag_B0_DmstPi0MuNu_Hardbbbar_evtgen_GR_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DmstPi0MuNu_Hardbbbar_evtgen_GR_200413-c21dec93027231dc6f615dfe5c662834/USER
 
 ##### Probe side samples ##########
   p_B0_MuNuDst_PUc0:
