@@ -19,6 +19,7 @@ parser.add_argument ('tag', type=str, choices=cfg.keys(), help='Tag identifying 
 
 parser.add_argument ('-e', '--eras', type=str, default=['A', 'B', 'C', 'D'], help='Eras to run on', nargs='+')
 parser.add_argument ('-p', '--parts', type=int, default=[1, 2, 3, 4, 5, 6], help='Parts to run on', nargs='+')
+parser.add_argument ('-t', '--time', type=int, default=8, help='Time expected for the jobs in hours (limits 3h - 45h).')
 
 parser.add_argument ('--wait', default=False, action='store_true')
 args = parser.parse_args()
@@ -70,7 +71,7 @@ config.General.transferLogs = False
     fout.write('\n')
     fout.write("config.Data.publication = False")
     fout.write('\n')
-    fout.write("config.Data.unitsPerJob = {}".format(60*int(settings['common']['data']['unitsPerJob'])))
+    fout.write("config.Data.unitsPerJob = {}".format(60*args.time))
     fout.write('\n')
 
     fout.write("config.Data.publishDBS = 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter/'")

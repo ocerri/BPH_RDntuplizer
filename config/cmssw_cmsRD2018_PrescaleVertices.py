@@ -1,6 +1,7 @@
 import os, sys
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
+import numpy as np
 
 from Configuration.StandardSequences.Eras import eras
 process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
@@ -48,7 +49,7 @@ else:
     fdefault += 'inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:10]
+    flist = np.array(flist)[np.random.randint(0, len(flist), 5).astype(np.int)]
 
 print 'Trying to get a local copy'
 for i in range(len(flist)):
@@ -104,7 +105,7 @@ process.nVtx = cms.EDProducer("NumberOfVertexesProducer",
 #         cmssw = cms.string(os.environ['CMSSW_VERSION']),
 #         cfg_name = cms.string(cfg_name),
 #         commit_hash = cms.string(commit_hash),
-#         verbose = cms.int32(0)
+#         verbose = cms.int32(1)
 # )
 
 

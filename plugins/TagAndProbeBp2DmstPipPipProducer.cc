@@ -406,8 +406,11 @@ void TagAndProbeBp2DmstPipPipProducer::produce(edm::Event& iEvent, const edm::Ev
             (*outputVecNtuplizer)["sigd_vtxD0pipi_PV"].push_back(sigd_vtxD0pipi_PV);
             (*outputVecNtuplizer)["dxy_vtxD0pipi_PV"].push_back(dxy_vtxD0pipi_PV.first);
             (*outputVecNtuplizer)["sigdxy_vtxD0pipi_PV"].push_back(sigdxy_vtxD0pipi_PV);
-            AddTLVToOut(p4_D0pipi_scaledDst, string("D0pipi_sDst"), &(*outputVecNtuplizer));
+            AddTLVToOut(p4_refit_D0, string("D0_refitD0pipi"), &(*outputVecNtuplizer));
+            AddTLVToOut(p4_refit_pi1, string("pi1_refitD0pipi"), &(*outputVecNtuplizer));
+            AddTLVToOut(p4_refit_pi2, string("pi2_refitD0pipi"), &(*outputVecNtuplizer));
             AddTLVToOut(vtxu::getTLVfromKinPart(D0pipi), string("D0pipi"), &(*outputVecNtuplizer));
+            AddTLVToOut(p4_D0pipi_scaledDst, string("D0pipi_sDst"), &(*outputVecNtuplizer));
             (*outputVecNtuplizer)["dphi_trgMu_D0pipi_sDst"].push_back(vtxu::dPhi(trgMu.phi(), p4_D0pipi_scaledDst.Phi()));
 
             /*

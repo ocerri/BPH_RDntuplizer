@@ -40,6 +40,7 @@ class NumberOfVertexesProducer : public edm::EDProducer {
 
       edm::Service<TFileService> fs;
       map<string, TH1D*> hNvtx;
+      map<string, TH1D*> hNvtxPassed;
 
       vector<string> triggerTags = {"Mu12_IP6", "Mu9_IP6", "Mu7_IP4"};
       int verbose = 0;
@@ -55,7 +56,8 @@ NumberOfVertexesProducer::NumberOfVertexesProducer(const edm::ParameterSet& iCon
 {
   produces<map<string, float>>("outputNtuplizer");
   for (auto trgTag: triggerTags) {
-    hNvtx[trgTag] = fs->make<TH1D>(("hNvtx"+trgTag).c_str(), ("Number of vertexes from events with active "+trgTag).c_str(), 101, -0.5, 100.5);
+    hNvtx[trgTag] = fs->make<TH1D>(("hNvtx"+trgTag).c_str(), ("Number of vertexes from events with active "+trgTag).c_str(), 81, -0.5, 80.5);
+    hNvtxPassed[trgTag] = fs->make<TH1D>(("hNvtxPassed"+trgTag).c_str(), ("Number of vertexes from events with passed "+trgTag).c_str(), 81, -0.5, 80.5);
   }
 }
 
@@ -76,12 +78,16 @@ void NumberOfVertexesProducer::produce(edm::Event& iEvent, const edm::EventSetup
   //BPH trigger footprint
   regex txt_regex_path("HLT_Mu[0-9]+_IP[0-9]_part[0-9].*");
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
-  if (verbose) {cout << "\n == TRIGGER PATHS= " << endl;}
+  if (verbose) {cout << "\n ==== TRIGGER PATHS ==== " << endl;}
 
   for (auto trgTag : triggerTags){(*outputNtuplizer)["prescale_" + trgTag] = 0;}
 
   map<string, bool> trgActive;
-  for (auto trgTag : triggerTags) trgActive[trgTag] = false;
+  map<string, bool> trgPassed;
+  for (auto trgTag : triggerTags) {
+    trgActive[trgTag] = false;
+    trgPassed[trgTag] = false;
+  }
 
   for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i) {
     auto trgName = names.triggerName(i);
@@ -93,11 +99,12 @@ void NumberOfVertexesProducer::produce(edm::Event& iEvent, const edm::EventSetup
     for (auto trgTag : triggerTags){
       bool match = trgName.substr(4, trgTag.size()) == trgTag.c_str();
       if (match && triggerPrescales->getPrescaleForIndex(i) > 0) trgActive[trgTag] = true;
+      if (match && triggerBits->accept(i)) trgPassed[trgTag] = true;
 
       // for (int part = 0; part <= 5; part++) {
       //   regex rule(Form("HLT_%s_part%d.*", trgTag.c_str(), part));
       //   if (regex_match(trgName, rule)) {
-      //     (*outputNtuplizer)[Form("prescale_%s_part%d", trgTag.c_str(), part)] = triggerPrescales->getPrescaleForIndex(i);
+      //     // (*outputNtuplizer)[Form("prescale_%s_part%d", trgTag.c_str(), part)] = triggerPrescales->getPrescaleForIndex(i);
       //     if (triggerPrescales->getPrescaleForIndex(i) > 0) (*outputNtuplizer)["prescale_" + trgTag]++;
       //   }
       // }
@@ -109,8 +116,13 @@ void NumberOfVertexesProducer::produce(edm::Event& iEvent, const edm::EventSetup
   auto Nvtx = vtxHandle->size();
   for (auto kv : hNvtx) {
     if(trgActive[kv.first]) {
-      if (verbose) {cout << "Filling " << kv.first << endl;}
+      if (verbose) {cout << "Filling active " << kv.first << endl;}
       kv.second->Fill(Nvtx);
+    }
+
+    if(trgPassed[kv.first]) {
+      if (verbose) {cout << "Filling passed " << kv.first << endl;}
+      hNvtxPassed[kv.first]->Fill(Nvtx);
     }
   }
 

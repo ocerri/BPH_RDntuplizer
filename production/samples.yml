@@ -2,7 +2,7 @@ common:
   data:
     lumimask : https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions18/13TeV/ReReco/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt
     globaltag: 102X_dataRun2_v11
-    unitsPerJob: 7 #If Automatic represent target runtime in hours
+    unitsPerJob: 7 #If Automatic represent target runtime in hours (not used)
     # maxRunTime: 14 #in hours (unused in Automatic)
   mc:
     splitting: 1
@@ -102,6 +102,7 @@ samples:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200408-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200411-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_MuNuDmst_HQETcentral_PU0:
     dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3
@@ -133,6 +134,7 @@ samples:
     dataset: BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_DmstHc_PU0:
     dataset: BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_PU0_10-2-3
@@ -150,6 +152,7 @@ samples:
     dataset: BP_Tag_B0_DmstHc_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DmstHc_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DmstHc_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
 
   Bp_MuNuDstst_PU0:
     dataset: BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU0_10-2-3
@@ -166,6 +169,7 @@ samples:
     dataset: BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200327-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_DmstPi0MuNu:
     dataset: BP_Tag_B0_DmstPi0MuNu_Hardbbbar_evtgen_GR_PUc0_10-2-3
