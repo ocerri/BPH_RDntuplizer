@@ -31,6 +31,7 @@ namespace vtxu {
   RefCountedKinematicTree FitDst(const edm::EventSetup&, pat::PackedCandidate, const RefCountedKinematicParticle, bool);
   RefCountedKinematicTree FitD0pipi(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, pat::PackedCandidate);
   RefCountedKinematicTree FitD0pipipis(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, pat::PackedCandidate, pat::PackedCandidate);
+  RefCountedKinematicTree FitD0_pions(const edm::EventSetup&, const RefCountedKinematicParticle, std::vector<pat::PackedCandidate>);
   RefCountedKinematicTree FitB_D0pismu(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, pat::Muon);
   RefCountedKinematicTree Fit_D0pismupi(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, pat::Muon, pat::PackedCandidate);
   RefCountedKinematicTree Fit_D0pihpis(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, pat::PackedCandidate);
