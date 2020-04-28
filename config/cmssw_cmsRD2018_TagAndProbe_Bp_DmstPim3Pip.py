@@ -48,7 +48,9 @@ else:
     fdefault += 'inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:5]
+    flist = flist[:10]
+    # flist = ['/store/data/Run2018D/ParkingBPH1/MINIAOD/05May2019promptD-v1/270000/0639BC54-D852-F24C-BA2C-41A95B5C3EC5.root']
+    flist = ['file:0639BC54-D852-F24C-BA2C-41A95B5C3EC5.root']
 
 print 'Trying to get a local copy'
 for i in range(len(flist)):

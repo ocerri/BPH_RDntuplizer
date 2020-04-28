@@ -9,26 +9,26 @@ common:
     globaltag: 102X_upgrade2018_realistic_v15
 
 samples:
-  data_Run2018A:
-    dataset: /ParkingBPH{}/Run2018A-05May2019-v1/MINIAOD
-    isMC: False
-    parts:
-      - 1
-      - 2
-      - 3
-      - 4
-      - 5
-      - 6
-  data_Run2018B:
-    dataset: /ParkingBPH{}/Run2018B-05May2019-v2/MINIAOD
-    isMC: False
-    parts:
-      - 1
-      - 2
-      - 3
-      - 4
-      - 5
-      - 6
+  # data_Run2018A:
+  #   dataset: /ParkingBPH{}/Run2018A-05May2019-v1/MINIAOD
+  #   isMC: False
+  #   parts:
+  #     - 1
+  #     - 2
+  #     - 3
+  #     - 4
+  #     - 5
+  #     - 6
+  # data_Run2018B:
+  #   dataset: /ParkingBPH{}/Run2018B-05May2019-v2/MINIAOD
+  #   isMC: False
+  #   parts:
+  #     - 1
+  #     - 2
+  #     - 3
+  #     - 4
+  #     - 5
+  #     - 6
   data_Run2018C:
     dataset: /ParkingBPH{}/Run2018C-05May2019-v1/MINIAOD
     isMC: False
@@ -171,10 +171,20 @@ samples:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200327-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
 
-  B0_DmstPi0MuNu:
+  B0_DmstPi0MuNu_PUc0:
     dataset: BP_Tag_B0_DmstPi0MuNu_Hardbbbar_evtgen_GR_PUc0_10-2-3
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DmstPi0MuNu_Hardbbbar_evtgen_GR_200413-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bp_MuNuDstst_PipPi0_PUc0:
+    dataset: BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_200425-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDstst_PipPim_PUc0:
+    dataset: BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_200425-c21dec93027231dc6f615dfe5c662834/USER
 
 ##### Probe side samples ##########
   p_B0_MuNuDst_PUc0:

@@ -99,6 +99,20 @@ TagAndProbeBp2DmstPipPipPipPimProducer::TagAndProbeBp2DmstPipPipPipPimProducer(c
 
 
 void TagAndProbeBp2DmstPipPipPipPimProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+    vector<bool> countersFlag(counters.size(), false);
+    counters[0]++;
+
+    // Output collection
+    unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
+    unique_ptr<map<string, vector<float>>> outputVecNtuplizer(new map<string, vector<float>>);
+
+    // if (counters[0] < 30209) {
+    //   (*outputNtuplizer)["n_B"] = 0;
+    //   iEvent.put(move(outputNtuplizer), "outputNtuplizer");
+    //   iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");
+    //   return;
+    // }
+
     edm::Handle<vector<pat::PackedCandidate>> pfCandHandle;
     iEvent.getByToken(PFCandSrc_, pfCandHandle);
     unsigned int N_pfCand = pfCandHandle->size();
@@ -111,16 +125,11 @@ void TagAndProbeBp2DmstPipPipPipPimProducer::produce(edm::Event& iEvent, const e
     iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
     auto trgMu = (*trgMuonsHandle)[0];
 
-    // Output collection
-    unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
-    unique_ptr<map<string, vector<float>>> outputVecNtuplizer(new map<string, vector<float>>);
 
     int n_K = 0, n_pi = 0, n_D0 = 0, n_pi1 = 0, n_pi2 = 0, n_pi3 = 0, n_pi4 = 0, n_B = 0;
     int n_pis = 0, n_Dst = 0, n_fullB = 0;
 
-    if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
-    vector<bool> countersFlag(counters.size(), false);
-    counters[0]++;
+    if (verbose) {cout <<"-------------------- Evt " << counters[0] << " -----------------------\n";}
 
     vector<reco::Vertex> possibleVtxs = {};
 
@@ -163,6 +172,13 @@ void TagAndProbeBp2DmstPipPipPipPimProducer::produce(edm::Event& iEvent, const e
     if(verbose) {cout << "Number of good positive hadrons: " << N_goodPositiveHadrons << endl;}
     uint N_goodNegativeHadrons = goodNegativeHadrons.size();
     if(verbose) {cout << "Number of good negative hadrons: " << N_goodNegativeHadrons << endl;}
+
+    if (N_goodPositiveHadrons < 3 || N_goodNegativeHadrons < 2) {
+      (*outputNtuplizer)["n_B"] = 0;
+      iEvent.put(move(outputNtuplizer), "outputNtuplizer");
+      iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");
+      return;
+    }
 
     /*
     ############################################################################
@@ -229,7 +245,7 @@ void TagAndProbeBp2DmstPipPipPipPimProducer::produce(edm::Event& iEvent, const e
           auto pi1_tk = pi1.bestTrack();
           if (vtxu::dR(pi1.phi(), K.phi(), pi1.eta(), K.eta()) > __dRMax__) continue;
           auto dxy = pi1_tk->dxy(primaryVtx.position());
-          auto sigdxy_pi1_PV = fabs(dxy)/pi.dxyError();
+          auto sigdxy_pi1_PV = fabs(dxy)/pi1.dxyError();
 
           n_pi1++;
 
@@ -249,37 +265,42 @@ void TagAndProbeBp2DmstPipPipPipPimProducer::produce(edm::Event& iEvent, const e
           */
           for(uint i_pi2 = 0; i_pi2 < N_goodPositiveHadrons-2; ++i_pi2) {
             if(i_pi2==i_K) continue;
+            // cout << "i_pi2: " << i_pi2 << endl;
             const pat::PackedCandidate & pi2 = goodPositiveHadrons[i_pi2];
             if (vtxu::dR(pi2.phi(), K.phi(), pi2.eta(), K.eta()) > __dRMax__) continue;
             // Require significant impact parameter
             auto pi2_tk = pi2.bestTrack();
             auto dxy = pi2_tk->dxy(primaryVtx.position());
-            auto sigdxy_pi2_PV = fabs(dxy)/pi.dxyError();
+            auto sigdxy_pi2_PV = fabs(dxy)/pi2.dxyError();
             n_pi2++;
 
             for(uint i_pi3 = i_pi2+1; i_pi3 < N_goodPositiveHadrons-1; ++i_pi3) {
               if(i_pi3==i_K) continue;
+              // cout << "i_pi3: " << i_pi3 << endl;
               const pat::PackedCandidate & pi3 = goodPositiveHadrons[i_pi3];
               if (vtxu::dR(pi3.phi(), K.phi(), pi3.eta(), K.eta()) > __dRMax__) continue;
               // Require significant impact parameter
               auto pi3_tk = pi3.bestTrack();
               auto dxy = pi3_tk->dxy(primaryVtx.position());
-              auto sigdxy_pi3_PV = fabs(dxy)/pi.dxyError();
+              auto sigdxy_pi3_PV = fabs(dxy)/pi3.dxyError();
               n_pi3++;
 
               for(uint i_pi4 = i_pi3+1; i_pi4 < N_goodPositiveHadrons; ++i_pi4) {
                 if(i_pi4==i_K) continue;
+                // cout << "i_pi4: " << i_pi4 << endl;
                 const pat::PackedCandidate & pi4 = goodPositiveHadrons[i_pi4];
                 if (vtxu::dR(pi4.phi(), K.phi(), pi4.eta(), K.eta()) > __dRMax__) continue;
                 // Require significant impact parameter
                 auto pi4_tk = pi4.bestTrack();
                 auto dxy = pi4_tk->dxy(primaryVtx.position());
-                auto sigdxy_pi4_PV = fabs(dxy)/pi.dxyError();
+                auto sigdxy_pi4_PV = fabs(dxy)/pi4.dxyError();
                 n_pi4++;
 
                 // Fit the B+ vertex
                 vector<pat::PackedCandidate> pions = {pi1, pi2, pi3, pi4};
+                // cout << "DEBUG: before the fit" << endl;
                 auto D0pionsKinTree = vtxu::FitD0_pions(iSetup, D0, pions);
+                // cout << "DEBUG: after the fit" << endl;
                 auto res_D0pions = vtxu::fitQuality(D0pionsKinTree, __PvalChi2Vtx_min__);
                 if(!res_D0pions.isGood) continue;
                 updateCounter(6, countersFlag);
@@ -533,6 +554,7 @@ bool TagAndProbeBp2DmstPipPipPipPimProducer::qualityMuonID(pat::Muon m, reco::Ve
 }
 
 void TagAndProbeBp2DmstPipPipPipPimProducer::updateCounter(int idx, vector<bool> &cF) {
+  if(verbose) {cout << "Updating counter " << idx << endl;}
   if(!cF[idx]) {
     cF[idx] = true;
     counters[idx]++;
