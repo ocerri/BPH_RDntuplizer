@@ -58,6 +58,12 @@ process=BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
 
 process=BP_Tag_B0_DmstPi0MuNu_Hardbbbar_evtgen_GR_PUc0_10-2-3
 
+process=BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+
+process=BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+
+process=BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+
 
 python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_B2DstMu/out_CAND.root -c config/cmssw_privateMC_Tag_B0_MuDmst-pD0bar-kp.py --maxtime 30m -N 50 -f
 

@@ -278,6 +278,12 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     vtx["D0"] = reco::Candidate::Point();
     vtx["K"] = reco::Candidate::Point();
 
+    // (*outputNtuplizer)["MC_muMotherPdgId"] = 0;
+    // (*outputNtuplizer)["MC_muMotherNdaughters"] = 0;
+    (*outputNtuplizer)["MC_munuSisterPdgId"] = 0;
+    (*outputNtuplizer)["MC_DstSisPdgId_light"] = 0;
+    (*outputNtuplizer)["MC_DstSisPdgId_heavy"] = 0;
+
 
     if(i_B >= 0){
       auto p = (*PrunedGenParticlesHandle)[i_B];
@@ -291,13 +297,30 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       }
 
       for(auto d : *PrunedGenParticlesHandle) {
-        if(d.pdgId() == -13 && auxIsAncestor(&p, &d)) {
+        if(d.pdgId() == -13 && auxIsAncestor(&p, &d)) {// && d.numberOfDaughters() == 0) {
           p4["mu"].SetPtEtaPhiM(d.pt(), d.eta(), d.phi(), d.mass());
           mu_impactParam = vtxu::computeIP(interactionPoint, d.vertex(), d.momentum(), true);
+          auto muMother = d.mother();
+          (*outputNtuplizer)["MC_muMotherPdgId"] = muMother->pdgId();
+          (*outputNtuplizer)["MC_muMotherNdaughters"] = muMother->numberOfDaughters();
+          for(uint iss = 0; iss <  muMother->numberOfDaughters(); iss++) {
+            auto muSis = muMother->daughter(iss);
+            if (muSis->pdgId() != 22 && muSis->pdgId() != 14 && muSis->pdgId() != -13) (*outputNtuplizer)["MC_munuSisterPdgId"] = muSis->pdgId();
+          }
         }
         else if(d.pdgId() == -413 && auxIsAncestor(&p, &d)) {
           p4["Dst"].SetPtEtaPhiM(d.pt(), d.eta(), d.phi(), d.mass());
           vtx["Dst"] = d.vertex();
+          auto DstMother = d.mother();
+          (*outputNtuplizer)["MC_DstMotherPdgId"] = DstMother->pdgId();
+          (*outputNtuplizer)["MC_DstMotherNdaughters"] = DstMother->numberOfDaughters();
+          for(uint iss = 0; iss <  DstMother->numberOfDaughters(); iss++) {
+            auto DstSis = DstMother->daughter(iss);
+            auto pdgId = DstSis->pdgId();
+            if (pdgId == 22 || pdgId == 14) continue;
+            if (abs(pdgId) > 400) (*outputNtuplizer)["MC_DstSisPdgId_heavy"] = pdgId;
+            else (*outputNtuplizer)["MC_DstSisPdgId_light"] = pdgId;
+          }
           for(auto dd : d.daughterRefVector()) {
             if(dd->pdgId() == -211) {
               p4["pis"].SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
