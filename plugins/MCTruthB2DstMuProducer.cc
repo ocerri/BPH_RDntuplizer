@@ -317,7 +317,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
           for(uint iss = 0; iss <  DstMother->numberOfDaughters(); iss++) {
             auto DstSis = DstMother->daughter(iss);
             auto pdgId = DstSis->pdgId();
-            if (pdgId == 22 || pdgId == 14) continue;
+            if (pdgId == 22 || pdgId == 14 || pdgId == -413) continue;
             if (abs(pdgId) > 400) (*outputNtuplizer)["MC_DstSisPdgId_heavy"] = pdgId;
             else (*outputNtuplizer)["MC_DstSisPdgId_light"] = pdgId;
           }
