@@ -297,7 +297,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       }
 
       for(auto d : *PrunedGenParticlesHandle) {
-        if(d.pdgId() == -13 && auxIsAncestor(&p, &d)) {// && d.numberOfDaughters() == 0) {
+        if(d.pdgId() == -13 && auxIsAncestor(&p, &d)) {
           p4["mu"].SetPtEtaPhiM(d.pt(), d.eta(), d.phi(), d.mass());
           mu_impactParam = vtxu::computeIP(interactionPoint, d.vertex(), d.momentum(), true);
           auto muMother = d.mother();
