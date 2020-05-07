@@ -103,13 +103,18 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     iEvent.getByToken(decayTreeOutSrc_, outMapHandle);
     vector<float> muPt, muEta, muPhi;
     vector<float> DstPt, DstEta, DstPhi;
+    vector<float> AddTkCharge, AddTkPt, AddTkEta, AddTkPhi;
     for( auto const& kv : (*outMapHandle) ) {
       if (kv.first == "Dst_refitD0pismu_pt") DstPt = kv.second;
-      if (kv.first == "Dst_refitD0pismu_eta") DstEta = kv.second;
-      if (kv.first == "Dst_refitD0pismu_phi") DstPhi = kv.second;
-      if (kv.first == "mu_refitD0pismu_pt") muPt = kv.second;
-      if (kv.first == "mu_refitD0pismu_eta") muEta = kv.second;
-      if (kv.first == "mu_refitD0pismu_phi") muPhi = kv.second;
+      else if (kv.first == "Dst_refitD0pismu_eta") DstEta = kv.second;
+      else if (kv.first == "Dst_refitD0pismu_phi") DstPhi = kv.second;
+      else if (kv.first == "mu_refitD0pismu_pt") muPt = kv.second;
+      else if (kv.first == "mu_refitD0pismu_eta") muEta = kv.second;
+      else if (kv.first == "mu_refitD0pismu_phi") muPhi = kv.second;
+      else if (kv.first == "tksAdd_charge") AddTkCharge = kv.second;
+      else if (kv.first == "tksAdd_pt") AddTkPt = kv.second;
+      else if (kv.first == "tksAdd_eta") AddTkEta = kv.second;
+      else if (kv.first == "tksAdd_phi") AddTkPhi = kv.second;
     }
     vector<TLorentzVector> reco_muTLVs, reco_DstTLVs;
     for(uint i = 0; i < muPt.size(); i ++) {
