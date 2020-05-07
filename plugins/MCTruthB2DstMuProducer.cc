@@ -10,6 +10,7 @@
 
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 
 #include <iostream>
@@ -66,6 +67,7 @@ private:
 
     // ----------member data ---------------------------
     edm::EDGetTokenT<vector<reco::GenParticle>> PrunedParticlesSrc_;
+    edm::EDGetTokenT<vector<pat::PackedGenParticle>> PackedParticlesSrc_;
     edm::EDGetTokenT<map<string, vector<float>>> decayTreeOutSrc_;
 
     double mass_mu = 0.1056583745;
@@ -83,6 +85,7 @@ MCTruthB2DstMuProducer::MCTruthB2DstMuProducer(const edm::ParameterSet &iConfig)
 {
     verbose = iConfig.getParameter<int>( "verbose" );
     PrunedParticlesSrc_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
+    PackedParticlesSrc_ = consumes<vector<pat::PackedGenParticle>>(edm::InputTag("packedGenParticles"));
     decayTreeOutSrc_ = consumes<map<string, vector<float>>>(iConfig.getParameter<edm::InputTag>( "decayTreeVecOut" ));
 
     produces<map<string, float>>("outputNtuplizer");
@@ -392,6 +395,50 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     TLorentzVector p4st_mu(p4["mu"]);
     p4st_mu.Boost(-1*p4["B"].BoostVector());
     (*outputNtuplizer)["MC_Est_mu"] = p4st_mu.E();
+
+
+    for (uint i = 0; i < AddTkCharge.size(); i++) {
+        (*outputVecNtuplizer)["MC_addTkFlag"].push_back(-1);
+        (*outputVecNtuplizer)["MC_addTk_dEta"].push_back(0);
+        (*outputVecNtuplizer)["MC_addTk_dPhi"].push_back(0);
+        (*outputVecNtuplizer)["MC_addTk_dPt"].push_back(-1);
+        (*outputVecNtuplizer)["MC_addTk_dz"].push_back(0);
+        (*outputVecNtuplizer)["MC_addTk_dxy"].push_back(0);
+        (*outputVecNtuplizer)["MC_addTk_pdgId"].push_back(0);
+        (*outputVecNtuplizer)["MC_addTk_pdgIdMother"].push_back(0);
+        (*outputVecNtuplizer)["MC_addTk_pdgIdMotherMother"].push_back(0);
+    }
+    if (AddTkCharge.size() > 0) {
+      // Get packedGenParticles
+      edm::Handle<std::vector<pat::PackedGenParticle>> PackedGenParticlesHandle;
+      iEvent.getByToken(PackedParticlesSrc_, PackedGenParticlesHandle);
+      // unsigned int N_PackedGenParticles = PackedGenParticlesHandle->size();
+      for(auto packGenP : (*PackedGenParticlesHandle)) {
+        if (packGenP.charge() == 0) continue;
+        if (packGenP.pt() < 0.2) continue;
+        for (uint i = 0; i < AddTkCharge.size(); i++) {
+          if ((*outputVecNtuplizer)["MC_addTkFlag"][i] != -1) continue;
+          if (packGenP.charge() != AddTkCharge[i]) continue;
+
+          float dEta = fabs(packGenP.eta() - AddTkEta[i]);
+          float dPhi = fabs(vtxu::dPhi(packGenP.phi(), AddTkPhi[i]));
+          float dPt = fabs(packGenP.pt() - AddTkPt[i])/packGenP.pt();
+          if (dEta < 0.002 && dPhi < 0.002 && dPt < 0.03) {
+            (*outputVecNtuplizer)["MC_addTkFlag"][i] = 1;
+            (*outputVecNtuplizer)["MC_addTk_dEta"][i] = dEta;
+            (*outputVecNtuplizer)["MC_addTk_dPhi"][i] = dPhi;
+            (*outputVecNtuplizer)["MC_addTk_dPt"][i] = dPt;
+            (*outputVecNtuplizer)["MC_addTk_dz"][i] = packGenP.dz();
+            (*outputVecNtuplizer)["MC_addTk_dxy"][i] = packGenP.dxy();
+            (*outputVecNtuplizer)["MC_addTk_pdgId"][i] = packGenP.pdgId();
+            (*outputVecNtuplizer)["MC_addTk_pdgIdMother"][i] = packGenP.mother(0)->pdgId();
+            if (packGenP.mother(0)->mother(0)) {
+              (*outputVecNtuplizer)["MC_addTk_pdgIdMotherMother"][i] = packGenP.mother(0)->mother(0)->pdgId();
+            }
+          }
+        }
+      }
+    }
 
 
     iEvent.put(move(outputNtuplizer), "outputNtuplizer");
