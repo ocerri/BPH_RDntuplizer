@@ -397,6 +397,15 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputNtuplizer)["MC_Est_mu"] = p4st_mu.E();
 
 
+    (*outputVecNtuplizer)["MC_addTkFlag"] = {};
+    (*outputVecNtuplizer)["MC_addTk_dEta"] = {};
+    (*outputVecNtuplizer)["MC_addTk_dPhi"] = {};
+    (*outputVecNtuplizer)["MC_addTk_dPt"] = {};
+    (*outputVecNtuplizer)["MC_addTk_dz"] = {};
+    (*outputVecNtuplizer)["MC_addTk_dxy"] = {};
+    (*outputVecNtuplizer)["MC_addTk_pdgId"] = {};
+    (*outputVecNtuplizer)["MC_addTk_pdgIdMother"] = {};
+    (*outputVecNtuplizer)["MC_addTk_pdgIdMotherMother"] = {};
     for (uint i = 0; i < AddTkCharge.size(); i++) {
         (*outputVecNtuplizer)["MC_addTkFlag"].push_back(-1);
         (*outputVecNtuplizer)["MC_addTk_dEta"].push_back(0);
