@@ -41,6 +41,7 @@ class NumberOfVertexesProducer : public edm::EDProducer {
       edm::Service<TFileService> fs;
       map<string, TH1D*> hNvtx;
       map<string, TH1D*> hNvtxPassed;
+      map<string, TH1D*> hZvtxPassed;
 
       vector<string> triggerTags = {"Mu12_IP6", "Mu9_IP6", "Mu7_IP4"};
       int verbose = 0;
@@ -58,6 +59,7 @@ NumberOfVertexesProducer::NumberOfVertexesProducer(const edm::ParameterSet& iCon
   for (auto trgTag: triggerTags) {
     hNvtx[trgTag] = fs->make<TH1D>(("hNvtx"+trgTag).c_str(), ("Number of vertexes from events with active "+trgTag).c_str(), 81, -0.5, 80.5);
     hNvtxPassed[trgTag] = fs->make<TH1D>(("hNvtxPassed"+trgTag).c_str(), ("Number of vertexes from events with passed "+trgTag).c_str(), 81, -0.5, 80.5);
+    hZvtxPassed[trgTag] = fs->make<TH1D>(("hZvtxPassed"+trgTag).c_str(), ("Z position of vertexes from events with passed "+trgTag).c_str(), 100, -25., 25.);
   }
 }
 
@@ -123,6 +125,7 @@ void NumberOfVertexesProducer::produce(edm::Event& iEvent, const edm::EventSetup
     if(trgPassed[kv.first]) {
       if (verbose) {cout << "Filling passed " << kv.first << endl;}
       hNvtxPassed[kv.first]->Fill(Nvtx);
+      for(auto vtx : (*vtxHandle)) hZvtxPassed[kv.first]->Fill(vtx.position().z());
     }
   }
 
