@@ -432,7 +432,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
           float dEta = fabs(packGenP.eta() - AddTkEta[i]);
           float dPhi = fabs(vtxu::dPhi(packGenP.phi(), AddTkPhi[i]));
           float dPt = fabs(packGenP.pt() - AddTkPt[i])/packGenP.pt();
-          if (dEta < 0.002 && dPhi < 0.002 && dPt < 0.03) {
+          if (hypot(dEta, dPhi) < 0.002 && dPt < 0.03) {
             (*outputVecNtuplizer)["MC_addTkFlag"][i] = 1;
             (*outputVecNtuplizer)["MC_addTk_dEta"][i] = dEta;
             (*outputVecNtuplizer)["MC_addTk_dPhi"][i] = dPhi;

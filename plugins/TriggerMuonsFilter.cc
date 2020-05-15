@@ -41,6 +41,7 @@ class TriggerMuonsFilter : public edm::stream::EDFilter<> {
 
       edm::Service<TFileService> fs;
       TH1I* hAllNvts;
+      TH1I* hAllVtxZ;
 
       int N_analyzed_events = 0;
       int N_passed_events = 0;
@@ -59,6 +60,7 @@ TriggerMuonsFilter::TriggerMuonsFilter(const edm::ParameterSet& iConfig):
   produces<map<string, float>>("outputNtuplizer");
   produces<map<string, vector<float>>>("outputVecNtuplizer");
   hAllNvts = fs->make<TH1I>("hAllNvts", "Number of vertexes from all the MINIAOD events", 101, -0.5, 100.5);
+  hAllVtxZ = fs->make<TH1I>("hAllVtxZ", "Z coordinate of vertexes from all the MINIAOD events", 100, -25, 25);
 }
 
 bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -72,6 +74,7 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
   iEvent.getByToken(vtxSrc_, vtxHandle);
   auto primaryVtx = (*vtxHandle)[0];
   hAllNvts->Fill((int)vtxHandle->size());
+  for(auto vtx : (*vtxHandle)) hAllVtxZ->Fill(vtx.position().z());
 
   // Output collection
   unique_ptr<vector<pat::Muon>> trgMuonsMatched( new vector<pat::Muon> );

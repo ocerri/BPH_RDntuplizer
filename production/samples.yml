@@ -106,6 +106,7 @@ samples:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200430-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200503-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200504-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200509-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_MuNuDmst_HQETcentral_PU0:
     dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3
@@ -162,6 +163,16 @@ samples:
     dataset: BP_Tag_B0_DstmDsp_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DstmDsp_Hardbbbar_evtgen_ISGW2_200506-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_DstmDp_PUc0:
+    dataset: BP_Tag_B0_DstmDp_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DstmDp_Hardbbbar_evtgen_ISGW2_200506-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_DstmD0_PUc0:
+    dataset: BP_Tag_B0_DstmD0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DstmD0_Hardbbbar_evtgen_ISGW2_200506-c21dec93027231dc6f615dfe5c662834/USER
 
   Bp_MuNuDstst_PU0:
     dataset: BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU0_10-2-3

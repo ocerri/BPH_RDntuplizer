@@ -351,6 +351,13 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["dxy_vtxD0pismu_PV"].push_back(dxy_vtxD0pismu_PV.first);
             (*outputVecNtuplizer)["sigdxy_vtxD0pismu_PV"].push_back(sigdxy_vtxD0pismu_PV);
 
+            float localVertexDensity = 0;
+            for(auto vtx : (*vtxHandle)) {
+              float dz = bestVtx.position().z() - vtx.position().z();
+              if(fabs(dz) < 1.5*__dzMax__) localVertexDensity++;
+            }
+            (*outputVecNtuplizer)["localVertexDensity"].push_back(localVertexDensity/(2*1.5*__dzMax__));
+
             /*
             ############################################################################
                                   Compute analysis variables
@@ -396,8 +403,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             vector<double> tksAdd_pval = {};
             vector<double> tksAdd_charge = {};
             vector<double> tksAdd_pt = {};
+            vector<double> tksAdd_ptError = {};
             vector<double> tksAdd_eta = {};
+            vector<double> tksAdd_etaError = {};
             vector<double> tksAdd_phi = {};
+            vector<double> tksAdd_phiError = {};
+            vector<double> tksAdd_dz = {};
             vector<double> tksAdd_sigdca_vtxB = {};
             vector<double> tksAdd_cos_PV = {};
             if(verbose) {cout << "Looking for additional tracks" << endl;}
@@ -448,8 +459,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               tksAdd_pval.push_back(res.pval);
               tksAdd_charge.push_back(ptk.pdgId()/211);
               tksAdd_pt.push_back(refit_pi_p4.Pt());
+              tksAdd_ptError.push_back(tk->ptError());
               tksAdd_eta.push_back(refit_pi_p4.Eta());
+              tksAdd_etaError.push_back(tk->etaError());
               tksAdd_phi.push_back(refit_pi_p4.Phi());
+              tksAdd_phiError.push_back(tk->phiError());
+              tksAdd_dz.push_back(tk->dz(bestVtx.position()));
               tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
               tksAdd_cos_PV.push_back(vtxu::computePointingCos(bestVtx, vtxB, refit_pi));
               N_compatible_tk++;
@@ -461,8 +476,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_pval"] = {};
               (*outputVecNtuplizer)["tksAdd_charge"] = {};
               (*outputVecNtuplizer)["tksAdd_pt"] = {};
+              (*outputVecNtuplizer)["tksAdd_ptError"] = {};
               (*outputVecNtuplizer)["tksAdd_eta"] = {};
+              (*outputVecNtuplizer)["tksAdd_etaError"] = {};
               (*outputVecNtuplizer)["tksAdd_phi"] = {};
+              (*outputVecNtuplizer)["tksAdd_phiError"] = {};
+              (*outputVecNtuplizer)["tksAdd_dz"] = {};
               (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
               (*outputVecNtuplizer)["tksAdd_cos_PV"] = {};
             }
@@ -475,8 +494,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_pval"].push_back(tksAdd_pval[i]);
               (*outputVecNtuplizer)["tksAdd_charge"].push_back(tksAdd_charge[i]);
               (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
+              (*outputVecNtuplizer)["tksAdd_ptError"].push_back(tksAdd_ptError[i]);
               (*outputVecNtuplizer)["tksAdd_eta"].push_back(tksAdd_eta[i]);
+              (*outputVecNtuplizer)["tksAdd_etaError"].push_back(tksAdd_etaError[i]);
               (*outputVecNtuplizer)["tksAdd_phi"].push_back(tksAdd_phi[i]);
+              (*outputVecNtuplizer)["tksAdd_phiError"].push_back(tksAdd_phiError[i]);
+              (*outputVecNtuplizer)["tksAdd_dz"].push_back(tksAdd_dz[i]);
               (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
               (*outputVecNtuplizer)["tksAdd_cos_PV"].push_back(tksAdd_cos_PV[i]);
             }
