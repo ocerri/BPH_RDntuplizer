@@ -8,6 +8,7 @@ import argparse
 cfg = {'PrescaleVertices': 'cmssw_cmsRD2018_PrescaleVertices.py',
        'B2DstMu': 'cmssw_cmsRD2018_Tag_B0_MuDmst-pD0bar-kp.py',
        'combDmstMum': 'cmssw_cmsRD2018_Tag_MumDmst-pD0bar-kp.py',
+       'TagAndProbe_Bp2MuNuDstst_Pip': 'cmssw_cmsRD2018_TagAndProbe_Bp_MuNuDstst_pip.py',
        'TagAndProbe_B2DstPi': 'cmssw_cmsRD2018_TagAndProbe_B0_Dmstpi.py',
        'TagAndProbe_Bp2DmstPipPip': 'cmssw_cmsRD2018_TagAndProbe_Bp_DmstPipPip.py',
        'TagAndProbe_Bp2DmstPim3Pip': 'cmssw_cmsRD2018_TagAndProbe_Bp_DmstPim3Pip.py',
