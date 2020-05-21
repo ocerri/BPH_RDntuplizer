@@ -15,13 +15,11 @@ def processCmd(cmd, quite = 0):
     return output
 
 def createBatchName(a):
-    knownTags = ['B0_JpsiKst', 'B0_Mu', 'B0_Tau', 'B0_DmstHc', 'Bp_MuNuDstst']
-    n = None
-    for t in knownTags:
-        if t in a.input_file[0]:
-            n = 'B' + t.split('_')[1]
-            break
-    if n is None:
+    try:
+        aux = os.path.basename(a[0])
+        out = re.search('B[0pm]', aux)
+        n = aux[out.start(), aux.find('PU')+4]
+    except:
         n = a.maxtime
     return n
 
@@ -116,7 +114,7 @@ if __name__ == "__main__":
             Njobs = args.nMaxJobs
             print 'Only', Njobs, 'will be submitted'
     if Njobs == 0: exit()
-    
+
     '''
     ###################### Check CMSSW and config ############################
     '''

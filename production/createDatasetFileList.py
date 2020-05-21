@@ -13,14 +13,13 @@ for k, d in prod_samples['samples'].iteritems():
             print '########## {} ##########'.format(dataset)
             fname = 'inputFiles' + dataset.replace('/', '_') + '.txt'
             if os.path.isfile(fname):
-                print 'Files list already existing'
+                print 'Already present'
             else:
                 print 'Creating files list'
                 cmd = 'das_client --query="file dataset={}" --limit=0 > {}'.format(dataset, fname)
                 os.system(cmd)
-
-            print '\nTotal number of files:'
-            os.system('cat '+fname+' | wc -l')
+                print '\nTotal number of files:'
+                os.system('cat '+fname+' | wc -l')
             print '\n'
     else:
         dataset = d['dataset']
@@ -30,7 +29,7 @@ for k, d in prod_samples['samples'].iteritems():
             if forceMC:
                 os.system('rm '+fname)
             else:
-                print "Already present\n\n"
+                print 'Already present\n\n'
                 continue
         for p in d['parts']:
             print p

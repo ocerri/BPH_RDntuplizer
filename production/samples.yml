@@ -204,17 +204,19 @@ samples:
   Bp_MuNuDstst_PipPi0_PUc0:
     dataset: BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_200425-c21dec93027231dc6f615dfe5c662834/USER
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_200425-c21dec93027231dc6f615dfe5c662834/USER #Wrong excited state
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_200518-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_MuNuDstst_PipPim_PUc0:
     dataset: BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_200425-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_200520-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_MuNuDstst_Pi0Pi0_PUc0:
     dataset: BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_200427-c21dec93027231dc6f615dfe5c662834/USER
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_200427-c21dec93027231dc6f615dfe5c662834/USER #Wrong excited state
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_200518-c21dec93027231dc6f615dfe5c662834/USER
 
 ##### Probe side samples ##########
   p_B0_MuNuDst_PUc0:

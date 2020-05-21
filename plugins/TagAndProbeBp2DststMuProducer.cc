@@ -28,7 +28,7 @@
 #define __sigIPpfCand_min__ 2. // loose cut
 #define __PvalChi2Vtx_min__ 0.05 // loose cut
 #define __dmD0_max__ 0.15 // loose cut
-#define __sigdxy_vtx_PV_min__ 2.0 // loose cut
+#define __sigdxy_vtx_PV_min__ 4.0 // loose cut
 #define __dmDst_max__ 0.15 // loose cut
 #define __mass_D0pipmu_max__ 10. // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
@@ -164,6 +164,7 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
         if (!K.hasTrackDetails()) continue;
         if (K.pdgId() != charge_K*211 ) continue;
         if (K.pt() < __pThad_min__) continue;
+        if (fabs(K.eta()) > 2.4) continue;
         // Require to be close to the trigger muon;
         auto K_tk = K.bestTrack();
         if (fabs(K_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
@@ -189,6 +190,7 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
           const pat::PackedCandidate & pi = (*pfCandHandle)[i_pi];
           if (!pi.hasTrackDetails()) continue;
           if (pi.pdgId() != charge_pi*211 ) continue;
+          if (fabs(pi.eta()) > 2.4) continue;
           //Require a minimum pt
           if(pi.pt() < __pThad_min__) continue;
           // Require to be close to the trigger muon;
@@ -245,6 +247,7 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
             const pat::PackedCandidate & pip = (*pfCandHandle)[i_pip];
             if (!pip.hasTrackDetails()) continue;
             if (pip.pdgId() != charge_pip*211 ) continue;
+            if (fabs(pip.eta()) > 2.4) continue;
             // Require to be close to the trigger muon;
             auto pip_tk = pip.bestTrack();
             if (fabs(pip_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
@@ -290,19 +293,30 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
             double exp_M = mass_piK + (mass_Dst - mass_D0);
             TLorentzVector p4_exp_Dst;
             p4_exp_Dst.SetPtEtaPhiM(exp_pt, p4_refit_D0.Eta(), p4_refit_D0.Phi(), exp_M);
+            auto p4_exp_pis = p4_exp_Dst - p4_refit_D0;
 
             auto mass_D0pip = (p4_refit_D0 + p4_refit_pip).M();
             auto mass_expDstpip = (p4_exp_Dst + p4_refit_pip).M();
-            if (mass_expDstpip > 3.5) continue;
+            if (mass_expDstpip > 3.) continue;
 
+            TLorentzVector p4st_pip(p4_refit_pip);
+            p4st_pip.Boost(-1*p4_exp_Dst.BoostVector());
+            (*outputVecNtuplizer)["Est_pip"].push_back(p4st_pip.E());
+            auto CosThetaSt_pip = cos(p4st_pip.Angle(p4_exp_Dst.BoostVector()));
+            (*outputVecNtuplizer)["CosThetaSt_pip"].push_back(CosThetaSt_pip);
 
             (*outputVecNtuplizer)["mass_D0pip"].push_back(mass_D0pip);
             (*outputVecNtuplizer)["mass_expDstpip"].push_back(mass_expDstpip);
+            (*outputVecNtuplizer)["dm_expDstpip_pik"].push_back(mass_expDstpip-mass_piK);
 
             (*outputVecNtuplizer)["chi2_D0pipmu"].push_back(res.chi2);
             (*outputVecNtuplizer)["dof_D0pipmu"].push_back(res.dof);
             (*outputVecNtuplizer)["pval_D0pipmu"].push_back(res.pval);
             (*outputVecNtuplizer)["mass_D0pipmu"].push_back(mass_D0pipmu);
+
+            AddTLVToOut(p4_exp_Dst+p4_refit_pip, string("Dstst_expD0pip"), &(*outputVecNtuplizer));
+            AddTLVToOut(p4_exp_pis, string("pis_expD0pipmu"), &(*outputVecNtuplizer));
+
 
             // Looking for the best vertex to associate it with
             uint i_best = 0;
@@ -395,13 +409,17 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
             (*outputVecNtuplizer)["pis_eta"] = {};
             (*outputVecNtuplizer)["pis_phi"] = {};
             (*outputVecNtuplizer)["chi2_D0pis"] = {};
+            (*outputVecNtuplizer)["chi2_D0pismu"] = {};
             (*outputVecNtuplizer)["dof_D0pis"] = {};
+            (*outputVecNtuplizer)["dof_D0pismu"] = {};
             (*outputVecNtuplizer)["pval_D0pis"] = {};
+            (*outputVecNtuplizer)["pval_D0pismu"] = {};
             (*outputVecNtuplizer)["mass_D0pis"] = {};
+            (*outputVecNtuplizer)["mass_D0pismu"] = {};
             (*outputVecNtuplizer)["cos_Dst_PV"] = {};
-            (*outputVecNtuplizer)["pis_refitD0pis_pt"] = {};
-            (*outputVecNtuplizer)["pis_refitD0pis_eta"] = {};
-            (*outputVecNtuplizer)["pis_refitD0pis_phi"] = {};
+            (*outputVecNtuplizer)["pis_refitD0pismu_pt"] = {};
+            (*outputVecNtuplizer)["pis_refitD0pismu_eta"] = {};
+            (*outputVecNtuplizer)["pis_refitD0pismu_phi"] = {};
             for(uint i_pis = 0; i_pis < N_pfCand; ++i_pis) {
               if(i_pis==i_pi || i_pis==i_K || i_pis==i_pip) continue;
 
@@ -430,6 +448,35 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
 
               if (verbose) {cout << "D* found\n";}
 
+              auto BKinTree = vtxu::FitB_D0pismu(iSetup, D0, pis, trgMu);
+              auto res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
+              if(!res.isGood) continue;
+              updateCounter(11, countersFlag);
+
+              BKinTree->movePointerToTheTop();
+              auto mass_D0pismu = BKinTree->currentParticle()->currentState().mass();
+              if (mass_D0pismu > 7.) continue; // Last cut! from now on always save
+              updateCounter(12, countersFlag);
+              if (verbose) {cout << "B->D* mu found\n";}
+
+              (*outputVecNtuplizer)["chi2_D0pismu"].push_back(res.chi2);
+              (*outputVecNtuplizer)["dof_D0pismu"].push_back(res.dof);
+              (*outputVecNtuplizer)["pval_D0pismu"].push_back(res.pval);
+              (*outputVecNtuplizer)["mass_D0pismu"].push_back(mass_D0pismu);
+
+              auto D0pismu = BKinTree->currentParticle();
+              auto vtxB = BKinTree->currentDecayVertex();
+
+              BKinTree->movePointerToTheFirstChild();
+              auto refit_D0 = BKinTree->currentParticle();
+              auto p4_refiD0pismu_D0 = vtxu::getTLVfromKinPart(refit_D0);
+              BKinTree->movePointerToTheNextChild();
+              auto refit_pis = BKinTree->currentParticle();
+              auto p4_refitD0pismu_pis = vtxu::getTLVfromKinPart(refit_pis);
+              AddTLVToOut(p4_refitD0pismu_pis, string("pis_refitD0pismu"), &(*outputVecNtuplizer));
+
+              auto dm = (p4_refiD0pismu_D0 + p4_refitD0pismu_pis).M() - mass_piK;
+
               auto Dst = DstKinTree->currentParticle();
               auto vtxDst = DstKinTree->currentDecayVertex();
 
@@ -444,11 +491,8 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
               (*outputVecNtuplizer)["dof_D0pis"].push_back(res_D0pis.dof);
               (*outputVecNtuplizer)["pval_D0pis"].push_back(res_D0pis.pval);
               (*outputVecNtuplizer)["mass_D0pis"].push_back(mass_D0pis);
+              (*outputVecNtuplizer)["dm_D0pis_piK"].push_back(dm);
               (*outputVecNtuplizer)["cos_Dst_PV"].push_back(cos_Dst_PV);
-
-              DstKinTree->movePointerToTheFirstChild();
-              auto refitD0pis_pis = DstKinTree->currentParticle();
-              AddTLVToOut(vtxu::getTLVfromKinPart(refitD0pis_pis), string("pis_refitD0pis"), &(*outputVecNtuplizer));
             }
 
             if(n_B > 100) break;
