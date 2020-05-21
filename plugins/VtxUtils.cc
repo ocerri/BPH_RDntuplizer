@@ -232,8 +232,8 @@ RefCountedKinematicTree vtxu::FitB_mumupiK(const edm::EventSetup& iSetup, pat::M
   float mPi = _PiMass_, dmPi = _PiMassErr_;
   parts.push_back(pFactory.particle(m1_tk, mMu, chi, ndf, dmMu));
   parts.push_back(pFactory.particle(m2_tk, mMu, chi, ndf, dmMu));
-  parts.push_back(pFactory.particle(K_tk, mK, chi, ndf, dmK));
   parts.push_back(pFactory.particle(pi_tk, mPi, chi, ndf, dmPi));
+  parts.push_back(pFactory.particle(K_tk, mK, chi, ndf, dmK));
 
   if (!Bmass_constraint && !JpsiKstmass_constraint && !pointing_constraint) {
     KinematicParticleVertexFitter VtxFitter;
