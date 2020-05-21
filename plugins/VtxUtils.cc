@@ -102,8 +102,8 @@ RefCountedKinematicTree vtxu::FitKst_piK(const edm::EventSetup& iSetup, pat::Pac
   double chi = 0, ndf = 0;
   float mK = _KMass_, dmK = _KMassErr_;
   float mPi = _PiMass_, dmPi = _PiMassErr_;
-  parts.push_back(pFactory.particle(K_tk, mK, chi, ndf, dmK));
   parts.push_back(pFactory.particle(pi_tk, mPi, chi, ndf, dmPi));
+  parts.push_back(pFactory.particle(K_tk, mK, chi, ndf, dmK));
 
   if (!mass_constraint) {
     KinematicParticleVertexFitter VtxFitter;
