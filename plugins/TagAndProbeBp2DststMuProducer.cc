@@ -230,6 +230,7 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
           auto dxy_vtxD0_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxD0);
           auto sigdxy_vtxD0_PV = dxy_vtxD0_PV.first/dxy_vtxD0_PV.second;
 
+          if(cosT_D0_PV < 0.5) continue;
           if(sigdxy_vtxD0_PV < __sigdxy_vtx_PV_min__) continue;
           if (verbose) {cout << "pi-K vertex displacement passed\n";}
           updateCounter(7, countersFlag);
@@ -294,15 +295,16 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
             TLorentzVector p4_exp_Dst;
             p4_exp_Dst.SetPtEtaPhiM(exp_pt, p4_refit_D0.Eta(), p4_refit_D0.Phi(), exp_M);
             auto p4_exp_pis = p4_exp_Dst - p4_refit_D0;
+            auto p4_exp_Dstst = p4_exp_Dst + p4_refit_pip;
 
             auto mass_D0pip = (p4_refit_D0 + p4_refit_pip).M();
             auto mass_expDstpip = (p4_exp_Dst + p4_refit_pip).M();
             if (mass_expDstpip > 3.) continue;
 
             TLorentzVector p4st_pip(p4_refit_pip);
-            p4st_pip.Boost(-1*p4_exp_Dst.BoostVector());
+            p4st_pip.Boost(-1*p4_exp_Dstst.BoostVector());
             (*outputVecNtuplizer)["Est_pip"].push_back(p4st_pip.E());
-            auto CosThetaSt_pip = cos(p4st_pip.Angle(p4_exp_Dst.BoostVector()));
+            auto CosThetaSt_pip = cos(p4st_pip.Angle(p4_exp_Dstst.BoostVector()));
             (*outputVecNtuplizer)["CosThetaSt_pip"].push_back(CosThetaSt_pip);
 
             (*outputVecNtuplizer)["mass_D0pip"].push_back(mass_D0pip);
@@ -416,6 +418,7 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
             (*outputVecNtuplizer)["pval_D0pismu"] = {};
             (*outputVecNtuplizer)["mass_D0pis"] = {};
             (*outputVecNtuplizer)["mass_D0pismu"] = {};
+            (*outputVecNtuplizer)["dm_D0pis_piK"] = {};
             (*outputVecNtuplizer)["cos_Dst_PV"] = {};
             (*outputVecNtuplizer)["pis_refitD0pismu_pt"] = {};
             (*outputVecNtuplizer)["pis_refitD0pismu_eta"] = {};
