@@ -322,12 +322,16 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
 
           BKinTree->movePointerToTheFirstChild();
           auto refit_Mu1 = BKinTree->currentParticle();
+          auto p4_refit_Mu1 = vtxu::getTLVfromKinPart(refit_Mu1);
           BKinTree->movePointerToTheNextChild();
           auto refit_Mu2 = BKinTree->currentParticle();
-          BKinTree->movePointerToTheFirstChild();
+          auto p4_refit_Mu2 = vtxu::getTLVfromKinPart(refit_Mu2);
+          BKinTree->movePointerToTheNextChild();
           auto refit_pi = BKinTree->currentParticle();
+          auto p4_refit_pi = vtxu::getTLVfromKinPart(refit_pi);
           BKinTree->movePointerToTheNextChild();
           auto refit_K = BKinTree->currentParticle();
+          auto p4_refit_K = vtxu::getTLVfromKinPart(refit_K);
 
           n_B++;
 
@@ -349,9 +353,6 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           (*outputVecNtuplizer)["dof_piK"].push_back(res_piK.dof);
           (*outputVecNtuplizer)["pval_piK"].push_back(res_piK.pval);
           (*outputVecNtuplizer)["mass_piK"].push_back(mass_piK);
-          AddTLVToOut(vtxu::getTLVfromKinPart(Kst), string("Kst"), &(*outputVecNtuplizer));
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_pi), string("piRefit"), &(*outputVecNtuplizer));
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_K), string("KRefit"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["cos_Kst_PV"].push_back(cos_Kst_PV);
           (*outputVecNtuplizer)["cosT_Kst_PV"].push_back(cosT_Kst_PV);
           (*outputVecNtuplizer)["d_vtxKst_PV"].push_back(d_vtxKst_PV.first);
@@ -381,14 +382,18 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           // (*outputVecNtuplizer)["chi2_mumu_cJpsiMass"].push_back(res_mumu_cJpsiMass.chi2);
           // (*outputVecNtuplizer)["dof_mumu_cJpsiMass"].push_back(res_mumu_cJpsiMass.dof);
           // (*outputVecNtuplizer)["pval_mumu_cJpsiMass"].push_back(res_mumu_cJpsiMass.pval);
-          AddTLVToOut(vtxu::getTLVfromKinPart(Jpsi), string("Jpsi"), &(*outputVecNtuplizer));
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_Mu1), string("mupRefit"), &(*outputVecNtuplizer));
-          AddTLVToOut(vtxu::getTLVfromKinPart(refit_Mu2), string("mumRefit"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["cos_Jpsi_PV"].push_back(cos_Jpsi_PV);
           (*outputVecNtuplizer)["cosT_Jpsi_PV"].push_back(cosT_Jpsi_PV);
           (*outputVecNtuplizer)["d_vtxJpsi_PV"].push_back(d_vtxJpsi_PV.first);
           (*outputVecNtuplizer)["sigd_vtxJpsi_PV"].push_back(sigd_vtxJpsi_PV);
           (*outputVecNtuplizer)["sigdxy_vtxJpsi_PV"].push_back(dxy_vtxJpsi_PV.first/dxy_vtxJpsi_PV.second);
+
+          AddTLVToOut(p4_refit_Mu1, string("mupRefit"), &(*outputVecNtuplizer));
+          AddTLVToOut(p4_refit_Mu2, string("mumRefit"), &(*outputVecNtuplizer));
+          AddTLVToOut(p4_refit_Mu1+p4_refit_Mu1, string("JpsiRefit"), &(*outputVecNtuplizer));
+          AddTLVToOut(p4_refit_pi, string("piRefit"), &(*outputVecNtuplizer));
+          AddTLVToOut(p4_refit_K, string("KRefit"), &(*outputVecNtuplizer));
+          AddTLVToOut(p4_refit_pi+p4_refit_K, string("KstRefit"), &(*outputVecNtuplizer));
 
           if(n_B >= 100) break;
         }
