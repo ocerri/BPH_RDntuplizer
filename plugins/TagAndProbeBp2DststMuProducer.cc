@@ -307,6 +307,11 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
             auto CosThetaSt_pip = cos(p4st_pip.Angle(p4_exp_Dstst.BoostVector()));
             (*outputVecNtuplizer)["CosThetaSt_pip"].push_back(CosThetaSt_pip);
 
+            auto E_expPi = p4_refit_D0.E()*mass_pi/mass_D0;
+            (*outputVecNtuplizer)["pis_expScale_E"].push_back(E_expPi);
+            auto Pt_expPi = sqrt(E_expPi*E_expPi - mass_pi*mass_pi)/cosh(p4_refit_D0.Eta());
+            (*outputVecNtuplizer)["pis_expScale_pt"].push_back(Pt_expPi);
+
             (*outputVecNtuplizer)["mass_D0pip"].push_back(mass_D0pip);
             (*outputVecNtuplizer)["mass_expDstpip"].push_back(mass_expDstpip);
             (*outputVecNtuplizer)["dm_expDstpip_pik"].push_back(mass_expDstpip-mass_piK);
@@ -404,6 +409,7 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
                              Look for the soft pion to make a Dst-
             ############################################################################
             */
+            (*outputVecNtuplizer)["pis_TagCandIdx"] = {};
             (*outputVecNtuplizer)["sigdxy_pis_PV"] = {};
             (*outputVecNtuplizer)["pis_norm_chi2"] = {};
             (*outputVecNtuplizer)["pis_N_valid_hits"] = {};
@@ -462,6 +468,7 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
               updateCounter(12, countersFlag);
               if (verbose) {cout << "B->D* mu found\n";}
 
+              (*outputVecNtuplizer)["pis_TagCandIdx"].push_back(n_B-1);
               (*outputVecNtuplizer)["chi2_D0pismu"].push_back(res.chi2);
               (*outputVecNtuplizer)["dof_D0pismu"].push_back(res.dof);
               (*outputVecNtuplizer)["pval_D0pismu"].push_back(res.pval);
