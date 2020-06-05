@@ -80,6 +80,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   edm::Handle<vector<reco::Vertex>> vtxHandle;
   iEvent.getByToken(vtxSrc_, vtxHandle);
   auto primaryVtx = (*vtxHandle)[0];
+  auto nRecoVtx = vtxHandle->size();
 
   if (verbose) {
     cout << "\n MUONS LIST" << endl;
@@ -136,9 +137,10 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
         mTag = m;
       }
     }
-    if(ptTagMu == -1) continue;
-    pTag.SetPtEtaPhiM(mTag.pt(), mTag.eta(), mTag.phi(), massMu);
+    if(ptTagMu == -1) pTag.SetPtEtaPhiM(0, -99999999, -9999999999, massMu);
+    else pTag.SetPtEtaPhiM(mTag.pt(), mTag.eta(), mTag.phi(), massMu);
 
+    outMap["nVtx"] = nRecoVtx;
     outMap["mTag_pt"] = mTag.pt();
     outMap["mTag_eta"] = mTag.eta();
     outMap["mTag_phi"] = mTag.phi();

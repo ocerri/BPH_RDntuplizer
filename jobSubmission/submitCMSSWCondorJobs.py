@@ -157,7 +157,8 @@ if __name__ == "__main__":
             fsub.write('\n')
             fsub.write('+InteractiveUser = True')
             fsub.write('\n')
-            fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/bbockelm/cms:rhel7"')
+            # Check for the right one using: ll /cvmfs/singularity.opensciencegrid.org/cmssw/
+            fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/bbockelm/cms:rhel7-m202006"')
             fsub.write('\n')
             fsub.write('+SingularityBindCVMFS = True')
             fsub.write('\n')

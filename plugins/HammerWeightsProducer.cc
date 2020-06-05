@@ -114,6 +114,7 @@ private:
     };
 
     int N_evets_weights_produced = 0;
+    int N_evets_analyzed = 0;
 };
 
 
@@ -162,7 +163,7 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
 
 void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     if (verbose) {cout << "-----------  Hammer weights ----------\n";}
-
+    N_evets_analyzed++;
     // Get prunedGenParticles
     edm::Handle<std::vector<reco::GenParticle>> PrunedGenParticlesHandle;
     iEvent.getByToken(PrunedParticlesSrc_, PrunedGenParticlesHandle);
@@ -174,7 +175,7 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     if(i_B == -1){
       cout << "[ERROR]: Invalid B idx (i.e. no B MC set)" << endl;
       cerr << "[ERROR]: Invalid B idx (i.e. no B MC set)" << endl;
-      if (N_evets_weights_produced == 0) return;
+      if (2*N_evets_weights_produced < N_evets_analyzed) return;
       else exit(1);
     }
     // cout << "i_B retieved: " << i_B << endl;
