@@ -48,7 +48,7 @@ else:
     fdefault += 'inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:5]
+    flist = flist[:3]
 
 print 'Trying to get a local copy'
 for i in range(len(flist)):
@@ -74,9 +74,9 @@ if args.useLocalLumiList:
 #####################   Output   ###################
 '''
 if args.outputFile == '.root':
-    outname = 'TagAndProbe_CAND.root'
+    outname = 'TagAndProbeTrigger_CAND.root'
 elif args.outputFile.startswith('_numEvent'):
-    outname = 'TagAndProbe_CAND' + args.outputFile
+    outname = 'TagAndProbeTrigger_CAND' + args.outputFile
 else:
     outname = args.outputFile
 

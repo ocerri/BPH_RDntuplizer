@@ -144,7 +144,8 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     outMap["mTag_pt"] = mTag.pt();
     outMap["mTag_eta"] = mTag.eta();
     outMap["mTag_phi"] = mTag.phi();
-    outMap["mTag_hasInnerTrk"] = !mProbe.innerTrack().isNull();
+    if(ptTagMu == -1) outMap["mTag_hasInnerTrk"] = 0;
+    else outMap["mTag_hasInnerTrk"] = !mTag.innerTrack().isNull();
     outMap["mProbe_pt"] = mProbe.pt();
     outMap["mProbe_eta"] = mProbe.eta();
     outMap["mProbe_phi"] = mProbe.phi();
@@ -163,7 +164,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       outMap["mProbe_dxy"] = dxy;
       outMap["mProbe_sigdxy"] = fabs(dxy)/tk->dxyError();
 
-      if(!mProbe.innerTrack().isNull()) {
+      if(outMap["mProbe_hasInnerTrk"] && outMap["mTag_hasInnerTrk"]) {
         auto kinTree = vtxu::FitJpsi_mumu(iSetup, mTag, mProbe, false);
         auto res = vtxu::fitQuality(kinTree, 0.1);
         outMap["vtx_isValid"] = res.isValid;

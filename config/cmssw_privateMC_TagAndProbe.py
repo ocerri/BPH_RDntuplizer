@@ -71,9 +71,9 @@ process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 #####################   Output   ###################
 '''
 if args.outputFile == '.root':
-    outname = 'TagAndProbe_CAND.root'
+    outname = 'TagAndProbeTrigger_CAND.root'
 elif args.outputFile.startswith('_numEvent'):
-    outname = 'TagAndProbe_CAND' + args.outputFile
+    outname = 'TagAndProbeTrigger_CAND' + args.outputFile
 else:
     outname = args.outputFile
 
