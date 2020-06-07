@@ -91,8 +91,8 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       }
   }
 
-  vector<string> triggerTag = {"Mu12_IP6", "Mu9_IP5", "Mu7_IP4", "Mu9_IP4", "Mu8_IP5", "Mu8_IP6", "Mu9_IP6", "Mu8_IP3"};
-  for(auto tag : triggerTag) outMap["prescale" + tag] = -1;
+  vector<string> triggerTag = {"Mu12_IP6", "Mu9_IP5", "Mu7_IP4", "Mu9_IP4", "Mu9_IP6"};
+  for(auto tag : triggerTag) outMap["prescale_" + tag] = -1;
 
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
   regex txt_regex_path("HLT_Mu[0-9]+_IP[0-9]_part[0-9]_v[0-9]");
@@ -120,8 +120,8 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   for(uint j=0; j < nMuons; j++) {
     if(idxTriggeringMuons.size() == 1 && idxTriggeringMuons[0] == j) continue;
     auto mProbe = (*muonHandle)[j];
-    if ( fabs(mProbe.eta()) > 1.7 ) continue;
-    if ( mProbe.pt() < 4. ) continue;
+    if ( fabs(mProbe.eta()) > 1.6 ) continue;
+    if ( mProbe.pt() < 5. ) continue;
     TLorentzVector pTag, pProbe;
     pProbe.SetPtEtaPhiM(mProbe.pt(), mProbe.eta(), mProbe.phi(), massMu);
 
