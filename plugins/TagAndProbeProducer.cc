@@ -120,6 +120,8 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   for(uint j=0; j < nMuons; j++) {
     if(idxTriggeringMuons.size() == 1 && idxTriggeringMuons[0] == j) continue;
     auto mProbe = (*muonHandle)[j];
+    if ( fabs(mProbe.eta()) > 1.7 ) continue;
+    if ( mProbe.pt() < 4. ) continue;
     TLorentzVector pTag, pProbe;
     pProbe.SetPtEtaPhiM(mProbe.pt(), mProbe.eta(), mProbe.phi(), massMu);
 
@@ -157,6 +159,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     outMap["mProbe_hasInnerTrk"] = !mProbe.innerTrack().isNull();
     outMap["mProbe_tightID"] = mProbe.isTightMuon(primaryVtx);
     outMap["mProbe_softID"] = mProbe.isSoftMuon(primaryVtx);
+    if (!outMap["mProbe_softID"]) continue;
     if(!mProbe.innerTrack().isNull()) {
       auto tk = mProbe.innerTrack();
       auto dxy = tk->dxy(primaryVtx.position());
