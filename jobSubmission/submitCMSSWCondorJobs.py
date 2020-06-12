@@ -88,12 +88,12 @@ if __name__ == "__main__":
     elif isinstance(args.input_file, list):
         flist = args.input_file
 
-    print 'Trying to get a local copy'
-    for i in range(len(flist)):
-        if flist[i].startswith('file:'):
-            continue
-        if os.path.isfile('/mnt/hadoop' + flist[i]):
-            flist[i] = 'file:/mnt/hadoop' + flist[i]
+    # print 'Trying to get a local copy'
+    # for i in range(len(flist)):
+    #     if flist[i].startswith('file:'):
+    #         continue
+    #     if os.path.isfile('/mnt/hadoop' + flist[i]):
+    #         flist[i] = 'file:/mnt/hadoop' + flist[i]
 
     rem = len(flist)%args.nFilePerJob
     Njobs = len(flist)/args.nFilePerJob
@@ -158,7 +158,7 @@ if __name__ == "__main__":
             fsub.write('+InteractiveUser = True')
             fsub.write('\n')
             # Check for the right one using: ll /cvmfs/singularity.opensciencegrid.org/cmssw/
-            fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/bbockelm/cms:rhel7-m202006"')
+            fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel7-m20200605"')
             fsub.write('\n')
             fsub.write('+SingularityBindCVMFS = True')
             fsub.write('\n')

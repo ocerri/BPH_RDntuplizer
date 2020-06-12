@@ -35,7 +35,7 @@ process=BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p
 
 python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_B2JpsiKst/out_CAND.root -c config/cmssw_privateMC_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py --maxtime 10m -N 50 -f
 
-python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_TagAndProbe/out_CAND.root -c config/cmssw_privateMC_TagAndProbe.py --maxtime 30m -N 30 -f
+python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_TagAndProbe/out_CAND.root -c config/cmssw_privateMC_TagAndProbe.py --maxtime 30m -N 60 -f
 
 
 
