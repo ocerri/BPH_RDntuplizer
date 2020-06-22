@@ -21,11 +21,11 @@
 
 #define __PvalChi2Vtx_min__ 0.05 // Very loose cut
 #define __dzMax__ 3.0
-#define __dmJpsi_max__ 1.0 // loose cut
+#define __dmJpsi_max__ 0.4 // loose cut
 #define __sigIPpfCand_min__ 2. // loose cut
 #define __pThad_min__ 0.5 // loose cut
-#define __dmKst_max__ 0.5 // loose cut
-#define __dmB0_max__ 1.0 // loose cut
+#define __dmKst_max__ 0.3 // loose cut
+#define __dmB0_max__ 0.5 // loose cut
 
 using namespace std;
 
@@ -232,6 +232,8 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
         auto d_vtxKst_PV = vtxu::vtxsDistance(primaryVtx, vtxKst);
         auto sigd_vtxKst_PV = d_vtxKst_PV.first/d_vtxKst_PV.second;
         auto dxy_vtxKst_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxKst);
+        auto sigdxy_vtxKst_PV = fabs(dxy_vtxKst_PV.first)/dxy_vtxKst_PV.second;
+        if (sigdxy_vtxKst_PV < 3) continue;
 
         auto PhiKinTree = vtxu::FitPhi_KK(iSetup, pi, K, false);
         float mass_KK = -1;
@@ -289,9 +291,13 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
 
               double cos_B_PV = vtxu::computePointingCos(primaryVtx, vtxB, B);
               (*outv)["cos_B_PV_"+tag].push_back(cos_B_PV);
+              auto cosT_B_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxB, B);
+              (*outv)["cosT_B_PV_"+tag].push_back(cosT_B_PV);
               auto d_vtxB_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
               double sigd_vtxB_PV = d_vtxB_PV.first/d_vtxB_PV.second;
               (*outv)["sigd_vtxB_PV_"+tag].push_back(sigd_vtxB_PV);
+              auto dxy_vtxB_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxB);
+              (*outv)["sigdxy_vtxB_PV"].push_back(dxy_vtxB_PV.first/dxy_vtxB_PV.second);
 
               // B2JpsiKstDecayTreeProducer::AddTLVToOut(vtxu::getTLVfromKinPart(B), string("B_"+tag), outv);
               auto pvec = B->currentState().globalMomentum();
@@ -317,8 +323,23 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           if(!res.isValid) continue;
           auto mass = BKinTree->currentParticle()->currentState().mass();
           if(fabs(mass - mass_B0) > __dmB0_max__) continue;
-          // debugPrint("mumupiK", res, mass);
-          addToOutBFit("mumupiK", res, mass, BKinTree, primaryVtx, &(*outputVecNtuplizer));
+
+          BKinTree->movePointerToTheTop();
+          auto B = BKinTree->currentParticle();
+          auto vtxB = BKinTree->currentDecayVertex();
+          // Looking for the best vertex to associate it with
+          uint i_best = 0;
+          auto maxCos = vtxu::computePointingCos(primaryVtx, vtxB, B);
+          for(uint i_vtx = 1; i_vtx < vtxHandle->size(); i_vtx++) {
+            auto auxCos = vtxu::computePointingCos((*vtxHandle)[i_vtx], vtxB, B);
+            if(auxCos > maxCos) {
+              maxCos = auxCos;
+              i_best = i_vtx;
+            }
+          }
+          auto bestVtx = (*vtxHandle)[i_best];
+
+          addToOutBFit("mumupiK", res, mass, BKinTree, bestVtx, &(*outputVecNtuplizer));
 
           BKinTree->movePointerToTheFirstChild();
           auto refit_Mu1 = BKinTree->currentParticle();
@@ -357,7 +378,7 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           (*outputVecNtuplizer)["cosT_Kst_PV"].push_back(cosT_Kst_PV);
           (*outputVecNtuplizer)["d_vtxKst_PV"].push_back(d_vtxKst_PV.first);
           (*outputVecNtuplizer)["sigd_vtxKst_PV"].push_back(sigd_vtxKst_PV);
-          (*outputVecNtuplizer)["sigdxy_vtxKst_PV"].push_back(dxy_vtxKst_PV.first/dxy_vtxKst_PV.second);
+          (*outputVecNtuplizer)["sigdxy_vtxKst_PV"].push_back(sigdxy_vtxKst_PV);
           (*outputVecNtuplizer)["mass_KK"].push_back(mass_KK);
           (*outputVecNtuplizer)["mass_piK_CPconj"].push_back(mass_piK_CPconj);
 

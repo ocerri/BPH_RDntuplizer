@@ -68,10 +68,11 @@ samples:
       - /storage/user/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgenFSR_SVV_PU20_10-2-3/jobs_out/out_MINIAODSIM_*.root
       - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-Probe_B0_JpsiKst_13TeV-pythia8_Hardbbbar_evtgenFSR_SVV_200225-c21dec93027231dc6f615dfe5c662834/USER
 
-  B0_JpsiKstFSR_PUc0:
+  B0_JpsiKst_PUc0:
     dataset: BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_PUc0_10-2-3
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_200605-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_200612-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_JpsiKst_PU35:
     dataset: BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU35_10-2-3
