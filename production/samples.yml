@@ -213,6 +213,7 @@ samples:
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200327-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200708-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_MuNuDstst_Pi0_PUc0:
     dataset: BP_Tag_B0_MuNuDstst_Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
