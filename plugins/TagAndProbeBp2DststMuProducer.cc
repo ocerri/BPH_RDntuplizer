@@ -281,14 +281,11 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
             BKinTree->movePointerToTheFirstChild();
             auto refit_D0 = BKinTree->currentParticle();
             auto p4_refit_D0 = vtxu::getTLVfromKinPart(refit_D0);
-            AddTLVToOut(p4_refit_D0, string("D0_refitD0pipmu"), &(*outputVecNtuplizer));
             BKinTree->movePointerToTheNextChild();
             auto refit_pip = BKinTree->currentParticle();
             auto p4_refit_pip = vtxu::getTLVfromKinPart(refit_pip);
-            AddTLVToOut(p4_refit_pip, string("pip_refitD0pipmu"), &(*outputVecNtuplizer));
             BKinTree->movePointerToTheNextChild();
             auto refit_mu = BKinTree->currentParticle();
-            AddTLVToOut(vtxu::getTLVfromKinPart(refit_mu), string("mu_refitD0pipmu"), &(*outputVecNtuplizer));
 
             double exp_pt = p4_refit_D0.Pt()*(mass_Dst/mass_D0);
             double exp_M = mass_piK + (mass_Dst - mass_D0);
@@ -298,9 +295,12 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
             auto p4_exp_Dstst = p4_exp_Dst + p4_refit_pip;
 
             auto mass_D0pip = (p4_refit_D0 + p4_refit_pip).M();
-            if ( 1e3*fabs(mass_D0pip - mass_piK - (mass_Dst - mass_D0)) < 2 ) continue; //Reject D**
+            if ( 1e3*fabs(mass_D0pip - mass_piK - (mass_Dst - mass_D0)) < 4 ) continue; //Reject D**
             auto mass_expDstpip = (p4_exp_Dst + p4_refit_pip).M();
             if (mass_expDstpip > 3.) continue;
+            AddTLVToOut(p4_refit_D0, string("D0_refitD0pipmu"), &(*outputVecNtuplizer));
+            AddTLVToOut(p4_refit_pip, string("pip_refitD0pipmu"), &(*outputVecNtuplizer));
+            AddTLVToOut(vtxu::getTLVfromKinPart(refit_mu), string("mu_refitD0pipmu"), &(*outputVecNtuplizer));
 
             TLorentzVector p4st_pip(p4_refit_pip);
             p4st_pip.Boost(-1*p4_exp_Dstst.BoostVector());
