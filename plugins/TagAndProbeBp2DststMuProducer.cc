@@ -298,6 +298,7 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
             auto p4_exp_Dstst = p4_exp_Dst + p4_refit_pip;
 
             auto mass_D0pip = (p4_refit_D0 + p4_refit_pip).M();
+            if ( 1e3*fabs(mass_D0pip - mass_piK - (mass_Dst - mass_D0)) < 2 ) continue; //Reject D**
             auto mass_expDstpip = (p4_exp_Dst + p4_refit_pip).M();
             if (mass_expDstpip > 3.) continue;
 
@@ -423,6 +424,7 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
             (*outputVecNtuplizer)["pval_D0pis"] = {};
             (*outputVecNtuplizer)["pval_D0pismu"] = {};
             (*outputVecNtuplizer)["mass_D0pis"] = {};
+            (*outputVecNtuplizer)["mass_D0pispip"] = {};
             (*outputVecNtuplizer)["mass_D0pismu"] = {};
             (*outputVecNtuplizer)["dm_D0pis_piK"] = {};
             (*outputVecNtuplizer)["cos_Dst_PV"] = {};
@@ -484,6 +486,8 @@ void TagAndProbeBp2DststMuProducer::produce(edm::Event& iEvent, const edm::Event
               auto refit_pis = BKinTree->currentParticle();
               auto p4_refitD0pismu_pis = vtxu::getTLVfromKinPart(refit_pis);
               AddTLVToOut(p4_refitD0pismu_pis, string("pis_refitD0pismu"), &(*outputVecNtuplizer));
+              (*outputVecNtuplizer)["mass_D0pispip"].push_back((p4_refiD0pismu_D0 + p4_refitD0pismu_pis + p4_refit_pip).M());
+
 
               auto dm = (p4_refiD0pismu_D0 + p4_refitD0pismu_pis).M() - mass_piK;
 
