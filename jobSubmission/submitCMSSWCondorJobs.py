@@ -16,9 +16,8 @@ def processCmd(cmd, quite = 0):
 
 def createBatchName(a):
     try:
-        aux = os.path.basename(a[0])
-        out = re.search('B[0pm]', aux)
-        n = aux[out.start(), aux.find('PU')+4]
+        aux = os.path.basename(a.input_file[0]).replace('inputFiles_', '').replace('.txt', '').replace('.root', '')
+        n = aux
     except:
         n = a.maxtime
     return n
@@ -158,7 +157,7 @@ if __name__ == "__main__":
             fsub.write('+InteractiveUser = True')
             fsub.write('\n')
             # Check for the right one using: ll /cvmfs/singularity.opensciencegrid.org/cmssw/
-            fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel7-m20200605"')
+            fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel7-m20200724"')
             fsub.write('\n')
             fsub.write('+SingularityBindCVMFS = True')
             fsub.write('\n')
@@ -179,9 +178,9 @@ if __name__ == "__main__":
         fsub.write('\n')
         fsub.write('on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)')   # Send the job to Held state on failure.
         fsub.write('\n')
-        fsub.write('periodic_release =  (NumJobStarts < 3) && ((CurrentTime - EnteredCurrentStatus) > (60*20))')   # Periodically retry the jobs for 3 times with an interval 20 mins.
+        fsub.write('periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) > (60*10))')   # Periodically retry the jobs for 3 times with an interval 20 mins.
         fsub.write('\n')
-        fsub.write('max_retries    = 3')
+        fsub.write('max_retries    = 5')
         fsub.write('\n')
         fsub.write('requirements   = Machine =!= LastRemoteHost')
         fsub.write('\n')
