@@ -48,28 +48,22 @@ public:
         if(verbose) { cout << Form("Denominator rate: %1.3e", outRate["den"]) << endl;}
 
         map<string, double> settings;
-        for(auto pars: paramsCLN) {
-          string name = "delta_" + pars.first;
-          settings[name] = 0;
-        }
+        for(auto n: parName) settings["delta_" + n] = 0;
         hammer.setFFEigenvectors("BtoD*", "CLNVar", settings);
         outRate["Central"] = hammer.getRate(proc, "SchmeCLN");
         if(verbose) { cout << Form("Central rate: %1.3e (ratio = %.3f)", outRate["Central"], outRate["Central"]/outRate["den"]) << endl;}
 
-        for(auto elem: paramsCLN) {
-          for(int i=1; i <= 2; i++) {
+        for(int i=0; i<4; i++) { //Loop over eigenVar
+          for (int j=0; j<2; j++) { //Loop over pos/neg direction
             map<string, double> settings;
-            for(auto pars: paramsCLN) {
-              string name = "delta_" + pars.first;
-              if(pars.first == elem.first) {
-                settings[name] = paramsCLN[pars.first][i];
-              }
-              else settings[name] = 0;
+            for (int k=0; k<4; k++) { //Loop over parameters
+              settings["delta_" + parName[k]] = eigVar[i][k][j];
             }
+
             hammer.setFFEigenvectors("BtoD*", "CLNVar", settings);
             auto rate = hammer.getRate(proc, "SchmeCLN");
-            string var_name = elem.first;
-            var_name += i==1? "Up" : "Down";
+            string var_name = "CLN" + varName[i];
+            var_name += j==0? "Up" : "Down";
             outRate[var_name] = rate;
             if(verbose) {cout << var_name << Form(": %1.3e", rate) << endl;}
           }
@@ -104,13 +98,17 @@ private:
 
     int verbose = 0;
 
-    map<string, vector<double>> paramsCLN {
-      // from EX: https://hflav-eos.web.cern.ch/hflav-eos/semi/summer16/html/ExclusiveVcb/exclBtoDstar.html
-      {"RhoSq", {1.205, +0.026, -0.026}},
-      {"R1", {1.404, +0.032, -0.032}},
-      {"R2", {0.854, +0.020, -0.020}},
-      // from TH: https://journals.aps.org/prd/pdf/10.1103/PhysRevD.85.094025
-      {"R0", {1.14, +0.11, -0.11}},
+    const vector<string> parName = {"RhoSq", "R1", "R2", "R0"};
+    // rho2, R1 and R2 from Ex: https://arxiv.org/pdf/1909.12524.pdf
+    // R0 from Th: https://journals.aps.org/prd/pdf/10.1103/PhysRevD.85.094025
+    const double centralVal[4] = {1.122, 1.270, 0.852, 1.14};
+
+    const vector<string> varName = {"eig1", "eig2", "eig3", "R0"};
+    const double eigVar[4][4][2] = {
+      {{-0.02102485,  0.02102485}, {-0.02293032,  0.02293032}, { 0.01652843, -0.01652843}, {0, 0}},
+      {{-0.01105955,  0.01105955}, { 0.01215074, -0.01215074}, { 0.00278883, -0.00278883}, {0, 0}},
+      {{ 0.00341205, -0.00341205}, { 0.00159999, -0.00159999}, { 0.00655998, -0.00655998}, {0, 0}},
+      {{0, 0}, {0, 0}, {0, 0}, {+0.11, -0.11}}
     };
 
     int N_evets_weights_produced = 0;
@@ -150,8 +148,8 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
 
     hammer.initRun();
     string centralValuesOpt = "BtoD*CLN: {";
-    for(auto elem: paramsCLN) {
-      centralValuesOpt += Form("%s: %f, ", elem.first.c_str(), elem.second[0]);
+    for(auto i=0; i<4; i++) {
+      centralValuesOpt += Form("%s: %f, ", parName[i].c_str(), centralVal[i]);
     }
     centralValuesOpt += "}";
     if (verbose) {cout << "[Hammer]: Central values\n\t" << centralValuesOpt << endl;}
@@ -278,10 +276,7 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
 
 
     map<string, double> settings;
-    for(auto pars: paramsCLN) {
-      string name = "delta_" + pars.first;
-      settings[name] = 0;
-    }
+    for(auto n: parName) settings["delta_" + n] = 0;
     hammer.setFFEigenvectors("BtoD*", "CLNVar", settings);
     auto weights = hammer.getWeights("SchmeCLN");
     if(weights.empty()) return;
@@ -298,20 +293,17 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       if(verbose) {cout << elem.second << endl;}
     }
 
-    for(auto elem: paramsCLN) {
-      for(int i=1; i <= 2; i++) {
+    for(int i=0; i<4; i++) { //Loop over eigenVar
+      for (int j=0; j<2; j++) { //Loop over pos/neg direction
         map<string, double> settings;
-        for(auto pars: paramsCLN) {
-          string name = "delta_" + pars.first;
-          if(pars.first == elem.first) {
-            settings[name] = paramsCLN[pars.first][i];
-          }
-          else settings[name] = 0;
+        for (int k=0; k<4; k++) { //Loop over parameters
+          settings["delta_" + parName[k]] = eigVar[i][k][j];
         }
+
         hammer.setFFEigenvectors("BtoD*", "CLNVar", settings);
         auto weights = hammer.getWeights("SchmeCLN");
-        string var_name = "CLN" + elem.first;
-        var_name += i==1? "Up" : "Down";
+        string var_name = "CLN" + varName[i];
+        var_name += j==0? "Up" : "Down";
 
         if(verbose) {cout << var_name << ": " << flush;}
         for(auto elem: weights) {
