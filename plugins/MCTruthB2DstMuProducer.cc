@@ -279,9 +279,11 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     p4["pi"] = TLorentzVector();
     p4["K"] = TLorentzVector();
     double mu_impactParam = -1;
+    auto mu_momVec = reco::Candidate::Vector();
 
     map<string, reco::Candidate::Point> vtx;
     vtx["B"] = reco::Candidate::Point();
+    vtx["mu"] = reco::Candidate::Point();
     vtx["Dst"] = reco::Candidate::Point();
     vtx["D0"] = reco::Candidate::Point();
     vtx["K"] = reco::Candidate::Point();
@@ -307,6 +309,8 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       for(auto d : *PrunedGenParticlesHandle) {
         if(d.pdgId() == -13 && auxIsAncestor(&p, &d)) {
           p4["mu"].SetPtEtaPhiM(d.pt(), d.eta(), d.phi(), d.mass());
+          vtx["mu"] = d.vertex();
+          mu_momVec = d.momentum();
           mu_impactParam = vtxu::computeIP(interactionPoint, d.vertex(), d.momentum(), true);
           auto muMother = d.mother();
           (*outputNtuplizer)["MC_muMotherPdgId"] = muMother->pdgId();
@@ -365,7 +369,9 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     for(auto kv : p4) {
       AddTLVToOut(kv.second, "MC_"+kv.first, &(*outputNtuplizer));
     }
-    (*outputNtuplizer)["MC_mu_IP"] = mu_impactParam;
+    (*outputNtuplizer)["MC_mu_TransvIP_PV"] = mu_impactParam;
+    (*outputNtuplizer)["MC_mu_TransvIP_vtxDst"] = vtxu::computeDCA_linApprox(vtx["Dst"], vtx["mu"], mu_momVec, true);
+    (*outputNtuplizer)["MC_mu_IP_vtxDst"] = vtxu::computeDCA_linApprox(vtx["Dst"], vtx["mu"], mu_momVec, false);
 
     for(auto kv : vtx) {
       auto n = kv.first;

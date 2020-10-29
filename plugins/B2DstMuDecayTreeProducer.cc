@@ -518,6 +518,25 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             GlobalPoint auxp(vtxDst->position().x(), vtxDst->position().y(), vtxDst->position().z());
             auto dca = vtxu::computeDCA(iSetup, trgMu, auxp);
             (*outputVecNtuplizer)["mu_dca_vtxDst"].push_back(dca.first);
+            (*outputVecNtuplizer)["mu_sigdca_vtxDst"].push_back(dca.first/dca.second);
+            auto dcaT = vtxu::computeDCA(iSetup, trgMu, auxp, 1);
+            (*outputVecNtuplizer)["mu_dcaT_vtxDst"].push_back(dcaT.first);
+            (*outputVecNtuplizer)["mu_sigdcaT_vtxDst"].push_back(fabs(dcaT.first)/dcaT.second);
+            auto dcaL = vtxu::computeDCA(iSetup, trgMu, auxp, 2);
+            (*outputVecNtuplizer)["mu_dcaL_vtxDst"].push_back(dcaL.first);
+            (*outputVecNtuplizer)["mu_sigdcaL_vtxDst"].push_back(fabs(dcaL.first)/dcaL.second);
+
+            GlobalPoint auxp2(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
+            dca = vtxu::computeDCA(iSetup, trgMu, auxp2);
+            (*outputVecNtuplizer)["mu_dca_vtxDstMu"].push_back(dca.first);
+            (*outputVecNtuplizer)["mu_sigdca_vtxDstMu"].push_back(dca.first/dca.second);
+            dcaT = vtxu::computeDCA(iSetup, trgMu, auxp2, 1);
+            (*outputVecNtuplizer)["mu_dcaT_vtxDstMu"].push_back(dcaT.first);
+            (*outputVecNtuplizer)["mu_sigdcaT_vtxDstMu"].push_back(fabs(dcaT.first)/dcaT.second);
+            dcaL = vtxu::computeDCA(iSetup, trgMu, auxp2, 2);
+            (*outputVecNtuplizer)["mu_dcaL_vtxDstMu"].push_back(dcaL.first);
+            (*outputVecNtuplizer)["mu_sigdcaL_vtxDstMu"].push_back(fabs(dcaL.first)/dcaL.second);
+
 
             (*outputVecNtuplizer)["sigdxy_K_PV"].push_back(sigdxy_K_PV);
             (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);

@@ -659,7 +659,7 @@ vtxu::kinFitResuts vtxu::fitQuality(RefCountedKinematicTree t, double pval_thr){
   return out;
 }
 
-pair<double,double> vtxu::computeDCA(reco::TransientTrack tk, GlobalPoint p) {
+pair<double,double> vtxu::computeDCA(reco::TransientTrack tk, GlobalPoint p, int kind) {
   TrajectoryStateClosestToPoint stateCA = tk.trajectoryStateClosestToPoint(p);
   double dT = stateCA.perigeeParameters().transverseImpactParameter();
   double dL = stateCA.perigeeParameters().longitudinalImpactParameter();
@@ -668,34 +668,28 @@ pair<double,double> vtxu::computeDCA(reco::TransientTrack tk, GlobalPoint p) {
   double EdT = stateCA.perigeeError().transverseImpactParameterError();
   double EdL = stateCA.perigeeError().longitudinalImpactParameterError();
   double EdCA = hypot(dT*EdT, dL*EdL)/dCA;
-  return make_pair(dCA,EdCA);
+  if (kind == 0) return make_pair(dCA,EdCA);
+  else if (kind == 1) return make_pair(dT,EdT);
+  else if (kind == 2) return make_pair(dL,EdL);
+  else assert(false);
 }
 
-pair<double,double> vtxu::computeDCA(const edm::EventSetup& iSetup, pat::PackedCandidate cand, GlobalPoint p) {
+pair<double,double> vtxu::computeDCA(const edm::EventSetup& iSetup, pat::PackedCandidate cand, GlobalPoint p, int kind) {
   // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
   reco::TransientTrack tk = TTBuilder->build(cand.bestTrack());
-  return vtxu::computeDCA(tk, p);
-  // TrajectoryStateClosestToPoint stateCA = tk.trajectoryStateClosestToPoint(p);
-  // double dT = stateCA.perigeeParameters().transverseImpactParameter();
-  // double dL = stateCA.perigeeParameters().longitudinalImpactParameter();
-  // double dCA = hypot(dL, dT);
-  //
-  // double EdT = stateCA.perigeeError().transverseImpactParameterError();
-  // double EdL = stateCA.perigeeError().longitudinalImpactParameterError();
-  // double EdCA = hypot(dT*EdT, dL*EdL)/dCA;
-  // return make_pair(dCA,EdCA);
+  return vtxu::computeDCA(tk, p, kind);
 }
 
-pair<double,double> vtxu::computeDCA(const edm::EventSetup& iSetup, pat::Muon mu, GlobalPoint p) {
+pair<double,double> vtxu::computeDCA(const edm::EventSetup& iSetup, pat::Muon mu, GlobalPoint p, int kind) {
   // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
   reco::TransientTrack tk = TTBuilder->build(mu.muonBestTrack());
-  return vtxu::computeDCA(tk, p);
+  return vtxu::computeDCA(tk, p, kind);
 }
 
 TLorentzVector vtxu::getTLVfromKinPart(const RefCountedKinematicParticle p) {
@@ -866,4 +860,24 @@ double vtxu::computeIP(reco::Candidate::Point axis, reco::Candidate::Point trajP
     cout << "Not yet implemented" << endl;
     return -1;
   }
+}
+
+double vtxu::computeDCA_linApprox(reco::Candidate::Point axis, reco::Candidate::Point trajPoint, reco::Candidate::Vector trajVector, bool transverseOnly){
+  double tV_z = transverseOnly ? 0 : trajVector.z();
+
+  double norm = sqrt(trajVector.x()*trajVector.x() + trajVector.y()*trajVector.y() + tV_z*tV_z);
+  double nx = trajVector.x() / norm;
+  double ny = trajVector.y() / norm;
+  double nz = tV_z / norm;
+
+  double amp_x = axis.x() - trajPoint.x();
+  double amp_y = axis.y() - trajPoint.y();
+  double amp_z = transverseOnly ? 0 : axis.z() - trajPoint.z();
+
+  double amp_dot_n = amp_x * nx + amp_y * ny + amp_z * nz;
+  double dx = amp_x - nx * amp_dot_n;
+  double dy = amp_y - ny * amp_dot_n;
+  double dz = amp_z - nz * amp_dot_n;
+
+  return sqrt(dx*dx + dy*dy + dz*dz);
 }

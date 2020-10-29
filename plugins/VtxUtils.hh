@@ -40,9 +40,9 @@ namespace vtxu {
   RefCountedKinematicTree FitVtxDstK(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, int);
   RefCountedKinematicTree FitVtxDstPi(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, int);
   RefCountedKinematicTree FitVtxMuDstPi(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, pat::PackedCandidate, int);
-  std::pair<double,double> computeDCA(reco::TransientTrack, GlobalPoint);
-  std::pair<double,double> computeDCA(const edm::EventSetup&, pat::PackedCandidate, GlobalPoint);
-  std::pair<double,double> computeDCA(const edm::EventSetup&, pat::Muon, GlobalPoint);
+  std::pair<double,double> computeDCA(reco::TransientTrack tk, GlobalPoint p, int kind=0);
+  std::pair<double,double> computeDCA(const edm::EventSetup& iSetup, pat::PackedCandidate cand, GlobalPoint p, int kind=0);
+  std::pair<double,double> computeDCA(const edm::EventSetup& iSetup, pat::Muon mu, GlobalPoint p, int kind=0);
   std::pair<double,double> vtxsDistance(reco::VertexRef, RefCountedKinematicVertex);
   std::pair<double,double> vtxsDistance(reco::Vertex, RefCountedKinematicVertex);
   std::pair<double,double> vtxsTransverseDistance(reco::Vertex, RefCountedKinematicVertex);
@@ -56,4 +56,5 @@ namespace vtxu {
   double dPhi(double, double);
   double dR(double, double, double, double);
   double computeIP(reco::Candidate::Point, reco::Candidate::Point, reco::Candidate::Vector, bool);
+  double computeDCA_linApprox(reco::Candidate::Point, reco::Candidate::Point, reco::Candidate::Vector, bool);
 };

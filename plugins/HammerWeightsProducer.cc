@@ -52,6 +52,7 @@ public:
         hammer.setFFEigenvectors("BtoD*", "CLNVar", settings);
         outRate["Central"] = hammer.getRate(proc, "SchmeCLN");
         if(verbose) { cout << Form("Central rate: %1.3e (ratio = %.3f)", outRate["Central"], outRate["Central"]/outRate["den"]) << endl;}
+        // hammer.saveOptionCard("Opts.yml", false);
 
         for(int i=0; i<4; i++) { //Loop over eigenVar
           for (int j=0; j<2; j++) { //Loop over pos/neg direction
