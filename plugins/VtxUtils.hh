@@ -57,4 +57,5 @@ namespace vtxu {
   double dR(double, double, double, double);
   double computeIP(reco::Candidate::Point, reco::Candidate::Point, reco::Candidate::Vector, bool);
   double computeDCA_linApprox(reco::Candidate::Point, reco::Candidate::Point, reco::Candidate::Vector, bool);
+  double computeCTau(reco::GenParticle);
 };

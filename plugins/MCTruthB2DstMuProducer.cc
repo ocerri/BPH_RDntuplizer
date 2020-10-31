@@ -293,7 +293,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputNtuplizer)["MC_munuSisterPdgId"] = 0;
     (*outputNtuplizer)["MC_DstSisPdgId_light"] = 0;
     (*outputNtuplizer)["MC_DstSisPdgId_heavy"] = 0;
-
+    (*outputNtuplizer)["MC_B_ctau"] = -1;
 
     if(i_B >= 0){
       auto p = (*PrunedGenParticlesHandle)[i_B];
@@ -301,6 +301,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       p4["B"].SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
       (*outputVecNtuplizer)["MC_decay"].push_back(p.mother()->pdgId());
       (*outputVecNtuplizer)["MC_decay"].push_back(p.pdgId());
+      (*outputNtuplizer)["MC_B_ctau"] = vtxu::computeCTau(p);
 
       for(auto d : p.daughterRefVector()) {
         (*outputVecNtuplizer)["MC_decay"].push_back(d->pdgId());

@@ -881,3 +881,43 @@ double vtxu::computeDCA_linApprox(reco::Candidate::Point axis, reco::Candidate::
 
   return sqrt(dx*dx + dy*dy + dz*dz);
 }
+
+double vtxu::computeCTau(reco::GenParticle p){
+  // cout << endl << "Computing lifetime for " << p.pdgId() << endl;
+  if(p.numberOfDaughters() == 0) {
+    // cout << "Stable particle" << endl;
+    return 1e6-1;
+  }
+
+  // auto strVtx = [](reco::Candidate::Point v) {
+  //   return Form("[%.3f, %.3f, %.3f]", v.x(), v.y(), v.z());
+  // };
+  auto distanceVtx = [](reco::Candidate::Point v1, reco::Candidate::Point v2) {
+    double dd = (v1.x() - v2.x())*(v1.x() - v2.x());
+    dd += (v1.y() - v2.y())*(v1.y() - v2.y());
+    dd += (v1.z() - v2.z())*(v1.z() - v2.z());
+    return sqrt(dd);
+  };
+
+  auto decayVtx = p.daughterRefVector()[0]->vertex();
+  // cout << "Decay vtx " << strVtx(decayVtx) << endl;
+  auto productionVtx = p.vertex();
+  // cout << Form("Particle: P=%.3f, ", p.p()) << strVtx(productionVtx) << Form(", Delta=%.4f", distanceVtx(decayVtx, productionVtx)) << endl;
+
+  auto mother = p.mother();
+  while(mother->numberOfDaughters() == 1) {
+    // cout << "Backward step " << mother->pdgId() << " with only 1 daughter" << endl;
+    // cout << Form("Particle: P=%.3f, ", mother->p()) << strVtx(mother->vertex()) << Form(", Delta=%.4f", distanceVtx(mother->vertex(), productionVtx)) << endl;
+    productionVtx = mother->vertex();
+    mother = mother->mother();
+  }
+  // cout << "Mother: " << mother->pdgId() << endl;
+
+  auto dl = distanceVtx(decayVtx, productionVtx);
+  auto beta = p.p()/p.energy();
+  auto gamma = 1/ sqrt(1 - beta*beta);
+  auto ctau = dl / (beta*gamma);
+  // cout << Form("ctau: %.3f mm", ctau*10) << endl;
+  // cout << endl;
+  return ctau;
+}
