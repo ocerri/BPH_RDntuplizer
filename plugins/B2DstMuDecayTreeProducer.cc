@@ -295,7 +295,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             // Vertex fitting from B and Dst products
             auto BKinTree = vtxu::FitB_D0pismu(iSetup, D0, pis, trgMu);
             auto res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
-            if(!res.isGood) continue;
+            if(res.chi2 > 50) continue;
             updateCounter(11, countersFlag);
 
             BKinTree->movePointerToTheTop();

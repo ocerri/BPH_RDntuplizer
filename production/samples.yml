@@ -146,6 +146,7 @@ samples:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_200501-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_201029-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_DmstHc_PU0:
     dataset: BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_PU0_10-2-3
