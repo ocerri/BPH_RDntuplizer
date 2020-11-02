@@ -295,7 +295,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             // Vertex fitting from B and Dst products
             auto BKinTree = vtxu::FitB_D0pismu(iSetup, D0, pis, trgMu);
             auto res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
-            if(res.chi2 > 50) continue;
+            if(!res.isValid || res.chi2 > 50) continue;
             updateCounter(11, countersFlag);
 
             BKinTree->movePointerToTheTop();
@@ -342,7 +342,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             auto cosT_D0pismu_PV = vtxu::computePointingCosTransverse(bestVtx, vtxB, D0pismu);
             auto d_vtxD0pismu_PV = vtxu::vtxsDistance(bestVtx, vtxB);
             auto sigd_vtxD0pismu_PV = d_vtxD0pismu_PV.first/d_vtxD0pismu_PV.second;
-            auto dxy_vtxD0pismu_PV = vtxu::vtxsDistance(bestVtx, vtxB);
+            auto dxy_vtxD0pismu_PV = vtxu::vtxsTransverseDistance(bestVtx, vtxB);
             auto sigdxy_vtxD0pismu_PV = dxy_vtxD0pismu_PV.first/dxy_vtxD0pismu_PV.second;
             (*outputVecNtuplizer)["cos_D0pismu_PV"].push_back(cos_D0pismu_PV);
             (*outputVecNtuplizer)["cosT_D0pismu_PV"].push_back(cosT_D0pismu_PV);

@@ -49,6 +49,7 @@ else:
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
     flist = flist[:5]
+    flist = ['/store/data/Run2018D/ParkingBPH5/MINIAOD/05May2019promptD-v1/230005/F31C64F8-800A-974E-8458-FC06FEC9442D.root']
 
 print 'Trying to get a local copy'
 for i in range(len(flist)):
