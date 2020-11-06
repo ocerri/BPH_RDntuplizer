@@ -217,10 +217,20 @@ samples:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200708-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200709-c21dec93027231dc6f615dfe5c662834/USER
 
+  Bp_TauNuDstst_Pip_PUc0:
+    dataset: BP_Tag_BP_Tag_Bp_TauNuDstst_Pip_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_TauNuDstst_Pip_Hardbbbar_evtgen_ISGW2_201104-c21dec93027231dc6f615dfe5c662834/USER
+
   B0_MuNuDstst_Pi0_PUc0:
     dataset: BP_Tag_B0_MuNuDstst_Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_Pi0_Hardbbbar_evtgen_ISGW2_200429-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_TauNuDstst_Pi0_PUc0:
+    dataset: BP_Tag_B0_TauNuDstst_Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDstst_Pi0_Hardbbbar_evtgen_ISGW2_201104-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_DmstPi0MuNu_PUc0:
     dataset: BP_Tag_B0_DmstPi0MuNu_Hardbbbar_evtgen_GR_PUc0_10-2-3
@@ -233,16 +243,36 @@ samples:
       # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_200425-c21dec93027231dc6f615dfe5c662834/USER #Wrong excited state
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_200518-c21dec93027231dc6f615dfe5c662834/USER
 
+  Bp_MuNuDstPipPi0_PUc0:
+    dataset: Bp_MuNuDstPipPi0_Hardbbbar_evtgen_PHSP_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstPipPi0_Hardbbbar_evtgen_PHSP_201104-c21dec93027231dc6f615dfe5c662834/USER
+
   B0_MuNuDstst_PipPim_PUc0:
     dataset: BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_200520-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDstPipPim_PUc0:
+    dataset: BP_Tag_B0_MuNuDstPipPim_Hardbbbar_evtgen_PHSP_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstPipPim_Hardbbbar_evtgen_PHSP_201104-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_MuNuDstst_Pi0Pi0_PUc0:
     dataset: BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
       # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_200427-c21dec93027231dc6f615dfe5c662834/USER #Wrong excited state
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_200518-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDstPiPiPi_PUc0:
+    dataset: BP_Tag_B0_MuNuDstPiPiPi_Hardbbbar_evtgen_PHSP_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstPiPi_Hardbbbar_evtgen_PHSP_201104-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bp_MuNuDstPiPiPi_PUc0:
+    dataset: BP_Tag_Bp_MuNuDstPiPiPi_Hardbbbar_evtgen_PHSP_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstPiPi_Hardbbbar_evtgen_PHSP_201104-c21dec93027231dc6f615dfe5c662834/USER
 
 ##### Probe side samples ##########
   p_B0_MuNuDst_PUc0:
