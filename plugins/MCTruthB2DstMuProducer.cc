@@ -294,6 +294,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputNtuplizer)["MC_DstSisPdgId_light"] = 0;
     (*outputNtuplizer)["MC_DstSisPdgId_heavy"] = 0;
     (*outputNtuplizer)["MC_B_ctau"] = -1;
+    (*outputNtuplizer)["MC_MassCharmedBDaugther"] = -1;
 
     if(i_B >= 0){
       auto p = (*PrunedGenParticlesHandle)[i_B];
@@ -305,6 +306,13 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
 
       for(auto d : p.daughterRefVector()) {
         (*outputVecNtuplizer)["MC_decay"].push_back(d->pdgId());
+        int pdgId = (int) abs(d->pdgId());
+        if ((pdgId/100)%10 == 4) {
+          (*outputNtuplizer)["MC_MassCharmedBDaugther"] = d->mass();
+          if (verbose) {
+            cout << d->pdgId() << Form(" mass: %.4f GeV", d->mass()) << endl;
+          }
+        }
       }
 
       for(auto d : *PrunedGenParticlesHandle) {

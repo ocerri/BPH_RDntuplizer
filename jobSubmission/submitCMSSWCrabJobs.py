@@ -17,6 +17,7 @@ cfg = {'PrescaleVertices': 'cmssw_cmsRD2018_PrescaleVertices.py',
        'TagAndProbe_Bp2DmstPim3Pip': 'cmssw_cmsRD2018_TagAndProbe_Bp_DmstPim3Pip.py',
        'TagAndProbeTrigger': 'cmssw_cmsRD2018_TagAndProbe.py',
        'B2JpsiKst': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py',
+       'B2JpsiK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiK.py',
        # 'probeB2DstMu': 'cmssw_cmsRD2018_Probe_B0_MuDmst.py'
        }
 

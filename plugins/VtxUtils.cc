@@ -214,6 +214,29 @@ RefCountedKinematicTree vtxu::FitJpsi_mumu(const edm::EventSetup& iSetup, pat::M
   }
 }
 
+RefCountedKinematicTree vtxu::FitB_mumuK(const edm::EventSetup& iSetup, pat::Muon m1, pat::Muon m2, pat::PackedCandidate K) {
+  // Get transient track builder
+  edm::ESHandle<TransientTrackBuilder> TTBuilder;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+
+  reco::TransientTrack m1_tk = TTBuilder->build(m1.muonBestTrack());
+  reco::TransientTrack m2_tk = TTBuilder->build(m2.muonBestTrack());
+  reco::TransientTrack K_tk = TTBuilder->build(K.bestTrack());
+
+  std::vector<RefCountedKinematicParticle> parts;
+  KinematicParticleFactoryFromTransientTrack pFactory;
+  double chi = 0, ndf = 0;
+  float mMu = _MuMass_, dmMu = _MuMassErr_;
+  float mK = _KMass_, dmK = _KMassErr_;
+  parts.push_back(pFactory.particle(m1_tk, mMu, chi, ndf, dmMu));
+  parts.push_back(pFactory.particle(m2_tk, mMu, chi, ndf, dmMu));
+  parts.push_back(pFactory.particle(K_tk, mK, chi, ndf, dmK));
+
+  KinematicParticleVertexFitter VtxFitter;
+  RefCountedKinematicTree KinTree = VtxFitter.fit(parts);
+  return KinTree;
+}
+
 RefCountedKinematicTree vtxu::FitB_mumupiK(const edm::EventSetup& iSetup, pat::Muon m1, pat::Muon m2, pat::PackedCandidate pi, pat::PackedCandidate K, bool JpsiKstmass_constraint, bool Bmass_constraint, bool pointing_constraint, reco::Vertex* ptrPV) {
   // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;

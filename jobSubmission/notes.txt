@@ -74,8 +74,10 @@ process=BP_Tag_B0_MuNuDstst_Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
 process=BP_Tag_B0_DmstPi0MuNu_Hardbbbar_evtgen_GR_PUc0_10-2-3
 
 process=BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+process=BP_Tag_Bp_MuNuDstPipPi0_Hardbbbar_evtgen_PHSP_PUc0_10-2-3
 
 process=BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+process=BP_Tag_B0_MuNuDstPipPim_Hardbbbar_evtgen_PHSP_PUc0_10-2-3
 
 process=BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
 

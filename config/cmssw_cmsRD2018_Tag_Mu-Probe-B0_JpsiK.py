@@ -8,17 +8,13 @@ process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
 
-# Needed for transient track builder
-# process.load('Configuration.StandardSequences.Services_cff')
-# process.load('Configuration.EventContent.EventContent_cff')
 process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
-# process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_v11', '')
 
 '''
 ############ Command line args ################
@@ -26,6 +22,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12
 
 args = VarParsing.VarParsing('analysis')
 args.register('inputFile', '', args.multiplicity.list, args.varType.string, "Input file or template for glob")
+args.register('useLocalLumiList', 1, args.multiplicity.singleton, args.varType.int, "Flag to use local lumi list")
 args.outputFile = ''
 args.parseArguments()
 
@@ -39,48 +36,48 @@ process.maxEvents = cms.untracked.PSet(
 
 from glob import glob
 if args.inputFile:
-    if len(args.inputFile) == 1 and '*' in args.inputFile[0]:
-        flist = glob(args.inputFile[0])
-    else:
-        flist = args.inputFile
+    flist = args.inputFile
 elif args.inputFiles:
-    if len(args.inputFiles) == 1 and args.inputFiles[0].endswith('.txt'):
+    if len(args.inputFiles) == 1:
         with open(args.inputFiles[0]) as f:
-            flist = [l[:-1] for l in f.readlines()]
+            flist = [l for l in f.readlines()]
     else:
         flist = args.inputFiles
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
-    # fdefault += 'inputFiles_BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    # fdefault += 'inputFiles_BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    # fdefault += 'inputFiles_BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    # fdefault += 'inputFiles_BP_Tag_B0_DmstHc_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    fdefault += 'inputFiles_BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
+    fdefault += 'inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:20]
+    flist = flist[:5]
 
+print 'Trying to get a local copy'
 for i in range(len(flist)):
-    if os.path.isfile(flist[i]):
-        flist[i] = 'file:' + flist[i]
+    if flist[i].startswith('file:'):
+        print 'Already set to local'
+        continue
+    print 'Looking for: /mnt/hadoop' + flist[i]
+    if os.path.isfile('/mnt/hadoop' + flist[i]):
+        print 'Found'
+        flist[i] = 'file:/mnt/hadoop' + flist[i]
 
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring(tuple(flist)),
-                            inputCommands=cms.untracked.vstring('keep *',
-                                                                'drop GenLumiInfoHeader_generator__SIM'),
-                            skipBadFiles=cms.untracked.bool(True)
+                            fileNames = cms.untracked.vstring(tuple(flist))
                            )
-process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
+
+if args.useLocalLumiList:
+    lumiListFile = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt'
+    if os.path.isfile(lumiListFile):
+        import FWCore.PythonUtilities.LumiList as LumiList
+        process.source.lumisToProcess = LumiList.LumiList(filename = lumiListFile).getVLuminosityBlockRange()
 
 
 '''
 #####################   Output   ###################
 '''
-
 if args.outputFile == '.root':
-    outname = 'B2DstMu_CAND.root'
+    outname = 'B2JpsiKst_CAND.root'
 elif args.outputFile.startswith('_numEvent'):
-    outname = 'B2DstMu_CAND' + args.outputFile
+    outname = 'B2JpsiKst_CAND' + args.outputFile
 else:
     outname = args.outputFile
 
@@ -96,33 +93,16 @@ process.TFileService = cms.Service("TFileService",
 '''
 
 process.trgF = cms.EDFilter("TriggerMuonsFilter",
-        muon_charge = cms.int32(1),
+        muon_charge = cms.int32(0),
         verbose = cms.int32(0)
 )
 
-process.B2MuDstDT = cms.EDProducer("B2DstMuDecayTreeProducer",
+process.B2JpsiKstDT = cms.EDProducer("B2JpsiKDecayTreeProducer",
         trgMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
-        charge_muon = cms.int32(+1),
-        charge_K = cms.int32(+1),
-        charge_pi = cms.int32(-1),
-        charge_pis = cms.int32(-1),
         verbose = cms.int32(0)
 )
 
-process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
-        verbose = cms.int32(0)
-)
-
-process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
-        decayTreeVecOut = cms.InputTag("B2MuDstDT","outputVecNtuplizer", ""),
-        verbose = cms.int32(0)
-)
-
-process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
-        decayOfInterest = cms.vstring('BD*MuNu', 'BD*TauNu'),
-        inputFFScheme = cms.vstring(#'BD', 'ISGW2',
-                                    'BD*', 'ISGW2'
-        ),
+process.B2JpsiKstDTFilter = cms.EDFilter("B2JpsiKstDecayTreeFilter",
         verbose = cms.int32(0)
 )
 
@@ -139,13 +119,10 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 
 process.p = cms.Path(
                     process.trgF +
-                    process.B2MuDstDT +
-                    process.B2MuDstDTFilter+
-                    process.MCpart +
-                    process.HammerWeights +
+                    process.B2JpsiKstDT +
+                    process.B2JpsiKstDTFilter +
                     process.outA
                     )
-
 
 # DEBUG -- dump the event content
 # process.output = cms.OutputModule(
@@ -163,4 +140,4 @@ process.p = cms.Path(
 #############   Overall settings    ################
 '''
 
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
