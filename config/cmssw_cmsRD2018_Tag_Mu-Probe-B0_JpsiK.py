@@ -75,9 +75,9 @@ if args.useLocalLumiList:
 #####################   Output   ###################
 '''
 if args.outputFile == '.root':
-    outname = 'B2JpsiKst_CAND.root'
+    outname = 'B2JpsiK_CAND.root'
 elif args.outputFile.startswith('_numEvent'):
-    outname = 'B2JpsiKst_CAND' + args.outputFile
+    outname = 'B2JpsiK_CAND' + args.outputFile
 else:
     outname = args.outputFile
 
