@@ -40,6 +40,16 @@ python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.
 
 
 
+
+
+process=BP_Tag-Probe_Bp_JpsiK_Hardbbbar_evtgen_SVS_PUc0_10-2-3
+
+python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_B2JpsiK/out_CAND.root -c config/cmssw_privateMC_Tag_Mu-Probe-B_JpsiK.py --maxtime 20m -N 50 -f
+
+
+
+
+
 process=BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3
 process=BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU0_10-2-3
 process=BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3

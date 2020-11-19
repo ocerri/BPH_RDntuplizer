@@ -223,10 +223,10 @@ void B2JpsiKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             auto cosT_B_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxB, B);
             (*outv)["cosT_B_PV_"+tag].push_back(cosT_B_PV);
             auto d_vtxB_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
-            double sigd_vtxB_PV = d_vtxB_PV.first/d_vtxB_PV.second;
+            double sigd_vtxB_PV = fabs(d_vtxB_PV.first)/d_vtxB_PV.second;
             (*outv)["sigd_vtxB_PV_"+tag].push_back(sigd_vtxB_PV);
             auto dxy_vtxB_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxB);
-            (*outv)["sigdxy_vtxB_PV"].push_back(dxy_vtxB_PV.first/dxy_vtxB_PV.second);
+            (*outv)["sigdxy_vtxB_PV_"+tag].push_back(fabs(dxy_vtxB_PV.first)/dxy_vtxB_PV.second);
 
             // B2JpsiKDecayTreeProducer::AddTLVToOut(vtxu::getTLVfromKinPart(B), string("B_"+tag), outv);
             auto pvec = B->currentState().globalMomentum();
@@ -238,7 +238,9 @@ void B2JpsiKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           }
           else{
             (*outv)["cos_B_PV_"+tag].push_back(0);
+            (*outv)["cosT_B_PV_"+tag].push_back(0);
             (*outv)["sigd_vtxB_PV_"+tag].push_back(0);
+            (*outv)["sigdxy_vtxB_PV_"+tag].push_back(0);
             (*outv)["B_"+tag+"_pt"].push_back(0);
             (*outv)["B_"+tag+"_eta"].push_back(0);
             (*outv)["B_"+tag+"_phi"].push_back(0);
