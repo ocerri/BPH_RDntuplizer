@@ -73,6 +73,7 @@ samples:
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_200605-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_200612-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_201119-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_JpsiKst_PU35:
     dataset: BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU35_10-2-3
@@ -267,8 +268,8 @@ samples:
     dataset: BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
     parts:
       #90 MeV width
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_200520-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_201110-c21dec93027231dc6f615dfe5c662834/USER
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_200520-c21dec93027231dc6f615dfe5c662834/USER
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_201110-c21dec93027231dc6f615dfe5c662834/USER
       #200 MeV width
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_201118-c21dec93027231dc6f615dfe5c662834/USER
 

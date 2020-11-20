@@ -51,14 +51,14 @@ elif args.inputFiles:
         flist = args.inputFiles
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
-    # fdefault += 'inputFiles_BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
+    fdefault += 'inputFiles_BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     # fdefault += 'inputFiles_BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     # fdefault += 'inputFiles_BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     # fdefault += 'inputFiles_BP_Tag_B0_DmstHc_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    fdefault += 'inputFiles_BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
+    # fdefault += 'inputFiles_BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:20]
+    flist = flist[:5]
 
 for i in range(len(flist)):
     if os.path.isfile(flist[i]):
@@ -123,7 +123,7 @@ process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
         inputFFScheme = cms.vstring(#'BD', 'ISGW2',
                                     'BD*', 'ISGW2'
         ),
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
 cfg_name = os.path.basename(sys.argv[0])
