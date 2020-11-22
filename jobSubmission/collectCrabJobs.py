@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument ('inputDir', help='list of directories', nargs='+')
 parser.add_argument ('-k', '--keepGoing', help='Skip corrupted files', action='store_true')
 args = parser.parse_args()
-# example: python collectCrabJobs.py /mnt/hadoop/store/user/ocerri/ParkingBPH*/ParkingBPH*_Run2018D-*_RDntuplizer_B2JpsiKst_200123
+# example: python collectCrabJobs.py /mnt/hadoop/store/user/ocerri/ParkingBPH*/*_RDntuplizer_B2JpsiKst_200123
 
 for dir in args.inputDir:
     print 20*'#' + 50*'-' + 20*'#'

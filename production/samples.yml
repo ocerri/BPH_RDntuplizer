@@ -84,6 +84,7 @@ samples:
     dataset: BP_Tag-Probe_Bp_JpsiK_Hardbbbar_evtgen_SVS_PUc0_10-2-3
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_Bp_JpsiK_Hardbbbar_evtgen_HELAMP_201110-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_Bp_JpsiK_Hardbbbar_evtgen_HELAMP_201120-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_MuNuDmst_PU0:
     dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU0_10-2-3
@@ -272,6 +273,7 @@ samples:
       # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_201110-c21dec93027231dc6f615dfe5c662834/USER
       #200 MeV width
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_201118-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_201120-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_MuNuDstPipPim_PUc0:
     dataset: BP_Tag_B0_MuNuDstPipPim_Hardbbbar_evtgen_PHSP_PUc0_10-2-3

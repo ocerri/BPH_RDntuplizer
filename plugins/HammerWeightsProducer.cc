@@ -361,7 +361,7 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
           if(verbose) {cout << var_name << ": " << flush;}
           for(auto elem: weights) {
             (*outputNtuplizer)["wh_" + var_name] = elem.second;
-            if(verbose) {cout << elem.second << endl;}
+            if(verbose) {cout << elem.second << Form(" (Ratio to central = %.3f)", (*outputNtuplizer)["wh_" + var_name]/(*outputNtuplizer)["wh_CLNCentral"])<< endl;}
           }
         }
       }
