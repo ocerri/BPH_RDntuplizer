@@ -333,7 +333,6 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     for(auto n: parNameCLN) settingsCLN["delta_" + n] = 0;
     hammer.setFFEigenvectors("BtoD*", "CLNVar", settingsCLN);
     auto weightsCLN = hammer.getWeights("SchmeCLN");
-    N_evets_weights_produced++;
     if(!weightsCLN.empty()) {
       if(verbose) {cout << "CLNCentral: " << flush;}
       for(auto elem: weightsCLN) {

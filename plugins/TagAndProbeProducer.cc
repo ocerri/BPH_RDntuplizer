@@ -6,6 +6,7 @@
 
 #include "TLorentzVector.h"
 #include "TTree.h"
+#include "TH2D.h"
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -43,14 +44,21 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
       edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
       edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
 
+      edm::Service<TFileService> fs;
+
+      TH1I* hAllNvts;
+      TH1I* hAllVtxZ;
       TTree* tree;
       map<string, float> outMap;
       bool treeDeclared = false;
 
+      int muonIDScaleFactors = false;
       int verbose = 0;
 
       double massMu  = 0.10565;
       double massJpsi  = 3.09691;
+
+      TH2D* hMuonIdSF;
 };
 
 
@@ -59,10 +67,18 @@ TagAndProbeProducer::TagAndProbeProducer(const edm::ParameterSet& iConfig):
   triggerPrescales_(consumes<pat::PackedTriggerPrescales>( edm::InputTag("patTrigger") )),
   muonSrc_( consumes<vector<pat::Muon>> ( edm::InputTag("slimmedMuons") ) ),
   vtxSrc_( consumes<vector<reco::Vertex>> ( edm::InputTag("offlineSlimmedPrimaryVertices") ) ),
+  muonIDScaleFactors( iConfig.getParameter<int>( "muonIDScaleFactors" ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
-  edm::Service<TFileService> fs;
+  hAllNvts = fs->make<TH1I>("hAllNvts", "Number of vertexes from all the MINIAOD events", 101, -0.5, 100.5);
+  hAllVtxZ = fs->make<TH1I>("hAllVtxZ", "Z coordinate of vertexes from all the MINIAOD events", 100, -25, 25);
   tree = fs->make<TTree>( "T", "Events Tree from TAG AND PROBE");
+
+  if (muonIDScaleFactors) {
+    TFile fAux = TFile("/storage/user/ocerri/BPhysics/data/calibration/muonIDscaleFactors/Run2018ABCD_SF_MuonID_Jpsi.root", "READ");
+    hMuonIdSF = (TH2D*) fAux.Get("NUM_SoftID_DEN_genTracks_pt_abseta");
+  }
+
 }
 
 bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -72,15 +88,18 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
   iEvent.getByToken(triggerPrescales_, triggerPrescales);
 
-  edm::Handle<vector<pat::Muon>> muonHandle;
-  iEvent.getByToken(muonSrc_, muonHandle);
-  uint nMuons = muonHandle->size();
-  if(nMuons < 2) return false;
 
   edm::Handle<vector<reco::Vertex>> vtxHandle;
   iEvent.getByToken(vtxSrc_, vtxHandle);
   auto primaryVtx = (*vtxHandle)[0];
   auto nRecoVtx = vtxHandle->size();
+  hAllNvts->Fill((int)nRecoVtx);
+  for(auto vtx : (*vtxHandle)) hAllVtxZ->Fill(vtx.position().z());
+
+  edm::Handle<vector<pat::Muon>> muonHandle;
+  iEvent.getByToken(muonSrc_, muonHandle);
+  uint nMuons = muonHandle->size();
+  if(nMuons < 2) return false;
 
   if (verbose) {
     cout << "\n MUONS LIST" << endl;
@@ -159,6 +178,14 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     outMap["mProbe_hasInnerTrk"] = !mProbe.innerTrack().isNull();
     outMap["mProbe_tightID"] = mProbe.isTightMuon(primaryVtx);
     outMap["mProbe_softID"] = mProbe.isSoftMuon(primaryVtx);
+    if (muonIDScaleFactors) {
+      if (outMap["mProbe_softID"]) {
+        auto ix = hMuonIdSF->GetXaxis()->FindBin(min(39.9,mProbe.pt()));
+        auto iy = hMuonIdSF->GetYaxis()->FindBin(min(2.4, fabs(mProbe.eta())));
+        outMap["sfMuonID"] = hMuonIdSF->GetBinContent(ix, iy);
+      }
+      else outMap["sfMuonID"] = 1.;
+    }
     if (!outMap["mProbe_softID"]) continue;
     if(!mProbe.innerTrack().isNull()) {
       auto tk = mProbe.innerTrack();
