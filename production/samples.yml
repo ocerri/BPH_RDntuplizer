@@ -147,6 +147,13 @@ samples:
     dataset: BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_PUc0_10-2-3
     parts:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201123-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201219-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201220-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201221-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201222-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201223-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201226-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201228-c21dec93027231dc6f615dfe5c662834/USER
 
   B0_MuNuDmst_HQETcentral_PU0:
     dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3
