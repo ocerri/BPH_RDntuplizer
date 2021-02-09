@@ -53,6 +53,7 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
       bool treeDeclared = false;
 
       int muonIDScaleFactors = false;
+      int requireTag = 1;
       int verbose = 0;
 
       double massMu  = 0.10565;
@@ -68,6 +69,7 @@ TagAndProbeProducer::TagAndProbeProducer(const edm::ParameterSet& iConfig):
   muonSrc_( consumes<vector<pat::Muon>> ( edm::InputTag("slimmedMuons") ) ),
   vtxSrc_( consumes<vector<reco::Vertex>> ( edm::InputTag("offlineSlimmedPrimaryVertices") ) ),
   muonIDScaleFactors( iConfig.getParameter<int>( "muonIDScaleFactors" ) ),
+  requireTag( iConfig.getParameter<int>( "requireTag" ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
   hAllNvts = fs->make<TH1I>("hAllNvts", "Number of vertexes from all the MINIAOD events", 101, -0.5, 100.5);
@@ -133,11 +135,11 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     auto m = (*muonHandle)[i];
     if(m.triggered("HLT_Mu*_IP*")) idxTriggeringMuons.push_back(i);
   }
-  if(idxTriggeringMuons.size() == 0) return false;
+  if(idxTriggeringMuons.size() == 0 && requireTag) return false;
 
 
   for(uint j=0; j < nMuons; j++) {
-    if(idxTriggeringMuons.size() == 1 && idxTriggeringMuons[0] == j) continue;
+    if(idxTriggeringMuons.size() == 1 && idxTriggeringMuons[0] == j && requireTag) continue;
     auto mProbe = (*muonHandle)[j];
     if ( fabs(mProbe.eta()) > 1.6 ) continue;
     if ( mProbe.pt() < 5. ) continue;
@@ -162,15 +164,18 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     else pTag.SetPtEtaPhiM(mTag.pt(), mTag.eta(), mTag.phi(), massMu);
 
     outMap["nVtx"] = nRecoVtx;
-    outMap["mTag_pt"] = mTag.pt();
-    outMap["mTag_eta"] = mTag.eta();
-    outMap["mTag_phi"] = mTag.phi();
+    outMap["mTag_pt"] = pTag.Pt();
+    outMap["mTag_eta"] = pTag.Eta();
+    outMap["mTag_phi"] = pTag.Phi();
     if(ptTagMu == -1) outMap["mTag_hasInnerTrk"] = 0;
     else outMap["mTag_hasInnerTrk"] = !mTag.innerTrack().isNull();
     outMap["mProbe_pt"] = mProbe.pt();
     outMap["mProbe_eta"] = mProbe.eta();
     outMap["mProbe_phi"] = mProbe.phi();
+
     outMap["massInv"] = (pTag + pProbe).M();
+    outMap["deltaR_tagProbe"] = vtxu::dR(pTag.Phi(), mProbe.phi(), pTag.Eta(), mProbe.eta());
+
     for(auto tag : triggerTag) {
       string trgPath = "HLT_" + tag + "_part*_v*";
       outMap["mProbe_HLT_" + tag] = mProbe.triggered(trgPath.c_str());
