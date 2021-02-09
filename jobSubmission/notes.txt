@@ -95,6 +95,8 @@ process=BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
 
 python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_B2DstMu/out_CAND.root -c config/cmssw_privateMC_Tag_B0_MuDmst-pD0bar-kp.py --maxtime 30m -N 100 -f
 
+python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_TagAndProbe/out_CAND.root -c config/cmssw_privateMC_TagAndProbe.py --maxtime 30m -N 150 -f
+
 ##### python jobSubmission/submitCMSSWCondorJobs.py -i /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/jobs_out/out_MINIAODSIM_*.root -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/jobs_B2DstMu/out_CAND.root -c config/cmssw_privateMC_Tag_B0_MuDmst-pD0bar-kp.py --maxtime 20m -N 20 -f ####
 
 python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_TagAndProbe_Bp_MuNuDstst/out_CAND.root -c config/cmssw_privateMC_TagAndProbe_Bp_MuNuDstst.py --maxtime 30m -N 100 -f

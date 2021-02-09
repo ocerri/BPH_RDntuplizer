@@ -63,7 +63,8 @@ for i in range(len(flist)):
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist)),
                             inputCommands=cms.untracked.vstring('keep *',
-                                                                'drop GenLumiInfoHeader_generator__SIM')
+                                                                'drop GenLumiInfoHeader_generator__SIM'),
+                            skipBadFiles=cms.untracked.bool(True)
                            )
 process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
