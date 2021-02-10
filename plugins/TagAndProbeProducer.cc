@@ -230,9 +230,12 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       outMap["vtx_dof"] = res.dof;
       outMap["vtx_pval"] = res.pval;
       outMap["vtx_isGood"] = res.isGood;
-      kinTree->movePointerToTheTop();
-      auto mass = kinTree->currentParticle()->currentState().mass();
-      outMap["massMuMu_refit"] = mass;
+      if (res.isValid) {
+        kinTree->movePointerToTheTop();
+        auto mass = kinTree->currentParticle()->currentState().mass();
+        outMap["massMuMu_refit"] = mass;
+      }
+      else outMap["massMuMu_refit"] = -1;
     }
     else {
       outMap["massMuMu"] = -1;
