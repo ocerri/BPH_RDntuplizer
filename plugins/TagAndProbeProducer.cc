@@ -95,6 +95,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(vtxSrc_, vtxHandle);
   auto primaryVtx = (*vtxHandle)[0];
   auto nRecoVtx = vtxHandle->size();
+  outMap["nVtx"] = nRecoVtx;
   hAllNvts->Fill((int)nRecoVtx);
   for(auto vtx : (*vtxHandle)) hAllVtxZ->Fill(vtx.position().z());
 
@@ -113,7 +114,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   }
 
   vector<string> triggerTag = {"Mu12_IP6", "Mu9_IP5", "Mu7_IP4", "Mu9_IP4", "Mu9_IP6"};
-  for(auto tag : triggerTag) outMap["prescale_" + tag] = -1;
+  for(auto tag : triggerTag) outMap["prescale" + tag] = -1;
 
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
   regex txt_regex_path("HLT_Mu[0-9]+_IP[0-9]_part[0-9]_v[0-9]");
@@ -140,47 +141,74 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
 
   for(uint j=0; j < nMuons; j++) {
     if(idxTriggeringMuons.size() == 1 && idxTriggeringMuons[0] == j && requireTag) continue;
+
     auto mProbe = (*muonHandle)[j];
     if ( fabs(mProbe.eta()) > 1.6 ) continue;
     if ( mProbe.pt() < 5. ) continue;
-    TLorentzVector pTag, pProbe;
+    if (mProbe.innerTrack().isNull()) continue;
+    auto tkProbe = mProbe.innerTrack();
+    auto dxyProbe = tkProbe->dxy(primaryVtx.position());
+    if (fabs(dxyProbe)/tkProbe->dxyError() < 3) continue;
+    TLorentzVector pProbe;
     pProbe.SetPtEtaPhiM(mProbe.pt(), mProbe.eta(), mProbe.phi(), massMu);
 
     pat::Muon mTag;
+    TLorentzVector pTag;
     double ptTagMu = -1;
-    for(uint i=0; i < nMuons; i++) {
+    for(auto i : idxTriggeringMuons) {
       if(i==j) continue;
       auto m = (*muonHandle)[i];
-      if(!m.isSoftMuon(primaryVtx)) continue;
       if(m.charge()*mProbe.charge() != -1) continue;
-      pTag.SetPtEtaPhiM(m.pt(), m.eta(), m.phi(), massMu);
-      if( fabs((pTag + pProbe).M() - massJpsi) > 0.5 ) continue;
+      if(m.innerTrack().isNull()) continue;
+      TLorentzVector pAux;
+      pAux.SetPtEtaPhiM(m.pt(), m.eta(), m.phi(), massMu);
+      if( fabs((pAux + pProbe).M() - massJpsi) > 0.2 ) continue;
       if(m.pt() > ptTagMu){
         ptTagMu = m.pt();
         mTag = m;
+        pTag = pAux;
       }
     }
-    if(ptTagMu == -1) pTag.SetPtEtaPhiM(0, -99999999, -9999999999, massMu);
-    else pTag.SetPtEtaPhiM(mTag.pt(), mTag.eta(), mTag.phi(), massMu);
+    if (requireTag && ptTagMu == -1) continue;
 
-    outMap["nVtx"] = nRecoVtx;
-    outMap["mTag_pt"] = pTag.Pt();
-    outMap["mTag_eta"] = pTag.Eta();
-    outMap["mTag_phi"] = pTag.Phi();
-    if(ptTagMu == -1) outMap["mTag_hasInnerTrk"] = 0;
-    else outMap["mTag_hasInnerTrk"] = !mTag.innerTrack().isNull();
+    if(ptTagMu != -1) {
+      outMap["mTag_pt"] = mTag.pt();
+      outMap["mTag_eta"] = mTag.eta();
+      outMap["mTag_phi"] = mTag.phi();
+
+      auto tkTag = mTag.innerTrack();
+      auto dxyTag = tkTag->dxy(primaryVtx.position());
+      outMap["mTag_dxy"] = fabs(dxyTag);
+      outMap["mTag_sigdxy"] = fabs(dxyTag)/tkTag->dxyError();
+      for(auto tag : triggerTag) {
+        string trgPath = "HLT_" + tag + "_part*_v*";
+        outMap["mTag_HLT_" + tag] = mTag.triggered(trgPath.c_str());
+      }
+      outMap["mTag_tightID"] = mTag.isTightMuon(primaryVtx);
+      outMap["mTag_softID"] = mTag.isSoftMuon(primaryVtx);
+    }
+    else {
+      outMap["mTag_pt"] = -1;
+      outMap["mTag_eta"] = -9999;
+      outMap["mTag_phi"] = -9999;
+      outMap["mTag_dxy"] = -1;
+      outMap["mTag_sigdxy"] = -1;
+      for(auto tag : triggerTag) outMap["mTag_HLT_" + tag] = -1;
+      outMap["mTag_tightID"] = -1;
+      outMap["mTag_softID"] = -1;
+    }
+
+
     outMap["mProbe_pt"] = mProbe.pt();
     outMap["mProbe_eta"] = mProbe.eta();
     outMap["mProbe_phi"] = mProbe.phi();
-
-    outMap["massInv"] = (pTag + pProbe).M();
-    outMap["deltaR_tagProbe"] = vtxu::dR(pTag.Phi(), mProbe.phi(), pTag.Eta(), mProbe.eta());
-
+    outMap["mProbe_dz"] = tkProbe->dz(primaryVtx.position());
+    outMap["mProbe_dxy"] = dxyProbe;
+    outMap["mProbe_sigdxy"] = fabs(dxyProbe)/tkProbe->dxyError();
     for(auto tag : triggerTag) {
       string trgPath = "HLT_" + tag + "_part*_v*";
       outMap["mProbe_HLT_" + tag] = mProbe.triggered(trgPath.c_str());
     }
-    outMap["mProbe_hasInnerTrk"] = !mProbe.innerTrack().isNull();
     outMap["mProbe_tightID"] = mProbe.isTightMuon(primaryVtx);
     outMap["mProbe_softID"] = mProbe.isSoftMuon(primaryVtx);
     if (muonIDScaleFactors) {
@@ -191,41 +219,32 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       }
       else outMap["sfMuonID"] = 1.;
     }
-    if (!outMap["mProbe_softID"]) continue;
-    if(!mProbe.innerTrack().isNull()) {
-      auto tk = mProbe.innerTrack();
-      auto dxy = tk->dxy(primaryVtx.position());
-      outMap["mProbe_dz"] = tk->dz(primaryVtx.position());
-      outMap["mProbe_dxy"] = dxy;
-      outMap["mProbe_sigdxy"] = fabs(dxy)/tk->dxyError();
 
-      if(outMap["mProbe_hasInnerTrk"] && outMap["mTag_hasInnerTrk"]) {
-        auto kinTree = vtxu::FitJpsi_mumu(iSetup, mTag, mProbe, false);
-        auto res = vtxu::fitQuality(kinTree, 0.1);
-        outMap["vtx_isValid"] = res.isValid;
-        outMap["vtx_chi2"] = res.chi2;
-        outMap["vtx_dof"] = res.dof;
-        outMap["vtx_pval"] = res.pval;
-        outMap["vtx_isGood"] = res.isGood;
-      }
-      else {
-        outMap["vtx_isValid"] = 0;
-        outMap["vtx_chi2"] = -1;
-        outMap["vtx_dof"] = -1;
-        outMap["vtx_pval"] = -1;
-        outMap["vtx_isGood"] = 0;
-      }
+    if(ptTagMu != -1) {
+      outMap["massMuMu"] = (pTag + pProbe).M();
+      outMap["deltaR_tagProbe"] = vtxu::dR(pTag.Phi(), mProbe.phi(), pTag.Eta(), mProbe.eta());
+      auto kinTree = vtxu::FitJpsi_mumu(iSetup, mTag, mProbe, false);
+      auto res = vtxu::fitQuality(kinTree, 0.05);
+      outMap["vtx_isValid"] = res.isValid;
+      outMap["vtx_chi2"] = res.chi2;
+      outMap["vtx_dof"] = res.dof;
+      outMap["vtx_pval"] = res.pval;
+      outMap["vtx_isGood"] = res.isGood;
+      kinTree->movePointerToTheTop();
+      auto mass = kinTree->currentParticle()->currentState().mass();
+      outMap["massMuMu_refit"] = mass;
     }
     else {
-      outMap["mProbe_dz"] = 0;
-      outMap["mProbe_dxy"] = 0;
-      outMap["mProbe_sigdxy"] = 0;
+      outMap["massMuMu"] = -1;
+      outMap["deltaR_tagProbe"] = -1;
       outMap["vtx_isValid"] = 0;
       outMap["vtx_chi2"] = -1;
       outMap["vtx_dof"] = -1;
       outMap["vtx_pval"] = -1;
       outMap["vtx_isGood"] = 0;
+      outMap["massMuMu_refit"] = -1;
     }
+
     addToTree();
   }
   if (verbose) {cout << "======================== " << endl;}

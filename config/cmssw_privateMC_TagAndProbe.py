@@ -50,8 +50,8 @@ elif args.inputFiles:
         flist = args.inputFiles
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
-    fdefault += 'inputFiles_BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    # fdefault += 'inputFiles_BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_PUc0_10-2-3.txt'
+    # fdefault += 'inputFiles_BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
+    fdefault += 'inputFiles_BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_PUc0_10-2-3.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
     flist = flist[:10]
@@ -92,7 +92,7 @@ process.TFileService = cms.Service("TFileService",
 
 process.TnP = cms.EDFilter("TagAndProbeProducer",
         muonIDScaleFactors = cms.int32(1),
-        requireTag = cms.int32(0),
+        requireTag = cms.int32(1),
         verbose = cms.int32(0)
 )
 
