@@ -170,6 +170,9 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
     (*outputNtuplizer)["MC_nB02JpsiKst"] = nB02JpsiKst;
     (*outputNtuplizer)["MC_idxCand"] = i_cand;
 
+    (*outputNtuplizer)["MC_d_vtxB"] = -1;
+    (*outputNtuplizer)["MC_dxy_vtxB"] = -1;
+
     p4["B"] = TLorentzVector();
     p4["Jpsi"] = TLorentzVector();
     p4["mup"] = TLorentzVector();
@@ -181,7 +184,19 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
     if(i_B >= 0){
       auto p = (*PrunedGenParticlesHandle)[i_B];
       p4["B"].SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
+
+      bool displSet = false;
       for(auto d : p.daughterRefVector()) {
+        if (!displSet) {
+          auto decayVtx = d->vertex();
+
+          auto dxy = hypot(decayVtx.x() - interactionPoint.x(), decayVtx.y() - interactionPoint.y());
+          auto d = hypot(decayVtx.z() - interactionPoint.z(), dxy);
+          (*outputNtuplizer)["MC_d_vtxB"] = d;
+          (*outputNtuplizer)["MC_dxy_vtxB"] = dxy;
+          displSet = true;
+        }
+
         if(d->pdgId() == 313) {
           p4["Kst"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
           for (auto dd : (*PackedGenParticlesHandle)) {

@@ -295,8 +295,10 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
               (*outv)["cosT_B_PV_"+tag].push_back(cosT_B_PV);
               auto d_vtxB_PV = vtxu::vtxsDistance(primaryVtx, vtxB);
               double sigd_vtxB_PV = d_vtxB_PV.first/d_vtxB_PV.second;
+              (*outv)["d_vtxB_PV_"+tag].push_back(d_vtxB_PV.first);
               (*outv)["sigd_vtxB_PV_"+tag].push_back(sigd_vtxB_PV);
               auto dxy_vtxB_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxB);
+              (*outv)["dxy_vtxB_PV"].push_back(dxy_vtxB_PV.first);
               (*outv)["sigdxy_vtxB_PV"].push_back(dxy_vtxB_PV.first/dxy_vtxB_PV.second);
 
               // B2JpsiKstDecayTreeProducer::AddTLVToOut(vtxu::getTLVfromKinPart(B), string("B_"+tag), outv);
@@ -309,7 +311,11 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
             }
             else{
               (*outv)["cos_B_PV_"+tag].push_back(0);
+              (*outv)["cosT_B_PV_"+tag].push_back(0);
+              (*outv)["d_vtxB_PV_"+tag].push_back(0);
               (*outv)["sigd_vtxB_PV_"+tag].push_back(0);
+              (*outv)["dxy_vtxB_PV_"+tag].push_back(0);
+              (*outv)["sigdxy_vtxB_PV_"+tag].push_back(0);
               (*outv)["B_"+tag+"_pt"].push_back(0);
               (*outv)["B_"+tag+"_eta"].push_back(0);
               (*outv)["B_"+tag+"_phi"].push_back(0);
