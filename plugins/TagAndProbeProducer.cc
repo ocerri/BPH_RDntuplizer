@@ -21,6 +21,7 @@
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
@@ -43,6 +44,7 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
       edm::EDGetTokenT <pat::PackedTriggerPrescales> triggerPrescales_;
       edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
       edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
+      edm::EDGetTokenT<reco::BeamSpot> beamSpotSrc_;
 
       edm::Service<TFileService> fs;
 
@@ -68,6 +70,7 @@ TagAndProbeProducer::TagAndProbeProducer(const edm::ParameterSet& iConfig):
   triggerPrescales_(consumes<pat::PackedTriggerPrescales>( edm::InputTag("patTrigger") )),
   muonSrc_( consumes<vector<pat::Muon>> ( edm::InputTag("slimmedMuons") ) ),
   vtxSrc_( consumes<vector<reco::Vertex>> ( edm::InputTag("offlineSlimmedPrimaryVertices") ) ),
+  beamSpotSrc_( consumes<reco::BeamSpot> ( edm::InputTag("offlineBeamSpot") ) ),
   muonIDScaleFactors( iConfig.getParameter<int>( "muonIDScaleFactors" ) ),
   requireTag( iConfig.getParameter<int>( "requireTag" ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
@@ -103,6 +106,9 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByToken(muonSrc_, muonHandle);
   uint nMuons = muonHandle->size();
   if(nMuons < 2) return false;
+
+  edm::Handle<reco::BeamSpot> beamSpotHandle;
+  iEvent.getByToken(beamSpotSrc_, beamSpotHandle);
 
   if (verbose) {
     cout << "\n MUONS LIST" << endl;
@@ -147,8 +153,12 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     if ( mProbe.pt() < 5. ) continue;
     if (mProbe.innerTrack().isNull()) continue;
     auto tkProbe = mProbe.innerTrack();
-    auto dxyProbe = tkProbe->dxy(primaryVtx.position());
-    if (fabs(dxyProbe)/tkProbe->dxyError() < 3) continue;
+    auto dxyProbe_PV = fabs(tkProbe->dxy(primaryVtx.position()));
+    auto dxyProbe_BS = fabs(tkProbe->dxy((*beamSpotHandle)));
+
+    auto dxyProbeUnc = tkProbe->dxyError();
+
+    if (dxyProbe_BS/dxyProbeUnc < 1) continue;
     TLorentzVector pProbe;
     pProbe.SetPtEtaPhiM(mProbe.pt(), mProbe.eta(), mProbe.phi(), massMu);
 
@@ -177,9 +187,13 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       outMap["mTag_phi"] = mTag.phi();
 
       auto tkTag = mTag.innerTrack();
-      auto dxyTag = tkTag->dxy(primaryVtx.position());
-      outMap["mTag_dxy"] = fabs(dxyTag);
-      outMap["mTag_sigdxy"] = fabs(dxyTag)/tkTag->dxyError();
+      auto dxyTag_PV = fabs(tkTag->dxy(primaryVtx.position()));
+      auto dxyTag_BS = fabs(tkTag->dxy((*beamSpotHandle)));
+      outMap["mTag_dxy_PV"] = dxyTag_PV;
+      outMap["mTag_sigdxy_PV"] = dxyTag_PV/tkTag->dxyError();
+      outMap["mTag_dxy_BS"] = dxyTag_BS;
+      outMap["mTag_sigdxy_BS"] = dxyTag_BS/tkTag->dxyError();
+
       for(auto tag : triggerTag) {
         string trgPath = "HLT_" + tag + "_part*_v*";
         outMap["mTag_HLT_" + tag] = mTag.triggered(trgPath.c_str());
@@ -191,8 +205,10 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       outMap["mTag_pt"] = -1;
       outMap["mTag_eta"] = -9999;
       outMap["mTag_phi"] = -9999;
-      outMap["mTag_dxy"] = -1;
-      outMap["mTag_sigdxy"] = -1;
+      outMap["mTag_dxy_PV"] = -1;
+      outMap["mTag_sigdxy_PV"] = -1;
+      outMap["mTag_dxy_BS"] = -1;
+      outMap["mTag_sigdxy_BS"] = -1;
       for(auto tag : triggerTag) outMap["mTag_HLT_" + tag] = -1;
       outMap["mTag_tightID"] = -1;
       outMap["mTag_softID"] = -1;
@@ -203,8 +219,10 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     outMap["mProbe_eta"] = mProbe.eta();
     outMap["mProbe_phi"] = mProbe.phi();
     outMap["mProbe_dz"] = tkProbe->dz(primaryVtx.position());
-    outMap["mProbe_dxy"] = dxyProbe;
-    outMap["mProbe_sigdxy"] = fabs(dxyProbe)/tkProbe->dxyError();
+    outMap["mProbe_dxy_PV"] = dxyProbe_PV;
+    outMap["mProbe_sigdxy_PV"] = dxyProbe_PV/dxyProbeUnc;
+    outMap["mProbe_dxy_BS"] = dxyProbe_BS;
+    outMap["mProbe_sigdxy_BS"] = dxyProbe_BS/dxyProbeUnc;
     for(auto tag : triggerTag) {
       string trgPath = "HLT_" + tag + "_part*_v*";
       outMap["mProbe_HLT_" + tag] = mProbe.triggered(trgPath.c_str());
