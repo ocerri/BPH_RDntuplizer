@@ -115,7 +115,7 @@ process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
 
 process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
         decayTreeVecOut = cms.InputTag("B2MuDstDT","outputVecNtuplizer", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
@@ -123,7 +123,7 @@ process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
         inputFFScheme = cms.vstring(#'BD', 'ISGW2',
                                     'BD*', 'ISGW2'
         ),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 cfg_name = os.path.basename(sys.argv[0])

@@ -50,6 +50,8 @@ class TriggerObjectsFilter : public edm::stream::EDFilter<> {
       edm::EDGetTokenT<vector<pat::TriggerObjectStandAlone>> triggerObjectsSrc_;
       edm::EDGetTokenT<vector<pat::PackedCandidate>> PFCandSrc_;
       edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
+      edm::EDGetTokenT<reco::BeamSpot> beamSpotSrc_;
+
 
       edm::Service<TFileService> fs;
       TH1I* hAllNvts;
@@ -70,6 +72,7 @@ TriggerObjectsFilter::TriggerObjectsFilter(const edm::ParameterSet& iConfig)
 
   PFCandSrc_ = consumes<vector<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"));
   vtxSrc_ = consumes<vector<reco::Vertex>> ( edm::InputTag("offlineSlimmedPrimaryVertices") );
+  beamSpotSrc_ = consumes<reco::BeamSpot> ( edm::InputTag("offlineBeamSpot") );
 
   trgObjectCharge_ = iConfig.getParameter<int>( "object_charge" );
   verbose = iConfig.getParameter<int>( "verbose" );
@@ -99,6 +102,9 @@ bool TriggerObjectsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSe
   auto primaryVtx = (*vtxHandle)[0];
   hAllNvts->Fill((int)vtxHandle->size());
   for(auto vtx : (*vtxHandle)) hAllVtxZ->Fill(vtx.position().z());
+
+  edm::Handle<reco::BeamSpot> beamSpotHandle;
+  iEvent.getByToken(beamSpotSrc_, beamSpotHandle);
 
   // Output collection
   unique_ptr<vector<pat::PackedCandidate>> trgCandidatesMatched( new vector<pat::PackedCandidate> );
@@ -204,15 +210,23 @@ bool TriggerObjectsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSe
 
         if(cand.hasTrackDetails()) {
           auto tk = cand.bestTrack();
-          auto dxy = tk->dxy(primaryVtx.position());
           (*outputVecNtuplizer)["trgMu_dz"].push_back(tk->dz(primaryVtx.position()));
-          (*outputVecNtuplizer)["trgMu_dxy"].push_back(dxy);
-          (*outputVecNtuplizer)["trgMu_sigdxy"].push_back(fabs(dxy)/tk->dxyError());
+          auto dxyUnc = tk->dxyError();
+
+          auto dxy_PV = fabs(tk->dxy(primaryVtx.position()));
+          (*outputVecNtuplizer)["trgMu_dxy_PV"].push_back(dxy_PV);
+          (*outputVecNtuplizer)["trgMu_sigdxy_PV"].push_back( dxy_PV/dxyUnc );
+
+          auto dxy_BS = fabs(tk->dxy((*beamSpotHandle)));
+          (*outputVecNtuplizer)["trgMu_dxy_BS"].push_back(dxy_BS);
+          (*outputVecNtuplizer)["trgMu_sigdxy_BS"].push_back( dxy_BS/dxyUnc );
         }
         else {
         (*outputVecNtuplizer)["trgMu_dz"].push_back(-9999);
-        (*outputVecNtuplizer)["trgMu_dxy"].push_back(-9999);
-        (*outputVecNtuplizer)["trgMu_sigdxy"].push_back(-9999);
+        (*outputVecNtuplizer)["trgMu_dxy_PV"].push_back(-9999);
+        (*outputVecNtuplizer)["trgMu_sigdxy_PV"].push_back(-9999);
+        (*outputVecNtuplizer)["trgMu_dxy_BS"].push_back(-9999);
+        (*outputVecNtuplizer)["trgMu_sigdxy_BS"].push_back(-9999);
       }
       }
       else {
@@ -232,8 +246,10 @@ bool TriggerObjectsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSe
         (*outputVecNtuplizer)["trgCand_isStandAloneMuon"].push_back(0);
         (*outputVecNtuplizer)["trgCand_isTrackerMuon"].push_back(0);
         (*outputVecNtuplizer)["trgMu_dz"].push_back(-9999);
-        (*outputVecNtuplizer)["trgMu_dxy"].push_back(-9999);
-        (*outputVecNtuplizer)["trgMu_sigdxy"].push_back(-9999);
+        (*outputVecNtuplizer)["trgMu_dxy_PV"].push_back(-9999);
+        (*outputVecNtuplizer)["trgMu_sigdxy_PV"].push_back(-9999);
+        (*outputVecNtuplizer)["trgMu_dxy_BS"].push_back(-9999);
+        (*outputVecNtuplizer)["trgMu_sigdxy_BS"].push_back(-9999);
       }
     }
   }

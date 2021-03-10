@@ -391,14 +391,14 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           auto mup = vecJpsiMuons[i_J].first;
           AddTLVToOut(vtxu::getTLVfromTrack(*(mup.bestTrack()), mass_Mu), string("mup"), &(*outputVecNtuplizer));
           auto dxy_mup = mup.innerTrack()->dxy(primaryVtx.position());
-          (*outputVecNtuplizer)["mup_dxy"].push_back(dxy_mup);
+          (*outputVecNtuplizer)["mup_dxy_PV"].push_back(dxy_mup);
           (*outputVecNtuplizer)["mup_sigdxy_PV"].push_back(fabs(dxy_mup)/mup.innerTrack()->dxyError());
           (*outputVecNtuplizer)["mup_isTrg"].push_back(trgMuIdx(mup, (*trgMuonsHandle) ));
 
           auto mum = vecJpsiMuons[i_J].second;
           AddTLVToOut(vtxu::getTLVfromTrack(*(mum.bestTrack()), mass_Mu), string("mum"), &(*outputVecNtuplizer));
           auto dxy_mum = mum.innerTrack()->dxy(primaryVtx.position());
-          (*outputVecNtuplizer)["mum_dxy"].push_back(dxy_mum);
+          (*outputVecNtuplizer)["mum_dxy_PV"].push_back(dxy_mum);
           (*outputVecNtuplizer)["mum_sigdxy_PV"].push_back(fabs(dxy_mum)/mum.innerTrack()->dxyError());
           (*outputVecNtuplizer)["mum_isTrg"].push_back(trgMuIdx(mum, (*trgMuonsHandle) ));
 

@@ -38,6 +38,7 @@ class TriggerMuonsFilter : public edm::stream::EDFilter<> {
       // ----------member data ---------------------------
       edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
       edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
+      edm::EDGetTokenT<reco::BeamSpot> beamSpotSrc_;
 
       edm::Service<TFileService> fs;
       TH1I* hAllNvts;
@@ -53,6 +54,7 @@ class TriggerMuonsFilter : public edm::stream::EDFilter<> {
 TriggerMuonsFilter::TriggerMuonsFilter(const edm::ParameterSet& iConfig):
   muonSrc_( consumes<vector<pat::Muon>> ( edm::InputTag("slimmedMuons") ) ),
   vtxSrc_( consumes<vector<reco::Vertex>> ( edm::InputTag("offlineSlimmedPrimaryVertices") ) ),
+  beamSpotSrc_( consumes<reco::BeamSpot> ( edm::InputTag("offlineBeamSpot") ) ),
   muonCharge_( iConfig.getParameter<int>( "muon_charge" ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
@@ -75,6 +77,9 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
   auto primaryVtx = (*vtxHandle)[0];
   hAllNvts->Fill((int)vtxHandle->size());
   for(auto vtx : (*vtxHandle)) hAllVtxZ->Fill(vtx.position().z());
+
+  edm::Handle<reco::BeamSpot> beamSpotHandle;
+  iEvent.getByToken(beamSpotSrc_, beamSpotHandle);
 
   // Output collection
   unique_ptr<vector<pat::Muon>> trgMuonsMatched( new vector<pat::Muon> );
@@ -103,15 +108,21 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
     (*outputVecNtuplizer)["trgMu_charge"].push_back(muon.charge());
     if(!muon.innerTrack().isNull()) {
       auto tk = muon.innerTrack();
-      auto dxy = tk->dxy(primaryVtx.position());
       (*outputVecNtuplizer)["trgMu_dz"].push_back(tk->dz(primaryVtx.position()));
-      (*outputVecNtuplizer)["trgMu_dxy"].push_back(dxy);
-      (*outputVecNtuplizer)["trgMu_sigdxy"].push_back(fabs(dxy)/tk->dxyError());
+      auto dxy_PV = fabs(tk->dxy(primaryVtx.position()));
+      auto dxyUnc = tk->dxyError();
+      (*outputVecNtuplizer)["trgMu_dxy_PV"].push_back(dxy_PV);
+      (*outputVecNtuplizer)["trgMu_sigdxy_PV"].push_back( dxy_PV/dxyUnc );
+      auto dxy_BS = fabs(tk->dxy((*beamSpotHandle)));
+      (*outputVecNtuplizer)["trgMu_dxy_BS"].push_back(dxy_BS);
+      (*outputVecNtuplizer)["trgMu_sigdxy_BS"].push_back( dxy_BS/dxyUnc );
     }
     else {
       (*outputVecNtuplizer)["trgMu_dz"].push_back(-999);
-      (*outputVecNtuplizer)["trgMu_dxy"].push_back(-999);
-      (*outputVecNtuplizer)["trgMu_sigdxy"].push_back(-999);
+      (*outputVecNtuplizer)["trgMu_dxy_PV"].push_back(-999);
+      (*outputVecNtuplizer)["trgMu_sigdxy_PV"].push_back(-999);
+      (*outputVecNtuplizer)["trgMu_dxy_BS"].push_back(-999);
+      (*outputVecNtuplizer)["trgMu_sigdxy_BS"].push_back(-999);
     }
   }
   bool acceptEvent = trgMuonsMatched->size() > 0;
