@@ -90,6 +90,13 @@ process.TFileService = cms.Service("TFileService",
 #################   Sequence    ####################
 '''
 
+process.l1bits=cms.EDProducer("L1TriggerResultsConverter",
+                              src=cms.InputTag("gtStage2Digis"),
+                              # src_ext=cms.InputTag("gtStage2Digis"),
+                              # storeUnprefireableBit=cms.bool(True),
+                              legacyL1=cms.bool(False),
+)
+
 process.TnP = cms.EDFilter("TagAndProbeProducer",
         muonIDScaleFactors = cms.int32(1),
         requireTag = cms.int32(1),
@@ -98,6 +105,7 @@ process.TnP = cms.EDFilter("TagAndProbeProducer",
 
 
 process.p = cms.Path(
+                    process.l1bits +
                     process.TnP
                     )
 

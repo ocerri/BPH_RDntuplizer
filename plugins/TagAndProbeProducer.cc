@@ -23,6 +23,13 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
+// L1 trigger
+#include "CondFormats/L1TObjects/interface/L1GtTriggerMenu.h"
+#include "CondFormats/DataRecord/interface/L1GtTriggerMenuRcd.h"
+#include "DataFormats/L1TGlobal/interface/GlobalAlgBlk.h"
+#include "DataFormats/L1Trigger/interface/BXVector.h"
+#include "DataFormats/L1Trigger/interface/Muon.h"
+
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
@@ -40,8 +47,11 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
       void addToTree();
 
       // ----------member data ---------------------------
+      edm::EDGetTokenT<BXVector<GlobalAlgBlk>> L1triggerBitsSrc_;
+      edm::EDGetTokenT<edm::TriggerResults> L1triggerResultsSrc_;
       edm::EDGetTokenT<edm::TriggerResults> triggerBitsSrc_;
       edm::EDGetTokenT <pat::PackedTriggerPrescales> triggerPrescales_;
+      edm::EDGetTokenT<BXVector<l1t::Muon>> l1MuonSrc_;
       edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
       edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
       edm::EDGetTokenT<reco::BeamSpot> beamSpotSrc_;
@@ -66,8 +76,11 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
 
 
 TagAndProbeProducer::TagAndProbeProducer(const edm::ParameterSet& iConfig):
+  L1triggerBitsSrc_(consumes<BXVector<GlobalAlgBlk>>( edm::InputTag("gtStage2Digis") )),
+  L1triggerResultsSrc_(consumes<edm::TriggerResults>( edm::InputTag("l1bits") )),
   triggerBitsSrc_(consumes<edm::TriggerResults>( edm::InputTag("TriggerResults","","HLT") )),
   triggerPrescales_(consumes<pat::PackedTriggerPrescales>( edm::InputTag("patTrigger") )),
+  l1MuonSrc_( consumes<BXVector<l1t::Muon>> ( edm::InputTag("gmtStage2Digis", "Muon", "RECO") ) ),
   muonSrc_( consumes<vector<pat::Muon>> ( edm::InputTag("slimmedMuons") ) ),
   vtxSrc_( consumes<vector<reco::Vertex>> ( edm::InputTag("offlineSlimmedPrimaryVertices") ) ),
   beamSpotSrc_( consumes<reco::BeamSpot> ( edm::InputTag("offlineBeamSpot") ) ),
@@ -110,14 +123,62 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   edm::Handle<reco::BeamSpot> beamSpotHandle;
   iEvent.getByToken(beamSpotSrc_, beamSpotHandle);
 
-  if (verbose) {
-    cout << "\n MUONS LIST" << endl;
-    for (auto muon : (*muonHandle)) {
-        cout << Form("id:%d  pt:%.1f  eta:%.1f  phi:%.1f", muon.pdgId(), muon.pt(), muon.eta(), muon.phi());
-        cout << Form(" tightID:%d softID:%d trgBPH:%d", muon.isTightMuon(primaryVtx), muon.isSoftMuon(primaryVtx), muon.triggered("HLT_Mu*_IP*_part*_v*"));
-        cout << endl;
+  // L1 triggers NanoAOD
+  edm::Handle<edm::TriggerResults> L1triggerResults;
+  iEvent.getByToken(L1triggerResultsSrc_, L1triggerResults);
+
+  if (verbose) {cout << "======== L1 trigger NanoAOD ======== : " << L1triggerResults->size() << endl;}
+
+  // regex regex_MuNano(".*SingleMu[0-9]+.*");
+
+  for (unsigned int i = 0; i < L1triggerResults->size(); ++i) {
+      auto n =  L1triggerResults->name(i);
+      auto result = L1triggerResults->accept(i);
+      if (verbose) {
+        cout << n << ": " << result << endl;
       }
   }
+
+  if (verbose) {cout << "====================================" << endl;}
+
+  // L1 trigger
+
+  edm::ESHandle<L1GtTriggerMenu> L1TriggerMenuHandle;
+  iSetup.get<L1GtTriggerMenuRcd>().get(L1TriggerMenuHandle);
+
+  edm::Handle<BXVector<GlobalAlgBlk>> L1TriggerBitsHandle;
+  iEvent.getByToken(L1triggerBitsSrc_, L1TriggerBitsHandle);
+  const std::vector<bool>* wordp = &L1TriggerBitsHandle->at(0, 0).getAlgoDecisionFinal();
+
+  regex regex_Mu(".*SingleMu[0-9]+.*");
+
+  if (verbose) {cout << "======== L1 trigger results ========" << endl;}
+
+  for (auto const& keyval : L1TriggerMenuHandle->gtAlgorithmAliasMap()) {
+    auto name = keyval.first;
+    auto idx  = keyval.second.algoBitNumber();
+    bool result = (*wordp)[idx];
+    if (verbose && regex_match(name, regex_Mu)) {
+      cout << name << ": " << result << endl;
+    }
+    if (regex_match(name, regex_Mu)) outMap[name] = result;
+  }
+  if (verbose) {cout << "====================================" << endl;}
+
+  edm::Handle<BXVector<l1t::Muon>> l1MuonHandle;
+  iEvent.getByToken(l1MuonSrc_, l1MuonHandle);
+  uint nL1Muons = (uint)l1MuonHandle->size(0);
+
+  if (verbose) {
+    cout << "============= L1 muons =============" << endl;
+    for (uint i=0; i < nL1Muons; i++) {
+      auto m = l1MuonHandle->at(0,i);
+      cout << i << ": " << Form("pt=%.2f, eta=%.2f, phi=%.2f", m.pt(), m.eta(), m.phi()) << endl;
+    }
+    cout << "====================================" << endl;
+  }
+
+  // HLT trigger
 
   vector<string> triggerTag = {"Mu12_IP6", "Mu9_IP5", "Mu7_IP4", "Mu9_IP4", "Mu9_IP6"};
   for(auto tag : triggerTag) outMap["prescale" + tag] = -1;
@@ -127,13 +188,40 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   if (verbose) { cout << "\n == TRIGGER PATHS == \n";}
   for (unsigned int i = 0; i < triggerBits->size(); ++i) {
       auto n =  names.triggerName(i);
-      if (verbose && triggerBits->accept(i)) {cout << n << ": PASS" << endl;}
+      if (verbose && triggerBits->accept(i) && false) {
+        cout << n << ": PASS" << endl;
+      }
       if(!regex_match(n, txt_regex_path)) continue;
       for(auto tag : triggerTag) {
         if(n.substr(4, tag.size()) == tag) {
           outMap["prescale" + tag] = triggerPrescales->getPrescaleForIndex(i);
           if(verbose) {cout << tag << "\t" << n << "\t" << triggerBits->wasrun(i) << "\t" << triggerPrescales->getPrescaleForIndex(i) << endl;}
         }
+      }
+  }
+
+  if (verbose) {
+    cout << "\n MUONS LIST" << endl;
+    for (auto muon : (*muonHandle)) {
+        cout << Form("id:%d  pt:%.1f  eta:%.1f  phi:%.1f", muon.pdgId(), muon.pt(), muon.eta(), muon.phi());
+        cout << Form(" tightID:%d softID:%d trgBPH:%d", muon.isTightMuon(primaryVtx), muon.isSoftMuon(primaryVtx), muon.triggered("HLT_Mu*_IP*_part*_v*"));
+        if(muon.triggered("HLT_Mu*_IP*")) {
+          uint idxMatch = 999;
+          float best_dR = 1e6;
+          float best_dpt = 1e6;
+          for (uint i=0; i < nL1Muons; i++) {
+            auto m = l1MuonHandle->at(0,i);
+            float dR = vtxu::dR(m.phi(), muon.phi(), m.eta(), muon.eta());
+            float dpt = fabs(muon.pt() - m.pt())/muon.pt();
+            if ((dR < best_dR && dpt < best_dpt) || (dpt/0.1 + dR/0.1 < best_dpt/0.1 + best_dR/0.1)) {
+              best_dR = dR;
+              best_dpt = dpt;
+              idxMatch = i;
+            }
+          }
+          cout << ", L1 match " << idxMatch << Form(": dR=%.4f, dpt=%.3f", best_dR, best_dpt);
+        }
+        cout << endl;
       }
   }
 
@@ -223,6 +311,29 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     outMap["mProbe_sigdxy_PV"] = dxyProbe_PV/dxyProbeUnc;
     outMap["mProbe_dxy_BS"] = dxyProbe_BS;
     outMap["mProbe_sigdxy_BS"] = dxyProbe_BS/dxyProbeUnc;
+
+    if(mProbe.triggered("HLT_Mu*_IP*")) {
+      uint idxMatch = 0;
+      float best_dR = 1e6;
+      float best_dpt = 1e6;
+      for (uint i=0; i < nL1Muons; i++) {
+        auto m = l1MuonHandle->at(0,i);
+        float dR = vtxu::dR(m.phi(), mProbe.phi(), m.eta(), mProbe.eta());
+        float dpt = fabs(mProbe.pt() - m.pt())/mProbe.pt();
+        if ((dR < best_dR && dpt < best_dpt) || (dpt/0.1 + dR/0.1 < best_dpt/0.1 + best_dR/0.1)) {
+          best_dR = dR;
+          best_dpt = dpt;
+          idxMatch = i;
+        }
+      }
+      outMap["mProbe_L1_pt"] = l1MuonHandle->at(0,idxMatch).pt();
+      outMap["mProbe_L1_dR"] = best_dR;
+    }
+    else {
+      outMap["mProbe_L1_pt"] = -1;
+      outMap["mProbe_L1_dR"] = -1;
+    }
+
     for(auto tag : triggerTag) {
       string trgPath = "HLT_" + tag + "_part*_v*";
       outMap["mProbe_HLT_" + tag] = mProbe.triggered(trgPath.c_str());

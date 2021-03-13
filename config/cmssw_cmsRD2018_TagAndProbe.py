@@ -48,7 +48,11 @@ else:
     fdefault += 'inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:3]
+    nTot = len(flist)
+    i0 = min(5, nTot)
+    i1 = int(nTot/3.0)
+    i2 = int(nTot*2.0/3.0)
+    flist = [flist[i0], flist[i1], flist[i2], flist[-5]]
 
 print 'Trying to get a local copy'
 for i in range(len(flist)):
@@ -90,6 +94,12 @@ process.TFileService = cms.Service("TFileService",
 '''
 #################   Sequence    ####################
 '''
+process.l1bits=cms.EDProducer("L1TriggerResultsConverter",
+                              src=cms.InputTag("gtStage2Digis"),
+                              # src_ext=cms.InputTag("gtStage2Digis"),
+                              # storeUnprefireableBit=cms.bool(True),
+                              legacyL1=cms.bool(False),
+)
 
 process.TnP = cms.EDFilter("TagAndProbeProducer",
         muonIDScaleFactors = cms.int32(0),
@@ -99,6 +109,7 @@ process.TnP = cms.EDFilter("TagAndProbeProducer",
 
 
 process.p = cms.Path(
+                    process.l1bits +
                     process.TnP
                     )
 
