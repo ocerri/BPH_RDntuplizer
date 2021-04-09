@@ -40,7 +40,9 @@ using namespace std;
 class TagAndProbeProducer : public edm::stream::EDFilter<> {
    public:
       explicit TagAndProbeProducer(const edm::ParameterSet&);
-      ~TagAndProbeProducer() {};
+      ~TagAndProbeProducer() {
+        cout << "Total events in output tree: " << tree->GetEntries() << endl;
+      };
 
    private:
       virtual bool filter(edm::Event&, const edm::EventSetup&) override;
@@ -148,20 +150,34 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
 
   edm::Handle<BXVector<GlobalAlgBlk>> L1TriggerBitsHandle;
   iEvent.getByToken(L1triggerBitsSrc_, L1TriggerBitsHandle);
-  const std::vector<bool>* wordp = &L1TriggerBitsHandle->at(0, 0).getAlgoDecisionFinal();
+  const std::vector<bool>* l1FinalDecision = &L1TriggerBitsHandle->at(0, 0).getAlgoDecisionFinal();
 
-  regex regex_Mu(".*SingleMu[0-9]+.*");
+  vector<string> consideredL1Seeds = {"5", "6", "7", "8", "9", "10", "12", "14", "16", "18", "20", "22", "25", "30"};
+  for (auto ptThr : consideredL1Seeds) {
+    string name = "L1_SingleMu"+ptThr;
+    outMap[name] = -1;
+  }
+
+  // regex regex_Mu(".*SingleMu.*");
+  regex regex_Mu(".*");
 
   if (verbose) {cout << "======== L1 trigger results ========" << endl;}
 
   for (auto const& keyval : L1TriggerMenuHandle->gtAlgorithmAliasMap()) {
     auto name = keyval.first;
     auto idx  = keyval.second.algoBitNumber();
-    bool result = (*wordp)[idx];
+    bool result = (*l1FinalDecision)[idx];
     if (verbose && regex_match(name, regex_Mu)) {
-      cout << name << ": " << result << endl;
+      cout << name << ": " << (int)result << endl;
     }
-    if (regex_match(name, regex_Mu)) outMap[name] = result;
+    for (auto ptThr : consideredL1Seeds) {
+      regex auxRegex("L1_SingleMu"+ptThr);
+      if (regex_match(name, auxRegex)) {
+        outMap[name] = result;
+        break;
+      }
+    }
+    // if (regex_match(name, regex_Mu)) outMap[name] = result;
   }
   if (verbose) {cout << "====================================" << endl;}
 
@@ -173,7 +189,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     cout << "============= L1 muons =============" << endl;
     for (uint i=0; i < nL1Muons; i++) {
       auto m = l1MuonHandle->at(0,i);
-      cout << i << ": " << Form("pt=%.2f, eta=%.2f, phi=%.2f", m.pt(), m.eta(), m.phi()) << endl;
+      cout << i << ": " << Form("pt=%.2f, eta=%.2f, phi=%.2f, quality=%d", m.pt(), m.eta(), m.phi(), m.hwQual()) << endl;
     }
     cout << "====================================" << endl;
   }
@@ -288,6 +304,28 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       }
       outMap["mTag_tightID"] = mTag.isTightMuon(primaryVtx);
       outMap["mTag_softID"] = mTag.isSoftMuon(primaryVtx);
+
+      if(mTag.triggered("HLT_Mu*_IP*")) {
+        uint idxMatch = 0;
+        float best_dR = 1e6;
+        float best_dpt = 1e6;
+        for (uint i=0; i < nL1Muons; i++) {
+          auto m = l1MuonHandle->at(0,i);
+          float dR = vtxu::dR(m.phi(), mTag.phi(), m.eta(), mTag.eta());
+          float dpt = fabs(mTag.pt() - m.pt())/mTag.pt();
+          if ((dR < best_dR && dpt < best_dpt) || (dpt/0.1 + dR/0.1 < best_dpt/0.1 + best_dR/0.1)) {
+            best_dR = dR;
+            best_dpt = dpt;
+            idxMatch = i;
+          }
+        }
+        outMap["mTag_L1_pt"] = l1MuonHandle->at(0,idxMatch).pt();
+        outMap["mTag_L1_dR"] = best_dR;
+      }
+      else {
+        outMap["mTag_L1_pt"] = -1;
+        outMap["mTag_L1_dR"] = -1;
+      }
     }
     else {
       outMap["mTag_pt"] = -1;
@@ -300,6 +338,8 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       for(auto tag : triggerTag) outMap["mTag_HLT_" + tag] = -1;
       outMap["mTag_tightID"] = -1;
       outMap["mTag_softID"] = -1;
+      outMap["mTag_L1_pt"] = -1;
+      outMap["mTag_L1_dR"] = -1;
     }
 
 

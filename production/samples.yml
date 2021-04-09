@@ -83,6 +83,11 @@ samples:
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_SoftQCD_evtgen_HELAMP_201231-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_SoftQCD_evtgen_HELAMP_210101-c21dec93027231dc6f615dfe5c662834/USER
 
+  B0_JpsiX_SoftQCD_PU20:
+    dataset: CP_B0_JpsiX_SoftQCD_PU20_10-2-3
+    parts:
+      - /BuToKJpsi_ToMuMu_probefilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-PUPoissonAve20_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM
+
   B0_JpsiKst_PU35:
     dataset: BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU35_10-2-3
     parts:

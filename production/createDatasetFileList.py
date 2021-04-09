@@ -39,6 +39,11 @@ for k, d in prod_samples['samples'].iteritems():
                 cmd += '"'
                 cmd += ' --limit=0 >> ' + fname
                 os.system(cmd)
+            elif p.endswith('/MINIAODSIM'):
+                cmd = 'das_client --query="file dataset={}'.format(p)
+                cmd += '"'
+                cmd += ' --limit=0 >> ' + fname
+                os.system(cmd)
             else:
                 with open(fname, 'a') as f:
                     for name in glob(p):
