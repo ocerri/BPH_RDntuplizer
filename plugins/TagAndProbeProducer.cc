@@ -309,6 +309,8 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
 
       auto out = matchL1Muon(mTag, *l1MuonHandle);
       outMap["mTag_L1_pt"] = get<3>(out);
+      if (get<0>(out) == 999) outMap["mTag_L1_eta"] = -999;
+      else outMap["mTag_L1_eta"] = l1MuonHandle->at(0,get<0>(out)).eta();
       outMap["mTag_L1_dR"] = get<1>(out);
     }
     else {
@@ -323,6 +325,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       outMap["mTag_tightID"] = -1;
       outMap["mTag_softID"] = -1;
       outMap["mTag_L1_pt"] = -1;
+      outMap["mTag_L1_eta"] = -999;
       outMap["mTag_L1_dR"] = -1;
     }
 
@@ -338,6 +341,8 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
 
     auto out = matchL1Muon(mProbe, *l1MuonHandle);
     outMap["mProbe_L1_pt"] = get<3>(out);
+    if (get<0>(out) == 999) outMap["mProbe_L1_eta"] = -999;
+    else outMap["mProbe_L1_eta"] = l1MuonHandle->at(0,get<0>(out)).eta();
     outMap["mProbe_L1_dR"] = get<1>(out);
 
     for(auto tag : triggerTag) {
