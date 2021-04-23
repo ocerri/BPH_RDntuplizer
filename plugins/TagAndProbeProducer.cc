@@ -46,7 +46,7 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
 
    private:
       virtual bool filter(edm::Event&, const edm::EventSetup&) override;
-      tuple<uint, float, float, float> matchL1Muon(pat::Muon, BXVector<l1t::Muon>);
+      tuple<uint, float, float, float> matchL1Muon(pat::Muon muReco, BXVector<l1t::Muon> muonsL1, uint skipIdx=9999);
       void addToTree();
 
       // ----------member data ---------------------------
@@ -287,6 +287,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     }
     if (requireTag && ptTagMu == -1) continue;
 
+    uint mTag_L1_idx = 9999;
     if(ptTagMu != -1) {
       outMap["mTag_pt"] = mTag.pt();
       outMap["mTag_eta"] = mTag.eta();
@@ -300,6 +301,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       outMap["mTag_dxy_BS"] = dxyTag_BS;
       outMap["mTag_sigdxy_BS"] = dxyTag_BS/tkTag->dxyError();
 
+      outMap["mTag_HLT_Mu_IP"] = mTag.triggered("HLT_Mu*_IP*");
       for(auto tag : triggerTag) {
         string trgPath = "HLT_" + tag + "_part*_v*";
         outMap["mTag_HLT_" + tag] = mTag.triggered(trgPath.c_str());
@@ -308,8 +310,9 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       outMap["mTag_softID"] = mTag.isSoftMuon(primaryVtx);
 
       auto out = matchL1Muon(mTag, *l1MuonHandle);
+      mTag_L1_idx = get<0>(out);
       outMap["mTag_L1_pt"] = get<3>(out);
-      if (get<0>(out) == 999) outMap["mTag_L1_eta"] = -999;
+      if (get<0>(out) == 9999) outMap["mTag_L1_eta"] = -999;
       else outMap["mTag_L1_eta"] = l1MuonHandle->at(0,get<0>(out)).eta();
       outMap["mTag_L1_dR"] = get<1>(out);
     }
@@ -321,6 +324,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       outMap["mTag_sigdxy_PV"] = -1;
       outMap["mTag_dxy_BS"] = -1;
       outMap["mTag_sigdxy_BS"] = -1;
+      outMap["mTag_HLT_Mu_IP"] = -1;
       for(auto tag : triggerTag) outMap["mTag_HLT_" + tag] = -1;
       outMap["mTag_tightID"] = -1;
       outMap["mTag_softID"] = -1;
@@ -339,9 +343,13 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     outMap["mProbe_dxy_BS"] = dxyProbe_BS;
     outMap["mProbe_sigdxy_BS"] = dxyProbe_BS/dxyProbeUnc;
 
-    auto out = matchL1Muon(mProbe, *l1MuonHandle);
+    auto out = matchL1Muon(mProbe, *l1MuonHandle, mTag_L1_idx);
+    if (mTag_L1_idx != 9999 && mTag_L1_idx == get<0>(out)) {
+      cout << "[ERROR] How can they match?" << endl;
+      assert(false);
+    }
     outMap["mProbe_L1_pt"] = get<3>(out);
-    if (get<0>(out) == 999) outMap["mProbe_L1_eta"] = -999;
+    if (get<0>(out) == 9999) outMap["mProbe_L1_eta"] = -999;
     else outMap["mProbe_L1_eta"] = l1MuonHandle->at(0,get<0>(out)).eta();
     outMap["mProbe_L1_dR"] = get<1>(out);
 
@@ -394,8 +402,8 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   return true;
 }
 
-tuple<uint, float, float, float> TagAndProbeProducer::matchL1Muon(pat::Muon muReco, BXVector<l1t::Muon> muonsL1) {
-  uint idxMatch = 999;
+tuple<uint, float, float, float> TagAndProbeProducer::matchL1Muon(pat::Muon muReco, BXVector<l1t::Muon> muonsL1, uint skipIdx) {
+  uint idxMatch = 9999;
   float best_dR = 1e6;
   float best_dpt = 1e6;
   float best_pt = -1;
@@ -405,6 +413,7 @@ tuple<uint, float, float, float> TagAndProbeProducer::matchL1Muon(pat::Muon muRe
   float phiProp = muReco.phi() + TMath::Sign(1, muReco.pdgId()) * dphi;
 
   for (uint i=0; i < muonsL1.size(0); i++) {
+    if (i == skipIdx) continue;
     auto m = muonsL1.at(0,i);
     if (m.hwQual() < 12) continue;
     float dR = vtxu::dR(m.phi(), phiProp, m.eta(), muReco.eta());

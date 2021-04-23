@@ -12,12 +12,12 @@ cfg = {'PrescaleVertices': 'cmssw_cmsRD2018_PrescaleVertices.py',
        'combDpstMup': 'cmssw_cmsRD2018_Tag_MupDpst-pD0-kp.py',
        'B2DstHad': 'cmssw_cmsRD2018_HadDmst-pD0bar-kp.py',
        'B2DstpHadm': 'cmssw_cmsRD2018_HadDpst-pD0bar-kp.py',
-       'TagAndProbe_Bp2MuNuDstst_Pip': 'cmssw_cmsRD2018_TagAndProbe_Bp_MuNuDstst_pip.py',
-       'TagAndProbe_Bp2MuNuDstst_Pim': 'cmssw_cmsRD2018_TagAndProbe_Bp_MuNuDstst_pim.py',
-       'TagAndProbe_B2DstPi': 'cmssw_cmsRD2018_TagAndProbe_B0_Dmstpi.py',
-       'TagAndProbe_Bp2DmstPipPip': 'cmssw_cmsRD2018_TagAndProbe_Bp_DmstPipPip.py',
-       'TagAndProbe_Bp2DmstPim3Pip': 'cmssw_cmsRD2018_TagAndProbe_Bp_DmstPim3Pip.py',
-       'TagAndProbeTrigger': 'cmssw_cmsRD2018_TagAndProbe.py',
+       # 'TagAndProbe_Bp2MuNuDstst_Pip': 'cmssw_cmsRD2018_TagAndProbe_Bp_MuNuDstst_pip.py',
+       # 'TagAndProbe_Bp2MuNuDstst_Pim': 'cmssw_cmsRD2018_TagAndProbe_Bp_MuNuDstst_pim.py',
+       # 'TagAndProbe_B2DstPi': 'cmssw_cmsRD2018_TagAndProbe_B0_Dmstpi.py',
+       # 'TagAndProbe_Bp2DmstPipPip': 'cmssw_cmsRD2018_TagAndProbe_Bp_DmstPipPip.py',
+       # 'TagAndProbe_Bp2DmstPim3Pip': 'cmssw_cmsRD2018_TagAndProbe_Bp_DmstPim3Pip.py',
+       'TagAndProbeTrigger': 'cmssw_cmsRD2018_TagAndProbeTrigger.py',
        'B2JpsiKst': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py',
        'B2JpsiK': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiK.py',
        # 'probeB2DstMu': 'cmssw_cmsRD2018_Probe_B0_MuDmst.py'
@@ -76,7 +76,8 @@ config.General.transferLogs = False
     fout.write('\n')
     fout.write("config.Data.inputDataset = '{}'".format(dataset))
     fout.write('\n')
-    fout.write("config.Data.lumiMask = '{}'".format(settings['common']['data']['lumimask']))
+    fout.write("config.Data.lumiMask = '/storage/user/ocerri/work/CMSSW_10_2_3/src/ntuplizer/BPH_RDntuplizer/production/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt'")
+    # fout.write("config.Data.lumiMask = '{}'".format(settings['common']['data']['lumimask']))
     fout.write('\n')
     fout.write("config.Data.publication = False")
     fout.write('\n')
