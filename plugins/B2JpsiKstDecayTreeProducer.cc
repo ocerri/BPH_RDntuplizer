@@ -171,7 +171,6 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
       if (!K.hasTrackDetails()) continue;
       //Require a positive charged hadron
       if (K.isTrackerMuon() || K.isStandAloneMuon()) continue;
-      if (K.charge() < 0) continue;
       //Require a minimum pt
       if(K.pt() < __pThad_min__) continue;
       // Require to be close to the trigger muon;
@@ -197,7 +196,7 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
         if (!pi.hasTrackDetails()) continue;
         //Require a negative charged hadron
         if (pi.isTrackerMuon() || pi.isStandAloneMuon()) continue;
-        if (pi.charge() > 0) continue;
+        if (pi.charge() + K.charge() != 0) continue;
         //Require a minimum pt
         if(pi.pt() < __pThad_min__) continue;
         // Require to be close to the trigger muon;
@@ -368,10 +367,12 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           ############################################################################
           */
           AddTLVToOut(vtxu::getTLVfromCand(pi, mass_Pi), string("pi"), &(*outputVecNtuplizer));
+          (*outputVecNtuplizer)["pi_charge"].push_back(pi.charge());
           (*outputVecNtuplizer)["pi_sigdxy_PV"].push_back(pi_sigdxy_PV);
           (*outputVecNtuplizer)["pi_norm_chi2"].push_back(pi_norm_chi2);
           (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
           AddTLVToOut(vtxu::getTLVfromCand(K, mass_K), string("K"), &(*outputVecNtuplizer));
+          (*outputVecNtuplizer)["K_charge"].push_back(K.charge());
           (*outputVecNtuplizer)["K_sigdxy_PV"].push_back(K_sigdxy_PV);
           (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
           (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
