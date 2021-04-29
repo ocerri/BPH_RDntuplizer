@@ -30,6 +30,12 @@ private:
   // vector<string> output_soruce_modules;
 
   TTree* tree;
+
+  bool isRealData;
+  unsigned int runNum;
+  unsigned int lumiNum;
+  unsigned long long eventNum;
+
   map<string, float> out_map;
   map<string, vector<float>> outv_map;
 
@@ -60,6 +66,10 @@ FlatTreeWriter::FlatTreeWriter( const edm::ParameterSet & cfg ) :
 void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   if(verbose){cout << "--------------------- Tree Wirter -----------------------" << endl;}
+  isRealData = iEvent.isRealData() ? 1 : 0 ;
+  runNum     = iEvent.id().run();
+  lumiNum    = iEvent.luminosityBlock();
+  eventNum   = iEvent.id().event();
 
   vector< edm::Handle<map<string, float>> > outMapHandle;
   iEvent.getManyByType(outMapHandle);
@@ -86,6 +96,11 @@ void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   if (first_call) {
     if(verbose) {cout << "\nCreating the branches in the output tree:\n";}
+    tree->Branch("isRealData", &isRealData);
+    tree->Branch("runNum", &runNum);
+    tree->Branch("lumiNum", &lumiNum);
+    tree->Branch("eventNum", &eventNum);
+
     for(auto& kv : out_map) {
       auto k = kv.first;
       if(verbose) {cout << k << endl;}

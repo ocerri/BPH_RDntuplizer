@@ -94,6 +94,7 @@ process.TFileService = cms.Service("TFileService",
 
 process.trgF = cms.EDFilter("TriggerMuonsFilter",
         muon_charge = cms.int32(0),
+        isMC = cms.int32(0),
         verbose = cms.int32(0)
 )
 

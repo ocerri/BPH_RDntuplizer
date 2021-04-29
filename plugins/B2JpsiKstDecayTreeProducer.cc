@@ -429,10 +429,6 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
       if(n_B >= 100) break;
     }
 
-    (*outputNtuplizer)["Run"] = iEvent.run();
-    (*outputNtuplizer)["LumiBlock"] = iEvent.luminosityBlock();
-    (*outputNtuplizer)["eventNumber"] = iEvent.id().event();
-
     (*outputNtuplizer)["n_K"] = n_K;
     (*outputNtuplizer)["n_pi"] = n_pi;
     (*outputNtuplizer)["n_Kst"] = n_Kst;

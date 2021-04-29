@@ -139,17 +139,19 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
         if(verbose) {cout << "[Hard process] " << p.pdgId() << ": " << p.vx() << ", " << p.vy() << endl;}
       }
 
-      if (p.pdgId() == 511 && p.numberOfDaughters()>1) {
+      if (abs(p.pdgId()) == 511 && p.numberOfDaughters()>1) {
         bool Jpsi_found = false;
         bool Kst_found = false;
         for(auto d : p.daughterRefVector()) {
-          if(d->pdgId() == 443) Jpsi_found = true;
-          else if(d->pdgId() == 313) Kst_found = true;
+          if(abs(d->pdgId()) == 443) Jpsi_found = true;
+          else if(abs(d->pdgId()) == 313) Kst_found = true;
         }
         if(Jpsi_found && Kst_found) nB02JpsiKst++;
         else continue;
 
-        if(verbose) {cout << Form("%d (B0->JpsiKst): pt:%.2f eta:%.2f phi:%.2f", i, p.pt(), p.eta(), p.phi()) << endl;}
+        if(verbose) {
+          cout << Form("%d (%sB0->JpsiKst): pt:%.2f eta:%.2f phi:%.2f", i, p.pdgId()>0? "" : "anti-", p.pt(), p.eta(), p.phi()) << endl;
+        }
 
         for(uint j = 0; j < reco_B_pt.size(); j++) {
           float dR = vtxu::dR(p.phi(), reco_B_phi[j], p.eta(), reco_B_eta[j]);
@@ -166,8 +168,9 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
       }
       else if (abs(p.pdgId()) ==  13) genMuons.push_back(p);
     }
+
     (*indexBmc) = i_B;
-    (*outputNtuplizer)["MC_nB02JpsiKst"] = nB02JpsiKst;
+    (*outputNtuplizer)["MC_nBd_to_JpsiKst"] = nB02JpsiKst;
     (*outputNtuplizer)["MC_idxCand"] = i_cand;
 
     (*outputNtuplizer)["MC_d_vtxB"] = -1;
@@ -185,6 +188,9 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
       auto p = (*PrunedGenParticlesHandle)[i_B];
       p4["B"].SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
 
+      // Charge conjugation sign
+      int ccSign = p.pdgId() > 0? 1: -1;
+
       bool displSet = false;
       for(auto d : p.daughterRefVector()) {
         if (!displSet) {
@@ -197,18 +203,18 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
           displSet = true;
         }
 
-        if(d->pdgId() == 313) {
+        if(d->pdgId()*ccSign == 313) {
           p4["Kst"].SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
           for (auto dd : (*PackedGenParticlesHandle)) {
             if (dd.numberOfMothers() == 0) continue;
             auto m = dd.mother(0);
-            if(m->pdgId() == 313) {
+            if(m->pdgId()*ccSign == 313) {
               bool match = d->pt()==m->pt() && d->eta()==m->eta() && d->phi()==m->phi();
               if (!match) continue;
-              if(dd.pdgId() == -211) {
+              if(dd.pdgId()*ccSign == -211) {
                 p4["pi"].SetPtEtaPhiM(dd.pt(), dd.eta(), dd.phi(), dd.mass());
               }
-              else if(dd.pdgId() == 321) {
+              else if(dd.pdgId()*ccSign == 321) {
                 p4["K"].SetPtEtaPhiM(dd.pt(), dd.eta(), dd.phi(), dd.mass());
               }
             }

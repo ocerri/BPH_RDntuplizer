@@ -1,0 +1,380 @@
+common:
+  data:
+    lumimask : https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions18/13TeV/ReReco/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt
+    globaltag: 102X_dataRun2_v11
+    unitsPerJob: 7 #If Automatic represent target runtime in hours (not used)
+    # maxRunTime: 14 #in hours (unused in Automatic)
+  mc:
+    splitting: 1
+    globaltag: 102X_upgrade2018_realistic_v15
+
+samples:
+  # data_Run2018A:
+  #   dataset: /ParkingBPH{}/Run2018A-05May2019-v1/MINIAOD
+  #   isMC: False
+  #   parts:
+  #     - 1
+  #     - 2
+  #     - 3
+  #     - 4
+  #     - 5
+  #     - 6
+  # data_Run2018B:
+  #   dataset: /ParkingBPH{}/Run2018B-05May2019-v2/MINIAOD
+  #   isMC: False
+  #   parts:
+  #     - 1
+  #     - 2
+  #     - 3
+  #     - 4
+  #     - 5
+  #     - 6
+  data_Run2018C:
+    dataset: /ParkingBPH{}/Run2018C-05May2019-v1/MINIAOD
+    isMC: False
+    parts:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+  data_Run2018D:
+    dataset: /ParkingBPH{}/Run2018D-05May2019promptD-v1/MINIAOD
+    isMC: False
+    # globaltag: 102X_dataRun2_Prompt_v14
+    parts:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+  #
+  #  MC
+  #
+  B0_JpsiKst_PU0:
+    dataset: BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU0_10-2-3
+    parts:
+      - /cmsMC_private/ocerri-BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private/ocerri-BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_JpsiKst_PU20:
+    dataset: BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU20_10-2-3
+    parts:
+      - /storage/user/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU20_10-2-3/jobs_out/out_MINIAODSIM_*.root
+
+  B0_JpsiKstFSR_PU20:
+    dataset: BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgenFSR_SVV_PU20_10-2-3
+    parts:
+      - /storage/user/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgenFSR_SVV_PU20_10-2-3/jobs_out/out_MINIAODSIM_*.root
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-Probe_B0_JpsiKst_13TeV-pythia8_Hardbbbar_evtgenFSR_SVV_200225-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_JpsiKst_PUc0:
+    dataset: BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_200605-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_200612-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_201119-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_201211-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_JpsiKst_SoftQCD_PUc0:
+    dataset: BP_Tag-Probe_B0_JpsiKst_SoftQCD_evtgen_HELAMP_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_SoftQCD_evtgen_HELAMP_201211-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_SoftQCD_evtgen_HELAMP_201231-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_SoftQCD_evtgen_HELAMP_210101-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_JpsiX_SoftQCD_PU20:
+    dataset: CP_B0_JpsiX_SoftQCD_PU20_10-2-3
+    parts:
+      - /BuToKJpsi_ToMuMu_probefilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-PUPoissonAve20_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM
+
+  B0_JpsiKst_PU35:
+    dataset: BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU35_10-2-3
+    parts:
+      - /storage/user/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU35_10-2-3/jobs_out/out_MINIAODSIM_*.root
+
+  Bp_JpsiK_PUc0:
+    dataset: BP_Tag-Probe_Bp_JpsiK_Hardbbbar_evtgen_SVS_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_Bp_JpsiK_Hardbbbar_evtgen_HELAMP_201110-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_Bp_JpsiK_Hardbbbar_evtgen_HELAMP_201120-c21dec93027231dc6f615dfe5c662834/USER
+
+  antiB0_MuNuDmst_PUc0:
+    dataset: BP_Tag_antiB0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_antiB0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201209-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDmst_PU0:
+    dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU0_10-2-3
+    parts:
+      - /cmsMC_private/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDmst_PU20:
+    dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3
+    parts:
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191202-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191210-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191211-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191212-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200110-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200113-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200117-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDmst_PU35:
+    dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU35_10-2-3
+    parts:
+      - /cmsMC_private_PU35_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200225-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDmst_PUc0:
+    dataset: BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200325-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200408-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200411-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200430-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200503-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200504-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200509-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201110-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201112-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201113-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201115-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201117-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201207-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDmst_SoftQCDall_GENonly:
+    dataset: BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_PUGENonly_10-2-3
+    parts:
+      - /storage/user/ocerri/BPhysics/data/cmsMC_private/BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_PUGENonly_10-2-3/jobs_out/out_*.root
+
+  B0_MuNuDmst_SoftQCDall_PUc0:
+    dataset: BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201123-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201219-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201220-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201221-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201222-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201223-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201226-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201228-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_SoftQCDall_evtgen_ISGW2_201230-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDmst_HQETcentral_PU0:
+    dataset: BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3
+    parts:
+      - /cmsMC_private/ocerri-BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_HQET2_central_PU0_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU0_10-2-3/ocerri-BPH_Tag-B0_MuNuDmst_13TeV-pythia8_Hardbbbar_HQET2_central_200225-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_TauNuDmst_PU0:
+    dataset: BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU0_10-2-3
+    parts:
+      - /cmsMC_private/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
+      # - /storage/user/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3/jobs_out/out_MINIAODSIM_*.root
+
+  B0_TauNuDmst_PU20:
+    dataset: BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3
+    parts:
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191202-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191205-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191212-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200110-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200113-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_TauNuDmst_PU35:
+    dataset: BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU35_10-2-3
+    parts:
+      - /cmsMC_private_PU35_10-2-3/ocerri-BPH_Tag-B0_TauNuDmst-pD0bar-kp-t2mnn_pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200225-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_TauNuDmst_PUc0:
+    dataset: BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_200501-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_201029-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_DmstHc_PU0:
+    dataset: BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_PU0_10-2-3
+    parts:
+      - /cmsMC_private/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_DmstHc_PU20:
+    dataset: BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_PU20_10-2-3
+    parts:
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_191202-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-B0_DmstHc-pD0bar-kp-Hc2mu_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_200117-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_DmstHc_PUc0:
+    dataset: BP_Tag_B0_DmstHc_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DmstHc_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DmstHc_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_DstmDsp_PUc0:
+    dataset: BP_Tag_B0_DstmDsp_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DstmDsp_Hardbbbar_evtgen_ISGW2_200506-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_DstmDp_PUc0:
+    dataset: BP_Tag_B0_DstmDp_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DstmDp_Hardbbbar_evtgen_ISGW2_200506-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DstmDp_Hardbbbar_evtgen_ISGW2_201207-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_DstmD0_PUc0:
+    dataset: BP_Tag_B0_DstmD0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DstmD0_Hardbbbar_evtgen_ISGW2_200506-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DstmD0_Hardbbbar_evtgen_ISGW2_201207-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bp_DstmHc_PUc0:
+    dataset: BP_Tag_Bp_DstmHc_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /mnt/hadoop/store/user/ocerri/cmsMC_private_PUc0_10-2-3/BP_Tag_Bp_DstmHc_Hardbbbar_evtgen_ISGW2_200522/*/*/out_MINIAODSIM_*.root
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_DstmHc_Hardbbbar_evtgen_ISGW2_210304-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bm_DstmHc_PUc0:
+    dataset: BP_Tag_Bm_DstmHc_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bm_DstmHc_Hardbbbar_evtgen_ISGW2_200528-c21dec93027231dc6f615dfe5c662834/USER
+      - /mnt/hadoop/store/user/ocerri/cmsMC_private_PUc0_10-2-3/BP_Tag_Bm_DstmHc_Hardbbbar_evtgen_ISGW2_200528/*/*/out_MINIAODSIM_*.root
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bm_DstmHc_Hardbbbar_evtgen_ISGW2_210304-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bm_DstmHc_Hardbbbar_evtgen_ISGW2_210306-c21dec93027231dc6f615dfe5c662834/USER
+
+  antiB0_DstmHc_PUc0:
+    dataset: BP_Tag_antiB0_DstmHc_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_antiB0_DstmHc_Hardbbbar_evtgen_ISGW2_200528-c21dec93027231dc6f615dfe5c662834/USER ## What is the difference with the one below?
+      - /mnt/hadoop/store/user/ocerri/cmsMC_private_PUc0_10-2-3/BP_Tag_antiB0_DstmHc_Hardbbbar_evtgen_ISGW2_200528/*/*/out_MINIAODSIM_*.root
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_antiB0_DstmHc_Hardbbbar_evtgen_ISGW2_201207-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_antiB0_DstmHc_Hardbbbar_evtgen_ISGW2_200304-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bp_MuNuDstst_PU0:
+    dataset: BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU0_10-2-3
+    parts:
+      - /cmsMC_private/ocerri-BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bp_MuNuDstst_PU20:
+    dataset: BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_PU20_10-2-3
+    parts:
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_191202-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PU20_10-2-3/ocerri-BPH_Tag-Bp_MuNuDstst_DmstPi_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_ISGW2_200117-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bp_MuNuDstst_Pip_PUc0:
+    dataset: BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200327-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200708-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_200709-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bp_TauNuDstst_Pip_PUc0:
+    dataset: BP_Tag_Bp_TauNuDstst_Pip_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_TauNuDstst_Pip_Hardbbbar_evtgen_ISGW2_201104-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDstst_Pi0_PUc0:
+    dataset: BP_Tag_B0_MuNuDstst_Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_Pi0_Hardbbbar_evtgen_ISGW2_200429-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_TauNuDstst_Pi0_PUc0:
+    dataset: BP_Tag_B0_TauNuDstst_Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_TauNuDstst_Pi0_Hardbbbar_evtgen_ISGW2_201104-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_DmstPi0MuNu_PUc0:
+    dataset: BP_Tag_B0_DmstPi0MuNu_Hardbbbar_evtgen_GR_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_DmstPi0MuNu_Hardbbbar_evtgen_GR_200413-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bp_MuNuDstst_PipPi0_PUc0:
+    dataset: BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_200425-c21dec93027231dc6f615dfe5c662834/USER #Wrong excited state
+      #90 MeV width
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_200518-c21dec93027231dc6f615dfe5c662834/USER
+      #200 MeV width
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_201129-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstst_PipPi0_Hardbbbar_evtgen_ISGW2_201207-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bp_MuNuDstPipPi0_PUc0:
+    dataset: BP_Tag_Bp_MuNuDstPipPi0_Hardbbbar_evtgen_PHSP_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstPipPi0_Hardbbbar_evtgen_PHSP_201104-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDstst_PipPim_PUc0:
+    dataset: BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      #90 MeV width
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_200520-c21dec93027231dc6f615dfe5c662834/USER
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_201110-c21dec93027231dc6f615dfe5c662834/USER
+      #200 MeV width
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_201118-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_201120-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_201207-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDstPipPim_PUc0:
+    dataset: BP_Tag_B0_MuNuDstPipPim_Hardbbbar_evtgen_PHSP_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstPipPim_Hardbbbar_evtgen_PHSP_201104-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDstst_Pi0Pi0_PUc0:
+    dataset: BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_200427-c21dec93027231dc6f615dfe5c662834/USER #Wrong excited state
+      #90 MeV width
+      # - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_200518-c21dec93027231dc6f615dfe5c662834/USER
+      #200 MeV width
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_201129-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstst_Pi0Pi0_Hardbbbar_evtgen_ISGW2_201207-c21dec93027231dc6f615dfe5c662834/USER
+
+  B0_MuNuDstPiPiPi_PUc0:
+    dataset: BP_Tag_B0_MuNuDstPiPiPi_Hardbbbar_evtgen_PHSP_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDstPiPiPi_Hardbbbar_evtgen_PHSP_201104-c21dec93027231dc6f615dfe5c662834/USER
+
+  Bp_MuNuDstPiPiPi_PUc0:
+    dataset: BP_Tag_Bp_MuNuDstPiPiPi_Hardbbbar_evtgen_PHSP_PUc0_10-2-3
+    parts:
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_Bp_MuNuDstPiPiPi_Hardbbbar_evtgen_PHSP_201104-c21dec93027231dc6f615dfe5c662834/USER
+
+##### Probe side samples ##########
+  p_B0_MuNuDst_PUc0:
+    dataset: BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /storage/user/ocerri/BPhysics/data/cmsMC_private/BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3/jobs_out/out_MINIAODSIM_*.root
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200314-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200315-c21dec93027231dc6f615dfe5c662834/USER
+
+  p_B0_MuNuDst_PUc1:
+    dataset: BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc1_10-2-3
+    parts:
+      - /cmsMC_private_PUc1_10-2-3/ocerri-BP_Probe_B0_MuNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+
+  p_B0_TauNuDst_PUc0:
+    dataset: BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+    parts:
+      - /storage/user/ocerri/BPhysics/data/cmsMC_private/BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3/jobs_out/out_MINIAODSIM_*.root
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200314-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200315-c21dec93027231dc6f615dfe5c662834/USER
+
+  p_B0_TauNuDst_PUc1:
+    dataset: BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc1_10-2-3
+    parts:
+      - /cmsMC_private_PUc1_10-2-3/ocerri-BP_Probe_B0_TauNuDmst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+
+  p_B0_DmstHc_PUc1:
+    dataset: BP_Probe_B0_DmstHc_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc1_10-2-3
+    parts:
+      - /cmsMC_private_PUc1_10-2-3/ocerri-BP_Probe_B0_DmstHc_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+
+  p_Bp_MuNuDstst_PUc1:
+    dataset: BP_Probe_Bp_MuNuDstst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_PUc1_10-2-3
+    parts:
+      - /cmsMC_private_PUc1_10-2-3/ocerri-BP_Probe_Bp_MuNuDstst_Tag-B_MuNuDst_Hardbbbar_evtgen_ISGW2_200327-c21dec93027231dc6f615dfe5c662834/USER

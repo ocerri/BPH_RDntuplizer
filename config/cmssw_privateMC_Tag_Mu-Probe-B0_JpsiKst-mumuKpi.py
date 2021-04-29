@@ -50,7 +50,8 @@ elif args.inputFiles:
         flist = args.inputFiles
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
-    fdefault += 'inputFiles_BPH_Tag-Probe_B0_JpsiKst-mumuKpi-kp_13TeV-pythia8_Hardbbbar_PTFilter5_0p0-evtgen_SVV_PU20_10-2-3.txt'
+    # fdefault += 'inputFiles_BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_PUc0_10-2-3.txt'
+    fdefault += 'inputFiles_CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
     flist = flist[:10]
@@ -90,6 +91,7 @@ process.TFileService = cms.Service("TFileService",
 
 process.trgF = cms.EDFilter("TriggerMuonsFilter",
         muon_charge = cms.int32(0),
+        isMC = cms.int32(1),
         verbose = cms.int32(0)
 )
 
@@ -105,7 +107,7 @@ process.B2JpsiKstDTFilter = cms.EDFilter("B2JpsiKstDecayTreeFilter",
 process.MCpart = cms.EDProducer("MCTruthB2JpsiKstProducer",
         decayTreeVecOut = cms.InputTag("B2JpsiKstDT","outputVecNtuplizer", ""),
         triggerMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
 cfg_name = os.path.basename(sys.argv[0])

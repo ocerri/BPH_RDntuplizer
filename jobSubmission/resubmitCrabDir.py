@@ -6,8 +6,8 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument ('inputDir', type=str, default='tmp/crab_*', help='Input directories', nargs='+')
 parser.add_argument ('-t', '--maxTime', type=int, help='Max run time in hours', default=None)
-parser.add_argument('--whitelist', type=int, help='Site white list', nargs='+', default=None)
-parser.add_argument('--blacklist', type=int, help='Site black list', nargs='+', default=None)
+parser.add_argument('--whitelist', type=str, help='Site white list', nargs='+', default=None)
+parser.add_argument('--blacklist', type=str, help='Site black list', nargs='+', default=None)
 
 
 args = parser.parse_args()

@@ -18,6 +18,15 @@
 
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
+
+// L1 trigger
+#include "DataFormats/L1Trigger/interface/BXVector.h"
+#include "DataFormats/L1Trigger/interface/Muon.h"
+#include "VtxUtils.hh"
+
+// Pileup info
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
 using namespace std;
 
@@ -33,29 +42,36 @@ class TriggerMuonsFilter : public edm::stream::EDFilter<> {
    private:
       // void beginJob(const edm::EventSetup&) {};
       virtual bool filter(edm::Event&, const edm::EventSetup&) override;
-      // void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) override;
+      tuple<uint, float, float, float> matchL1Muon(pat::Muon muReco, BXVector<l1t::Muon> muonsL1, uint skipIdx=9999);
 
       // ----------member data ---------------------------
+      edm::EDGetTokenT<BXVector<l1t::Muon>> l1MuonSrc_;
       edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
       edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
       edm::EDGetTokenT<reco::BeamSpot> beamSpotSrc_;
 
+      edm::EDGetTokenT<vector<PileupSummaryInfo>> pileupMCSrc_;
+
       edm::Service<TFileService> fs;
       TH1I* hAllNvts;
+      TH1I* hAllNTrueIntMC;
       TH1I* hAllVtxZ;
 
       int N_analyzed_events = 0;
       int N_passed_events = 0;
       int muonCharge_ = 0;
+      bool isMC_ = 0;
       int verbose = 0;
 };
 
 
 TriggerMuonsFilter::TriggerMuonsFilter(const edm::ParameterSet& iConfig):
+  l1MuonSrc_( consumes<BXVector<l1t::Muon>> ( edm::InputTag("gmtStage2Digis", "Muon", "RECO") ) ),
   muonSrc_( consumes<vector<pat::Muon>> ( edm::InputTag("slimmedMuons") ) ),
   vtxSrc_( consumes<vector<reco::Vertex>> ( edm::InputTag("offlineSlimmedPrimaryVertices") ) ),
   beamSpotSrc_( consumes<reco::BeamSpot> ( edm::InputTag("offlineBeamSpot") ) ),
   muonCharge_( iConfig.getParameter<int>( "muon_charge" ) ),
+  isMC_( iConfig.getParameter<int>( "isMC" ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
   produces<vector<pat::Muon>>("trgMuonsMatched");
@@ -63,11 +79,18 @@ TriggerMuonsFilter::TriggerMuonsFilter(const edm::ParameterSet& iConfig):
   produces<map<string, vector<float>>>("outputVecNtuplizer");
   hAllNvts = fs->make<TH1I>("hAllNvts", "Number of vertexes from all the MINIAOD events", 101, -0.5, 100.5);
   hAllVtxZ = fs->make<TH1I>("hAllVtxZ", "Z coordinate of vertexes from all the MINIAOD events", 100, -25, 25);
+  if(isMC_) {
+    pileupMCSrc_ = consumes<vector<PileupSummaryInfo>> ( edm::InputTag("slimmedAddPileupInfo") );
+    hAllNTrueIntMC = fs->make<TH1I>("hAllNTrueIntMC", "Number of true interactions generated in MC", 101, -0.5, 100.5);
+  }
 }
 
 bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   N_analyzed_events++;
   if (verbose) {cout << "Event " << N_analyzed_events << endl;}
+
+  edm::Handle<BXVector<l1t::Muon>> l1MuonHandle;
+  iEvent.getByToken(l1MuonSrc_, l1MuonHandle);
 
   edm::Handle<vector<pat::Muon>> muonHandle;
   iEvent.getByToken(muonSrc_, muonHandle);
@@ -86,6 +109,22 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
   unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
   unique_ptr<map<string, vector<float>>> outputVecNtuplizer(new map<string, vector<float>>);
 
+  // Save MC pileup information
+  if (isMC_) {
+    edm::Handle<vector<PileupSummaryInfo>> pileupMCHandle;
+    iEvent.getByToken(pileupMCSrc_, pileupMCHandle);
+    uint idxBX0 = -1;
+    for (uint i=0; i < pileupMCHandle->size(); i++) {
+      if (pileupMCHandle->at(i).getBunchCrossing() == 0) {
+        idxBX0 = i;
+        break;
+      }
+    }
+    float puMC = pileupMCHandle->at(idxBX0).getTrueNumInteractions();
+    (*outputNtuplizer)["nTrueIntMC"] = puMC;
+    hAllNTrueIntMC->Fill(puMC);
+  }
+
   vector<string> triggerTag = {"Mu12_IP6", "Mu9_IP5", "Mu7_IP4", "Mu9_IP4", "Mu8_IP5", "Mu8_IP6", "Mu9_IP6", "Mu8_IP3"};
 
   if (verbose) {cout << "\n MUONS LIST" << endl;}
@@ -96,6 +135,12 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
     if(muonCharge_ != 0 && muon.charge() != muonCharge_) continue;
     if(!muon.triggered("HLT_Mu*_IP*_part*_v*")) continue;
     trgMuonsMatched->push_back(muon);
+
+    auto out = matchL1Muon(muon, *l1MuonHandle);
+    (*outputNtuplizer)["trgMu_L1_pt"] = get<3>(out);
+    if (get<0>(out) == 9999) (*outputNtuplizer)["trgMu_L1_eta"] = -999;
+    else (*outputNtuplizer)["trgMu_L1_eta"] = l1MuonHandle->at(0,get<0>(out)).eta();
+    (*outputNtuplizer)["trgMu_L1_dR"] = get<1>(out);
 
     for(auto tag : triggerTag) {
       string trgPath = "HLT_" + tag + "_part*_v*";
@@ -151,6 +196,34 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
     return true;
   }
   else return false;
+}
+
+tuple<uint, float, float, float> TriggerMuonsFilter::matchL1Muon(pat::Muon muReco, BXVector<l1t::Muon> muonsL1, uint skipIdx) {
+  uint idxMatch = 9999;
+  float best_dR = 1e6;
+  float best_dpt = 1e6;
+  float best_pt = -1;
+
+  // Approximately radius 2.5 m in a 3.8T magnetic field
+  float dphi = 2 * TMath::ASin(2.5 * 0.3 * 3.8 / (2 * muReco.pt()) );
+  float phiProp = muReco.phi() + TMath::Sign(1, muReco.pdgId()) * dphi;
+
+  for (uint i=0; i < muonsL1.size(0); i++) {
+    if (i == skipIdx) continue;
+    auto m = muonsL1.at(0,i);
+    if (m.hwQual() < 12) continue;
+    float dR = vtxu::dR(m.phi(), phiProp, m.eta(), muReco.eta());
+    float dpt = fabs(muReco.pt() - m.pt())/muReco.pt();
+    if ((dR < best_dR && dpt < best_dpt) || (dpt + dR < best_dpt + best_dR)) {
+      best_dR = dR;
+      best_dpt = dpt;
+      idxMatch = i;
+      best_pt = m.pt();
+    }
+  }
+
+  tuple<uint, float, float, float> out(idxMatch, best_dR, best_dpt, best_pt);
+  return out;
 }
 
 DEFINE_FWK_MODULE(TriggerMuonsFilter);
