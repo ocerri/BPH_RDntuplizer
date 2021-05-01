@@ -107,7 +107,7 @@ process.B2JpsiKstDTFilter = cms.EDFilter("B2JpsiKstDecayTreeFilter",
 process.MCpart = cms.EDProducer("MCTruthB2JpsiKstProducer",
         decayTreeVecOut = cms.InputTag("B2JpsiKstDT","outputVecNtuplizer", ""),
         triggerMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 cfg_name = os.path.basename(sys.argv[0])

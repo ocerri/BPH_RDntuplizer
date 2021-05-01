@@ -37,7 +37,7 @@ if __name__ == "__main__":
     parser.add_argument ('--memory', help='min virtual memory in MB', default='2000')
     parser.add_argument ('--disk', help='min disk space in MB', default='4000')
     parser.add_argument ('--cpu', help='cpu threads', default='1')
-    parser.add_argument ('--name', type=str, default='BPH_RDntuplizer', help='Job batch name')
+    parser.add_argument ('--name', type=str, default='ntuples', help='Job batch name')
 
     args = parser.parse_args()
 
@@ -182,7 +182,7 @@ if __name__ == "__main__":
         fsub.write('\n')
         fsub.write('max_retries    = 5')
         fsub.write('\n')
-        fsub.write('requirements   = Machine =!= LastRemoteHost')
+        fsub.write('requirements   = Machine =!= LastRemoteHost && regexp("blade-.*", TARGET.Machine)')
         fsub.write('\n')
         fsub.write('universe = vanilla')
         fsub.write('\n')
@@ -191,7 +191,7 @@ if __name__ == "__main__":
 
     print 'Submitting jobs'
     cmd = 'condor_submit jobs.sub'
-    cmd += ' -batch-name ntuple_' + createBatchName(args)
+    cmd += ' -batch-name '+args.name+'_' + createBatchName(args)
     output = processCmd(cmd)
     print 'Job submitted'
     os.system('mv jobs.sub '+outdir+'/cfg/jobs.sub')

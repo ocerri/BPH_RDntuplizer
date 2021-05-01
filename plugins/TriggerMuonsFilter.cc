@@ -137,10 +137,10 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
     trgMuonsMatched->push_back(muon);
 
     auto out = matchL1Muon(muon, *l1MuonHandle);
-    (*outputNtuplizer)["trgMu_L1_pt"] = get<3>(out);
-    if (get<0>(out) == 9999) (*outputNtuplizer)["trgMu_L1_eta"] = -999;
-    else (*outputNtuplizer)["trgMu_L1_eta"] = l1MuonHandle->at(0,get<0>(out)).eta();
-    (*outputNtuplizer)["trgMu_L1_dR"] = get<1>(out);
+    (*outputVecNtuplizer)["trgMu_L1_pt"].push_back(get<3>(out));
+    if (get<0>(out) == 9999) (*outputVecNtuplizer)["trgMu_L1_eta"].push_back(-999);
+    else (*outputVecNtuplizer)["trgMu_L1_eta"].push_back( l1MuonHandle->at(0,get<0>(out)).eta() );
+    (*outputVecNtuplizer)["trgMu_L1_dR"].push_back( get<1>(out) );
 
     for(auto tag : triggerTag) {
       string trgPath = "HLT_" + tag + "_part*_v*";
