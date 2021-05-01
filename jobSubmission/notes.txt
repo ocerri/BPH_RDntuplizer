@@ -10,6 +10,6 @@ python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.
 
 
 ------------------------------- Ancillary --------------------------------------
-process=CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen; nFilesPerJob=3
+process=CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen; nFilesPerJob=2
 
 python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_B2JpsiKst/out_CAND.root -c config/cmssw_privateMC_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py --name ntuplesB2JpsiKst --maxtime 20m -N $nFilesPerJob -f

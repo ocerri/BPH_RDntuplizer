@@ -168,8 +168,9 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
     */
     for(uint i_k = 0; i_k < N_pfCand; ++i_k) {
       const pat::PackedCandidate & K = (*pfCandHandle)[i_k];
+      //Require a charged hadron
+      if (K.charge() == 0) continue;
       if (!K.hasTrackDetails()) continue;
-      //Require a positive charged hadron
       if (K.isTrackerMuon() || K.isStandAloneMuon()) continue;
       //Require a minimum pt
       if(K.pt() < __pThad_min__) continue;
