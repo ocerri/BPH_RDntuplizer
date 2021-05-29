@@ -30,6 +30,7 @@
 #define __dmD0_max__ 0.15 // loose cut
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
 #define __dmDst_max__ 0.15 // loose cut
+#define __dm_DstMiunsD0_max__ 0.008
 #define __mass_D0pismu_max__ 1000. // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
 #define __mass_D0pismupi_max__ 10. // Some reasonable cut on the mass
@@ -96,7 +97,10 @@ B2DstMuDecayTreeProducer::B2DstMuDecayTreeProducer(const edm::ParameterSet &iCon
     vtxSrc_ = consumes<vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"));
     TrgMuonSrc_ = consumes<vector<pat::Muon>> ( iConfig.getParameter<edm::InputTag>( "trgMuons" ) );
 
+    // If charge_muon == 0 accept both cahrges
     charge_muon = iConfig.getParameter<int>( "charge_muon" );
+
+    // Charges relative to muon charge
     charge_K = iConfig.getParameter<int>( "charge_K" );
     charge_pi = iConfig.getParameter<int>( "charge_pi" );
     charge_pis = iConfig.getParameter<int>( "charge_pis" );
@@ -133,7 +137,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
     for(uint i_trgMu = 0; i_trgMu < trgMuonsHandle->size(); i_trgMu++) {
       //######## Require muon quality ##################
       auto trgMu = (*trgMuonsHandle)[i_trgMu];
-      if (trgMu.charge() != charge_muon) continue;
+      if (charge_muon != 0 && trgMu.charge() != charge_muon) continue;
       if (trgMu.innerTrack().isNull()) continue;
       if (fabs(trgMu.eta()) > 1.5) continue;
       updateCounter(1, countersFlag);
@@ -162,7 +166,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       for(uint i_K = 0; i_K < N_pfCand; ++i_K) {
         const pat::PackedCandidate & K = (*pfCandHandle)[i_K];
         if (!K.hasTrackDetails()) continue;
-        if (K.pdgId() != charge_K*211 ) continue;
+        if (K.pdgId() != charge_K*trgMu.charge()*211 ) continue;
         if (K.pt() < __pThad_min__) continue;
         // Require to be close to the trigger muon;
         auto K_tk = K.bestTrack();
@@ -175,7 +179,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         auto K_N_valid_hits = K_tk->numberOfValidHits();
         if (sigdxy_K_PV < __sigIPpfCand_min__) continue;
         updateCounter(3, countersFlag);
-        if (verbose) {cout << Form("K%s found at %u\n", charge_K>0?"+":"-", i_K);}
+        if (verbose) {cout << Form("K%s found at %u\n", K.pdgId() > 0?"+":"-", i_K);}
         n_K++;
 
         /*
@@ -188,7 +192,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
           const pat::PackedCandidate & pi = (*pfCandHandle)[i_pi];
           if (!pi.hasTrackDetails()) continue;
-          if (pi.pdgId() != charge_pi*211 ) continue;
+          if (pi.pdgId() != charge_pi*trgMu.charge()*211 ) continue;
           //Require a minimum pt
           if(pi.pt() < __pThad_min__) continue;
           // Require to be close to the trigger muon;
@@ -202,7 +206,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           auto pi_N_valid_hits = pi_tk->numberOfValidHits();
           if (sigdxy_pi_PV < __sigIPpfCand_min__) continue;
           updateCounter(4, countersFlag);
-          if (verbose) {cout << Form("pi%s found at %u\n", charge_pi>0?"+":"-", i_pi);}
+          if (verbose) {cout << Form("pi%s found at %u\n", pi.pdgId()>0?"+":"-", i_pi);}
           n_pi++;
 
           //Fit the vertex
@@ -244,7 +248,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
             const pat::PackedCandidate & pis = (*pfCandHandle)[i_pis];
             if (!pis.hasTrackDetails()) continue;
-            if (pis.pdgId() != charge_pis*211 ) continue;
+            if (pis.pdgId() != charge_pis*trgMu.charge()*211 ) continue;
             // Require to be close to the trigger muon;
             auto pis_tk = pis.bestTrack();
             if (fabs(pis_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
@@ -256,7 +260,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             auto pis_N_valid_hits = pis_tk->numberOfValidHits();
             if (sigdxy_pis_PV < __sigIPpfCand_min__) continue;
             updateCounter(8, countersFlag);
-            if (verbose) {cout << Form("pis%s found at %u\n", charge_pis>0?"+":"-", i_pis);}
+            if (verbose) {cout << Form("pis%s found at %u\n", pis.pdgId()>0?"+":"-", i_pis);}
             n_pis++;
 
             // Fit the Dst vertex
@@ -277,6 +281,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             DstKinTree->movePointerToTheTop();
             auto mass_D0pis = DstKinTree->currentParticle()->currentState().mass();
             if (fabs(mass_D0pis - mass_Dst) > __dmDst_max__) continue;
+            if (fabs(mass_D0pis - mass_piK - (mass_Dst - mass_D0) ) > __dm_DstMiunsD0_max__) continue;
             updateCounter(10, countersFlag);
 
             auto Dst = DstKinTree->currentParticle();
@@ -514,6 +519,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             n_B++;
 
             (*outputVecNtuplizer)["mu_trgMu_idx"].push_back(i_trgMu);
+            (*outputVecNtuplizer)["mu_charge"].push_back(trgMu.charge());
             AddTLVToOut(vtxu::getTLVfromMuon(trgMu, mass_Mu), string("mu"), &(*outputVecNtuplizer));
             GlobalPoint auxp(vtxDst->position().x(), vtxDst->position().y(), vtxDst->position().z());
             auto dca = vtxu::computeDCA(iSetup, trgMu, auxp);

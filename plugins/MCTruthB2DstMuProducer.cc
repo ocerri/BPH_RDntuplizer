@@ -40,11 +40,11 @@ void auxPrintDau(const reco::Candidate* p, int kk=0) {
   else {cout << p->pdgId() << " -->";}
   for(uint i_d = 0; i_d < Nd; i_d++) {
     const auto d = p->daughter(i_d);
-    if((d->pdgId() == -13 || d->pdgId() == -413) && kk >= 0) {
+    if((abs(d->pdgId()) == 13 || abs(d->pdgId()) == 413)) {
       cout << " \033[1;32m" << d->pdgId() << "\033[0m";
     }
     else if(abs(d->pdgId()) > 10 && abs(d->pdgId()) < 17) {
-      cout << " \033[1;35m" << d->pdgId() << "\033[0m";
+      cout << " \033[" << abs(d->pdgId())%2 << ";35m" << d->pdgId() << "\033[0m";
     }
     else {cout << " " << d->pdgId();}
   }
@@ -95,7 +95,7 @@ MCTruthB2DstMuProducer::MCTruthB2DstMuProducer(const edm::ParameterSet &iConfig)
 
 
 void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
-    if (verbose) {cout << "-----------  MC Truth ----------\n";}
+    if (verbose) {cout << "------------------  MC Truth -----------------\n";}
 
     // Get prunedGenParticles
     edm::Handle<std::vector<reco::GenParticle>> PrunedGenParticlesHandle;
@@ -104,11 +104,13 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
 
     edm::Handle<map<string, vector<float>>> outMapHandle;
     iEvent.getByToken(decayTreeOutSrc_, outMapHandle);
+    vector<float> muCharge;
     vector<float> muPt, muEta, muPhi;
     vector<float> DstPt, DstEta, DstPhi;
     vector<float> AddTkCharge, AddTkPt, AddTkEta, AddTkPhi;
     for( auto const& kv : (*outMapHandle) ) {
-      if (kv.first == "Dst_refitD0pismu_pt") DstPt = kv.second;
+      if (kv.first == "mu_charge") muCharge = kv.second;
+      else if (kv.first == "Dst_refitD0pismu_pt") DstPt = kv.second;
       else if (kv.first == "Dst_refitD0pismu_eta") DstEta = kv.second;
       else if (kv.first == "Dst_refitD0pismu_phi") DstPhi = kv.second;
       else if (kv.first == "mu_refitD0pismu_pt") muPt = kv.second;
@@ -134,36 +136,59 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     unique_ptr<map<string, vector<float>>> outputVecNtuplizer(new map<string, vector<float>>);
     unique_ptr<int> indexBmc(new int);
 
+    // Get the pdgId of the cloasest MC particle to each reconstructed muon
+    (*outputVecNtuplizer)["MC_mu_cloasestMCpart_pdgId"] = {};
+    (*outputVecNtuplizer)["MC_mu_cloasestMCpart_dR"] = {};
+    (*outputVecNtuplizer)["MC_mu_cloasestMCpart_dpt"] = {};
 
-    if(verbose) {
-      uint nb = 0;
-      for(unsigned int i = 0; i < N_PrunedGenParticles; i++) {
-        auto p = (*PrunedGenParticlesHandle)[i];
-        int pId = abs(p.pdgId());
-        bool sel = pId == 511 || pId == 521;
-        sel = sel || pId == 531 || pId == 541;
-        sel = sel || pId == 10423;
+    for (auto muTLV : reco_muTLVs) {
+      float best_dR = 1e9;
+      float best_dpt = 1e9;
+      int best_pdgId = 0;
+      for(auto p : (*PrunedGenParticlesHandle)) {
+        if (p.charge() == 0 || p.pt() < 5) continue;
+        auto dR = vtxu::dR(muTLV.Phi(), p.phi(), muTLV.Eta(), p.eta());
+        auto dpt = fabs( p.pt() - muTLV.Pt() ) / p.pt();
 
-        if(sel) {
-          int kk = 0;
-          if(p.numberOfDaughters() < 2) kk = -1;
-          cout << "idx: " << i << endl;
-          auxPrintDau(&p, kk);
-          cout << endl;
-          nb ++;
+        if ( dR/0.01 + dpt/0.05 < best_dR/0.01 + best_dpt/0.05) {
+          best_dR = dR;
+          best_dpt = dpt;
+          best_pdgId = p.pdgId();
         }
       }
-      cout << "Number of B found: " << nb << endl;
+      (*outputVecNtuplizer)["MC_mu_cloasestMCpart_pdgId"].push_back(best_pdgId);
+      (*outputVecNtuplizer)["MC_mu_cloasestMCpart_dR"].push_back(best_dR);
+      (*outputVecNtuplizer)["MC_mu_cloasestMCpart_dpt"].push_back(best_dpt);
+
+      if (verbose) {
+        cout << Form("Cand %.2f -> pdgId match %d: dR=%.4f dpt=%.4f", muTLV.Pt(), best_pdgId, best_dR, best_dpt) << endl;
+      }
     }
 
-    // Looking for the B -> Mu/Tau + D* + X with the cloasest muon to the trigger muon
-    int i_B = -1;
-    int i_cand = -1;
-    float best_mInvMu = 1e9, best_mInvDst = 1e9;
-    TLorentzVector bestMu, bestDst;
-    int nB02DstMuX = 0;
 
+    if(verbose) {
+      cout << "Bottom hadrons MC history" << endl;
+      for(unsigned int i = 0; i < N_PrunedGenParticles; i++) {
+        auto p = (*PrunedGenParticlesHandle)[i];
+        if (p.numberOfDaughters() <= 1) continue;
+        int pId = abs(p.pdgId());
+
+        if ( (pId/100)%10 != 5 && (pId/1000)%10 != 5 ) continue;
+        cout << "idx: " << i << ", mother: " << p.mother()->pdgId() <<endl;
+        auxPrintDau(&p, -1);
+        cout << endl;
+      }
+      cout << endl << endl;
+    }
+
+    // Looking for the B(s) -> (mu D*)^0 + X cloasest to one of the candidates
     reco::Candidate::Point interactionPoint(-9999999999, -999, -999);
+    int i_B = -1;
+    int j_mu = -1, j_Dst = -1;
+    int i_cand = -1;
+    float best_distance = 1e9;
+    TLorentzVector bestMu, bestDst;
+    int nB2DstMuX = 0;
     for(uint i = 0; i < N_PrunedGenParticles; i++) {
       auto p = (*PrunedGenParticlesHandle)[i];
       if(p.isHardProcess() && interactionPoint.x() == -9999999999) {
@@ -171,103 +196,101 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         if(verbose) {cout << "[Hard process] " << p.pdgId() << ": " << p.vx() << ", " << p.vy() << endl;}
       }
 
-      if (p.pdgId() != 511 || p.numberOfDaughters()<=1) continue;
 
-      TLorentzVector pMu, pDst;
-      bool mu_found = false;
-      bool Dst_found = false;
-      for(auto d : p.daughterRefVector()) {
-        if(d->pdgId() == -13) {
-          pMu.SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
-          mu_found = true;
-        }
-        else if(d->pdgId() == -15) {
-          for (auto dd : d->daughterRefVector()) {
-            if (dd->pdgId() == -13) {
-              pMu.SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
-              mu_found = true;
+      if(p.numberOfDaughters()<=1) continue; // Needs to decay and not oscillate into a different one
+      int pId = abs(p.pdgId());
+      if(pId != 511 && pId != 521 && pId != 531) continue; // Require B or B_s meson
+
+      vector<int> idx_mu;
+      vector<int> idx_Dst;
+
+      for(uint j = 0; j < N_PrunedGenParticles; j++) {
+        auto d = (*PrunedGenParticlesHandle)[j];
+        int dID = abs(d.pdgId());
+        if(dID != 13 && dID != 413) continue; // If not mu or D*, skip
+        if (!auxIsAncestor(&p, &d)) continue;
+
+        if (dID == 13) idx_mu.push_back(j);
+        else if (dID == 413) {
+          bool pis_found = false;
+          bool DuToKpi_found = false;
+          for(auto dd : d.daughterRefVector()) {
+            if(abs(dd->pdgId()) == 211) pis_found = true;
+            else if(abs(dd->pdgId()) == 421) {
+
+              bool pi_found = false;
+              bool K_found = false;
+              bool other_nonGamma = false;
+              for(auto ddd : dd->daughterRefVector()) {
+                if (abs(ddd->pdgId()) == 211) pi_found = true;
+                else if ( abs(ddd->pdgId()) == 321 ) K_found = true;
+                else if ( ddd->pdgId() != 22 ) other_nonGamma = true; // Allow only PHOTOS decays
+              }
+
+              if (pi_found && K_found && !other_nonGamma) DuToKpi_found = true;
             }
           }
-        }
-        else if(d->pdgId() == -413) {
-          pDst.SetPtEtaPhiM(d->pt(), d->eta(), d->phi(), d->mass());
-          Dst_found = true;
+          if (pis_found && DuToKpi_found) idx_Dst.push_back(j);
         }
       }
 
-      if(!mu_found || !Dst_found) continue;
-      nB02DstMuX++;
+      vector<pair<int, int>> idxMuDstPairs;
+      for(auto jMu : idx_mu) {
+        auto mu = (*PrunedGenParticlesHandle)[jMu];
+        for (auto jDst : idx_Dst) {
+          auto Dst = (*PrunedGenParticlesHandle)[jDst];
+          // mu+(-13)Dst-(-413) or mu-(13)Dst+(413)
+          if (mu.pdgId()*Dst.pdgId() > 0)  idxMuDstPairs.push_back(make_pair(jMu, jDst));
+        }
+      }
+
+      if (idxMuDstPairs.size() == 0) continue;
+      nB2DstMuX++;
       if(verbose) {
-        cout << "Recognized B0 --> D*MuNu: " << endl;
-        auxPrintDau(&p, -1);
+        cout << "Recognized B(s) -> D* mu X in MC particle " << i << ": " << endl;
+        auxPrintDau(&p, 0);
         cout << endl << endl;
       }
 
-      for(uint j = 0; j < reco_muTLVs.size(); j++) {
-        double mMu = (pMu + reco_muTLVs[j]).M();
-        double mDst = (pDst + reco_DstTLVs[j]).M();
-        if(mMu < best_mInvMu && mDst < best_mInvDst) {
-          best_mInvMu = mMu;
-          best_mInvDst = mDst;
-          bestMu = reco_muTLVs[j];
-          bestDst = reco_DstTLVs[j];
-          i_B = i;
-          i_cand = j;
-        }
-      }
-    }
-
-    // Look for the bkg process
-    if(i_B == -1) {
-      for(unsigned int i = 0; i < N_PrunedGenParticles; i++) {
-        auto p = (*PrunedGenParticlesHandle)[i];
-        if(p.numberOfDaughters()<=1) continue; // Needs to decay and not oscillate into a different one
-        int pId = abs(p.pdgId());
-        if(pId != 511 && pId != 521 && pId != 531 && pId != 541) continue; // Require a B or a B_s meson
-
-        TLorentzVector pMu, pDst;
-        bool mu_found = false;
-        bool Dst_found = false;
-
-        for(auto d : *PrunedGenParticlesHandle) {
-          if(d.pdgId() == -13 && auxIsAncestor(&p, &d)) {
-            pMu.SetPtEtaPhiM(d.pt(), d.eta(), d.phi(), d.mass());
-            mu_found = true;
-          }
-          else if(d.pdgId() == -413 && auxIsAncestor(&p, &d)) {
-            pDst.SetPtEtaPhiM(d.pt(), d.eta(), d.phi(), d.mass());
-            Dst_found = true;
-          }
-        }
-
-        if(!mu_found || !Dst_found) continue;
-        nB02DstMuX++;
-        if(verbose) {
-          cout << "Recognized B --> D*Mu +(X): " << endl;
-          auxPrintDau(&p, -1);
-          cout << endl << endl;
-        }
+      for (auto idxMuDst : idxMuDstPairs) {
+        auto mu = (*PrunedGenParticlesHandle)[idxMuDst.first];
+        auto Dst = (*PrunedGenParticlesHandle)[idxMuDst.second];
 
         for(uint j = 0; j < reco_muTLVs.size(); j++) {
-          double mMu = (pMu + reco_muTLVs[j]).M();
-          double mDst = (pDst + reco_DstTLVs[j]).M();
-          if(mMu < best_mInvMu && mDst < best_mInvDst) {
-            best_mInvMu = mMu;
-            best_mInvDst = mDst;
-            bestMu = reco_muTLVs[j];
-            bestDst = reco_DstTLVs[j];
+          if ( mu.charge() != muCharge[j] ) continue; // If they do not have the right sign
+
+          // delta R resolution of 0.01 for muon and double for D*, similar for pt
+          float distance = vtxu::dR(reco_muTLVs[j].Phi(), mu.phi(), reco_muTLVs[j].Eta(), mu.eta()) / 0.01;
+          distance += vtxu::dR(reco_DstTLVs[j].Phi(), Dst.phi(), reco_DstTLVs[j].Eta(), Dst.eta()) / 0.03;
+          distance += ( fabs(mu.pt() - reco_muTLVs[j].Pt()) / mu.pt() ) / 0.03;
+          distance += ( fabs(Dst.pt() - reco_DstTLVs[j].Pt()) / Dst.pt() ) / 0.10;
+
+          if(distance < best_distance) {
+            best_distance = distance;
             i_B = i;
+            j_mu = idxMuDst.first;
+            j_Dst = idxMuDst.second;
             i_cand = j;
+            bestDst = reco_DstTLVs[j];
+            bestMu = reco_muTLVs[j];
+
+            if (verbose) {
+              cout << Form("Best pair updated to mu:%d Dst:%d with candidate %d", j_mu, j_Dst, i_cand) << endl;
+              cout << Form ( "Mu dR=%.4f", vtxu::dR(reco_muTLVs[j].Phi(), mu.phi(), reco_muTLVs[j].Eta(), mu.eta()) ) << endl;
+              cout << Form ( "Mu dpt/pt=%.4f", ( fabs(mu.pt() - reco_muTLVs[j].Pt()) / mu.pt() ) ) << endl;
+              cout << Form ( "Dst dR=%.4f", vtxu::dR(reco_DstTLVs[j].Phi(), Dst.phi(), reco_DstTLVs[j].Eta(), Dst.eta()) ) << endl;
+              cout << Form ( "Dst dpt/pt=%.4f", ( fabs(Dst.pt() - reco_DstTLVs[j].Pt()) / Dst.pt() ) ) << endl;
+            }
           }
         }
       }
+
     }
 
-    (*outputNtuplizer)["MC_nB02DstMuX"] = nB02DstMuX;
+    (*outputNtuplizer)["MC_nB2DstMuX"] = nB2DstMuX;
     (*outputNtuplizer)["MC_idxCand"] = i_cand;
     (*indexBmc) = i_B;
 
-    // assert(i_B >= 0);
 
     float recoMuon_match_BMuon = 0;
     map<string, TLorentzVector> p4;
@@ -278,30 +301,36 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     p4["D0"] = TLorentzVector();
     p4["pi"] = TLorentzVector();
     p4["K"] = TLorentzVector();
-    double mu_impactParam = -1;
-    auto mu_momVec = reco::Candidate::Vector();
 
     map<string, reco::Candidate::Point> vtx;
     vtx["B"] = reco::Candidate::Point();
     vtx["mu"] = reco::Candidate::Point();
     vtx["Dst"] = reco::Candidate::Point();
     vtx["D0"] = reco::Candidate::Point();
-    vtx["K"] = reco::Candidate::Point();
+    vtx["pi"] = reco::Candidate::Point();
 
-    // (*outputNtuplizer)["MC_muMotherPdgId"] = 0;
-    // (*outputNtuplizer)["MC_muMotherNdaughters"] = 0;
-    (*outputNtuplizer)["MC_munuSisterPdgId"] = 0;
-    (*outputNtuplizer)["MC_DstSisPdgId_light"] = 0;
-    (*outputNtuplizer)["MC_DstSisPdgId_heavy"] = 0;
+    (*outputVecNtuplizer)["MC_decay"] = {};
+    (*outputNtuplizer)["MC_muMotherPdgId"] = 0;
+    (*outputVecNtuplizer)["MC_muSistersPdgId"] = {};
+    (*outputNtuplizer)["MC_DstMotherPdgId"] = 0;
+    (*outputVecNtuplizer)["MC_DstSistersPdgId"] = {};
+    (*outputNtuplizer)["MC_CharmedDstSisPdgId"] = 0;
+    (*outputNtuplizer)["MC_StrangeDstSisPdgId"] = 0;
     (*outputNtuplizer)["MC_B_ctau"] = -1;
     (*outputNtuplizer)["MC_MassCharmedBDaugther"] = -1;
+
+    (*outputNtuplizer)["MC_mu_TransvIP_PV"] = 0;
+    (*outputNtuplizer)["MC_mu_TransvIP_vtxDst"] = 0;
+    (*outputNtuplizer)["MC_mu_IP_vtxDst"] = 0;
 
     if(i_B >= 0){
       auto p = (*PrunedGenParticlesHandle)[i_B];
       vtx["B"] = p.vertex();
       p4["B"].SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
       (*outputVecNtuplizer)["MC_decay"].push_back(p.mother()->pdgId());
+      (*outputVecNtuplizer)["MC_decay"].push_back(0);
       (*outputVecNtuplizer)["MC_decay"].push_back(p.pdgId());
+      (*outputVecNtuplizer)["MC_decay"].push_back(0);
       (*outputNtuplizer)["MC_B_ctau"] = vtxu::computeCTau(p);
 
       for(auto d : p.daughterRefVector()) {
@@ -315,62 +344,56 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         }
       }
 
-      for(auto d : *PrunedGenParticlesHandle) {
-        if(d.pdgId() == -13 && auxIsAncestor(&p, &d)) {
-          p4["mu"].SetPtEtaPhiM(d.pt(), d.eta(), d.phi(), d.mass());
-          vtx["mu"] = d.vertex();
-          mu_momVec = d.momentum();
-          mu_impactParam = vtxu::computeIP(interactionPoint, d.vertex(), d.momentum(), true);
-          auto muMother = d.mother();
-          (*outputNtuplizer)["MC_muMotherPdgId"] = muMother->pdgId();
-          (*outputNtuplizer)["MC_muMotherNdaughters"] = muMother->numberOfDaughters();
-          for(uint iss = 0; iss <  muMother->numberOfDaughters(); iss++) {
-            auto muSis = muMother->daughter(iss);
-            if (muSis->pdgId() != 22 && muSis->pdgId() != 14 && muSis->pdgId() != -13) (*outputNtuplizer)["MC_munuSisterPdgId"] = muSis->pdgId();
-          }
+      auto mu = (*PrunedGenParticlesHandle)[j_mu];
+      p4["mu"].SetPtEtaPhiM(mu.pt(), mu.eta(), mu.phi(), mu.mass());
+      vtx["mu"] = mu.vertex();
+      (*outputNtuplizer)["MC_mu_TransvIP_PV"] = vtxu::computeIP(interactionPoint, mu.vertex(), mu.momentum(), true);
+      auto muMother = mu.mother();
+      (*outputNtuplizer)["MC_muMotherPdgId"] = muMother->pdgId();
+      for(uint iss = 0; iss <  muMother->numberOfDaughters(); iss++) {
+        auto muSis = muMother->daughter(iss);
+        if ( muSis->pdgId() != mu.pdgId() ) (*outputVecNtuplizer)["MC_muSistersPdgId"].push_back(muSis->pdgId());
+      }
+
+      auto Dst = (*PrunedGenParticlesHandle)[j_Dst];
+      p4["Dst"].SetPtEtaPhiM(Dst.pt(), Dst.eta(), Dst.phi(), Dst.mass());
+      vtx["Dst"] = Dst.vertex();
+      auto DstMother = Dst.mother();
+      (*outputNtuplizer)["MC_DstMotherPdgId"] = DstMother->pdgId();
+      for(uint iss = 0; iss <  DstMother->numberOfDaughters(); iss++) {
+        auto DstSis = DstMother->daughter(iss);
+        int pdgId = DstSis->pdgId();
+        if ( pdgId == Dst.pdgId() ) continue;
+
+        (*outputVecNtuplizer)["MC_DstSistersPdgId"].push_back(DstSis->pdgId());
+        int heavyQuark = (abs(pdgId)/100) %10;
+        if ( heavyQuark == 4 ) (*outputNtuplizer)["MC_CharmedDstSisPdgId"] = pdgId;
+        else if ( heavyQuark == 3 ) (*outputNtuplizer)["MC_StrangeDstSisPdgId"] = pdgId;
+      }
+
+      for(auto dd : Dst.daughterRefVector()) {
+        if(abs(dd->pdgId()) == 211) {
+          p4["pis"].SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
         }
-        else if(d.pdgId() == -413 && auxIsAncestor(&p, &d)) {
-          p4["Dst"].SetPtEtaPhiM(d.pt(), d.eta(), d.phi(), d.mass());
-          vtx["Dst"] = d.vertex();
-          auto DstMother = d.mother();
-          (*outputNtuplizer)["MC_DstMotherPdgId"] = DstMother->pdgId();
-          (*outputNtuplizer)["MC_DstMotherNdaughters"] = DstMother->numberOfDaughters();
-          for(uint iss = 0; iss <  DstMother->numberOfDaughters(); iss++) {
-            auto DstSis = DstMother->daughter(iss);
-            auto pdgId = DstSis->pdgId();
-            if (pdgId == 22 || pdgId == 14 || pdgId == -413) continue;
-            if (abs(pdgId) > 400) (*outputNtuplizer)["MC_DstSisPdgId_heavy"] = pdgId;
-            else (*outputNtuplizer)["MC_DstSisPdgId_light"] = pdgId;
-          }
-          for(auto dd : d.daughterRefVector()) {
-            if(dd->pdgId() == -211) {
-              p4["pis"].SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
+        else if(abs(dd->pdgId()) == 421) {
+          p4["D0"].SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
+          vtx["D0"] = dd->vertex();
+          for(auto ddd : dd->daughterRefVector()) {
+            if (abs(ddd->pdgId()) == 211) {
+              p4["pi"].SetPtEtaPhiM(ddd->pt(), ddd->eta(), ddd->phi(), ddd->mass());
+              vtx["pi"] = ddd->vertex();
             }
-            else if(abs(dd->pdgId()) == 421) {
-              p4["D0"].SetPtEtaPhiM(dd->pt(), dd->eta(), dd->phi(), dd->mass());
-              vtx["D0"] = dd->vertex();
-              for(auto ddd : dd->daughterRefVector()) {
-                if (ddd->pdgId() == -211 || ddd->pdgId() == 321)
-                {
-                  string name = ddd->pdgId() == -211 ? "pi" : "K";
-                  p4[name].SetPtEtaPhiM(ddd->pt(), ddd->eta(), ddd->phi(), ddd->mass());
-                  if (ddd->pdgId() == 321) vtx["K"] = ddd->vertex();
-                }
-              }
-            }
+            else if (abs(ddd->pdgId()) == 321) p4["K"].SetPtEtaPhiM(ddd->pt(), ddd->eta(), ddd->phi(), ddd->mass());
           }
         }
       }
 
-      double dPhi_mu = vtxu::dPhi(bestMu.Phi(), p4["mu"].Phi());
-      double dEta_mu = bestMu.Eta() - p4["mu"].Eta();
-      double dPt_rel_mu = (bestMu.Pt() - p4["mu"].Pt())/bestMu.Pt();
-      if (p4["mu"].Pt() > 0 && fabs(dPhi_mu) < 0.01 && fabs(dEta_mu) < 0.01 && fabs(dPt_rel_mu) < 0.1 ) {
-        recoMuon_match_BMuon = 1.;
-      }
-    }
-    else {
-      (*outputVecNtuplizer)["MC_decay"].push_back(-1);
+      double dR_mu = vtxu::dR(bestMu.Phi(), mu.phi(), bestMu.Eta(), mu.eta());
+      double dPt_rel_mu = (bestMu.Pt() - mu.pt())/mu.pt();
+      if (dR_mu < 0.02 && fabs(dPt_rel_mu) < 0.1 ) recoMuon_match_BMuon = 1.;
+
+      (*outputNtuplizer)["MC_mu_TransvIP_vtxDst"] = vtxu::computeDCA_linApprox(vtx["Dst"], vtx["mu"], mu.momentum(), true);
+      (*outputNtuplizer)["MC_mu_IP_vtxDst"] = vtxu::computeDCA_linApprox(vtx["Dst"], vtx["mu"], mu.momentum(), false);
     }
 
     (*outputNtuplizer)["recoMuon_match_BMuon"] = recoMuon_match_BMuon;
@@ -378,9 +401,6 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     for(auto kv : p4) {
       AddTLVToOut(kv.second, "MC_"+kv.first, &(*outputNtuplizer));
     }
-    (*outputNtuplizer)["MC_mu_TransvIP_PV"] = mu_impactParam;
-    (*outputNtuplizer)["MC_mu_TransvIP_vtxDst"] = vtxu::computeDCA_linApprox(vtx["Dst"], vtx["mu"], mu_momVec, true);
-    (*outputNtuplizer)["MC_mu_IP_vtxDst"] = vtxu::computeDCA_linApprox(vtx["Dst"], vtx["mu"], mu_momVec, false);
 
     for(auto kv : vtx) {
       auto n = kv.first;
@@ -394,13 +414,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       cout << i_B << ": ";
       for(auto v : (*outputVecNtuplizer)["MC_decay"]) {cout << v << " ";} cout << endl;
       cout << "Muon matched: " << recoMuon_match_BMuon << endl;
-      cout << Form("Muon pt:%.1f eta:%.1f IP:%1.2e", p4["mu"].Pt(), p4["mu"].Eta(), mu_impactParam) << endl;
-      if(p4["mu"].Pt() > 0) {
-        cout << "Distance between MC muon and trigger muon" << endl;
-        cout << "dPhi: " << vtxu::dPhi(bestMu.Phi(), p4["mu"].Phi()) << endl;
-        cout << "dEta: " << bestMu.Eta() - p4["mu"].Eta() << endl;
-        cout << "dPt: " << (bestMu.Pt() - p4["mu"].Pt())/bestMu.Pt() << endl;
-      }
+      cout << Form("MC muon pt=%.1f eta=%.2f IP=%1.2e", p4["mu"].Pt(), p4["mu"].Eta(), (*outputNtuplizer)["MC_mu_TransvIP_PV"]) << endl;
     }
 
     (*outputNtuplizer)["MC_M_vis"] = (p4["Dst"] + p4["mu"]).M();

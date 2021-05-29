@@ -51,11 +51,11 @@ elif args.inputFiles:
         flist = args.inputFiles
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
-    # fdefault += 'inputFiles_BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    # fdefault += 'inputFiles_BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    # fdefault += 'inputFiles_BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    # fdefault += 'inputFiles_BP_Tag_B0_DstmDp_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    fdefault += 'inputFiles_BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
+    # fdefault += 'inputFiles_CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8.txt'
+
+    fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
+    # fdefault += 'inputFiles_CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
+
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
     flist = flist[:5]
@@ -66,11 +66,11 @@ for i in range(len(flist)):
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist)),
-                            inputCommands=cms.untracked.vstring('keep *',
-                                                                'drop GenLumiInfoHeader_generator__SIM'),
-                            skipBadFiles=cms.untracked.bool(True)
+                            # inputCommands=cms.untracked.vstring('keep *',
+                            #                                     'drop GenLumiInfoHeader_generator__SIM'),
+                            # skipBadFiles=cms.untracked.bool(True)
                            )
-process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
+# process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
 
 '''
