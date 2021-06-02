@@ -58,7 +58,7 @@ else:
 
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:5]
+    flist = flist[:3]
 
 for i in range(len(flist)):
     if os.path.isfile(flist[i]):
