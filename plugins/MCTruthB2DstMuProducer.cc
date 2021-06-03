@@ -175,7 +175,8 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
 
         if ( (pId/100)%10 != 5 && (pId/1000)%10 != 5 ) continue;
         cout << "idx: " << i << ", mother: " << p.mother()->pdgId() <<endl;
-        auxPrintDau(&p, -1);
+        // auxPrintDau(&p, -1);
+        auxPrintDau(&p, 0);
         cout << endl;
       }
       cout << endl << endl;

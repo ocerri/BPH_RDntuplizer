@@ -116,14 +116,6 @@ process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
         verbose = cms.int32(1)
 )
 
-process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
-        decayOfInterest = cms.vstring('BD*MuNu', 'BD*TauNu'),
-        inputFFScheme = cms.vstring(#'BD', 'ISGW2',
-                                    'BD*', 'ISGW2'
-        ),
-        verbose = cms.int32(0)
-)
-
 cfg_name = os.path.basename(sys.argv[0])
 f = open(os.environ['CMSSW_BASE']+'/src/ntuplizer/BPH_RDntuplizer/.git/logs/HEAD')
 commit_hash = f.readlines()[-1][:-1].split(' ')[1]
@@ -140,7 +132,6 @@ process.p = cms.Path(
                     process.B2MuDstDT +
                     process.B2MuDstDTFilter+
                     process.MCpart +
-                    process.HammerWeights +
                     process.outA
                     )
 
@@ -161,4 +152,4 @@ process.p = cms.Path(
 #############   Overall settings    ################
 '''
 
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
