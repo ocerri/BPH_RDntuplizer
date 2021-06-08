@@ -22,7 +22,7 @@ python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.
 
 process=CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
 
-python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/af/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_B2DstMu/out_CAND.root -c config/cmssw_centralMC_Tag_B_MuDst-PiPiK.py --maxtime 30m -N 3 -f
+python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o /storage/af/user/ocerri/BPhysics/data/cmsMC_private/$process/ntuples_B2DstMu/out_CAND.root -c config/cmssw_centralMC_Tag_B_MuDst-PiPiK.py --maxtime 30m -N 4 -f
 
 
 ------------------------------- Main Private Production --------------------------------------

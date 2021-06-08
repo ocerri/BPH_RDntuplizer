@@ -220,6 +220,9 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     edm::Handle<std::vector<reco::GenParticle>> PrunedGenParticlesHandle;
     iEvent.getByToken(PrunedParticlesSrc_, PrunedGenParticlesHandle);
 
+    // Output collection
+    unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
+
     // Get the B index
     edm::Handle<int> indexBmcHandle;
     iEvent.getByToken(indexBmcSrc_, indexBmcHandle);
@@ -227,13 +230,30 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     if(i_B == -1){
       cout << "[ERROR]: Invalid B idx (i.e. no B MC set)" << endl;
       cerr << "[ERROR]: Invalid B idx (i.e. no B MC set)" << endl;
+      (*outputNtuplizer)["wh_CLNCentral"] = 1e-9;
+      for(int i=0; i<4; i++) { //Loop over eigenVar
+        for (int j=0; j<2; j++) { //Loop over pos/neg direction
+          string var_name = "CLN" + varNameCLN[i];
+          var_name += j==0? "Up" : "Down";
+          (*outputNtuplizer)["wh_" + var_name] = 0;
+        }
+      }
+
+      (*outputNtuplizer)["wh_BLPRCentral"] = 1e-9;
+      for(int i=0; i<7; i++) { //Loop over eigenVar
+        for (int j=0; j<2; j++) { //Loop over pos/neg direction
+          string var_name = "BLPR" + varNameBLPR[i];
+          var_name += j==0? "Up" : "Down";
+          (*outputNtuplizer)["wh_" + var_name] = 0;
+        }
+      }
+
+      iEvent.put(move(outputNtuplizer), "outputNtuplizer");
+
       if (2*N_evets_weights_produced < N_evets_analyzed) return;
       else exit(1);
     }
     // cout << "i_B retieved: " << i_B << endl;
-
-    // Output collection
-    unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
 
     // Initialize the Hammer event
     hammer.initEvent();

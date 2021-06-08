@@ -109,7 +109,16 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     vector<float> DstPt, DstEta, DstPhi;
     vector<float> AddTkCharge, AddTkPt, AddTkEta, AddTkPhi;
     for( auto const& kv : (*outMapHandle) ) {
-      if (kv.first == "mu_charge") muCharge = kv.second;
+      if (kv.first == "mu_charge") {
+        if (verbose) {
+          cout << "Reco candidates muon charges: [" << flush;
+          for (auto q : kv.second) {
+            cout << q << " " << flush;
+          }
+          cout << "]" << endl;
+        }
+        muCharge = kv.second;
+      }
       else if (kv.first == "Dst_refitD0pismu_pt") DstPt = kv.second;
       else if (kv.first == "Dst_refitD0pismu_eta") DstEta = kv.second;
       else if (kv.first == "Dst_refitD0pismu_phi") DstPhi = kv.second;
@@ -175,7 +184,9 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
 
         if ( (pId/100)%10 != 5 && (pId/1000)%10 != 5 ) continue;
         cout << "idx: " << i << ", mother: " << p.mother()->pdgId() <<endl;
-        auxPrintDau(&p, -1);
+        int printMode = -1;
+        if (pId == 511 || pId == 521 || pId == 531) printMode = 0;
+        auxPrintDau(&p, printMode);
         cout << endl;
       }
       cout << endl << endl;
@@ -200,6 +211,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       if(p.numberOfDaughters()<=1) continue; // Needs to decay and not oscillate into a different one
       int pId = abs(p.pdgId());
       if(pId != 511 && pId != 521 && pId != 531) continue; // Require B or B_s meson
+      if (verbose) {cout << Form("Relevant B meson found (idx: %d)", i) << endl;}
 
       vector<int> idx_mu;
       vector<int> idx_Dst;
@@ -232,6 +244,11 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
           }
           if (pis_found && DuToKpi_found) idx_Dst.push_back(j);
         }
+      }
+
+      if (verbose) {
+        cout << Form("Muons in decay tree: %d", (int)idx_mu.size()) << endl;
+        cout << Form("D* in decay tree: %d", (int)idx_Dst.size()) << endl;
       }
 
       vector<pair<int, int>> idxMuDstPairs;
