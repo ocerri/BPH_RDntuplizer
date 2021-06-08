@@ -250,7 +250,7 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
 
       iEvent.put(move(outputNtuplizer), "outputNtuplizer");
 
-      if (2*N_evets_weights_produced < N_evets_analyzed) return;
+      if (2*N_evets_weights_produced < N_evets_analyzed || 1 - ((float)N_evets_weights_produced)/N_evets_analyzed < 0.05) return;
       else exit(1);
     }
     // cout << "i_B retieved: " << i_B << endl;

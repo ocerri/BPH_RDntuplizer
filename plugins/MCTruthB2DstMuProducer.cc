@@ -225,24 +225,26 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         if (dID == 13) idx_mu.push_back(j);
         else if (dID == 413) {
           bool pis_found = false;
-          bool DuToKpi_found = false;
+          // bool DuToKpi_found = false;
+          bool Du_found = false;
           for(auto dd : d.daughterRefVector()) {
             if(abs(dd->pdgId()) == 211) pis_found = true;
             else if(abs(dd->pdgId()) == 421) {
-
-              bool pi_found = false;
-              bool K_found = false;
-              bool other_nonGamma = false;
-              for(auto ddd : dd->daughterRefVector()) {
-                if (abs(ddd->pdgId()) == 211) pi_found = true;
-                else if ( abs(ddd->pdgId()) == 321 ) K_found = true;
-                else if ( ddd->pdgId() != 22 ) other_nonGamma = true; // Allow only PHOTOS decays
-              }
-
-              if (pi_found && K_found && !other_nonGamma) DuToKpi_found = true;
+              // bool pi_found = false;
+              // bool K_found = false;
+              // bool other_nonGamma = false;
+              // for(auto ddd : dd->daughterRefVector()) {
+              //   if (abs(ddd->pdgId()) == 211) pi_found = true;
+              //   else if ( abs(ddd->pdgId()) == 321 ) K_found = true;
+              //   else if ( ddd->pdgId() != 22 ) other_nonGamma = true; // Allow only PHOTOS decays
+              // }
+              //
+              // if (pi_found && K_found && !other_nonGamma) DuToKpi_found = true;
+              Du_found = true;
             }
           }
-          if (pis_found && DuToKpi_found) idx_Dst.push_back(j);
+          // if (pis_found && DuToKpi_found) idx_Dst.push_back(j);
+          if (pis_found && Du_found) idx_Dst.push_back(j);
         }
       }
 
