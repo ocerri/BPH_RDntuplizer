@@ -51,11 +51,11 @@ elif args.inputFiles:
         flist = args.inputFiles
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
-    # fdefault += 'inputFiles_BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
+    fdefault += 'inputFiles_BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     # fdefault += 'inputFiles_BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     # fdefault += 'inputFiles_BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     # fdefault += 'inputFiles_BP_Tag_B0_DstmDp_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    fdefault += 'inputFiles_BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
+    # fdefault += 'inputFiles_BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
     flist = flist[:5]
@@ -116,7 +116,7 @@ process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
 
 process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
         decayTreeVecOut = cms.InputTag("B2MuDstDT","outputVecNtuplizer", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.HammerWeights = cms.EDProducer("HammerWeightsProducer",

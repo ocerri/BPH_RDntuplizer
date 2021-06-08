@@ -61,9 +61,10 @@ else:
     #     flist = [l[:-1] for l in f.readlines()]
     #     flist = flist[:5]
 
-    flist = ['/storage/user/ocerri/BPhysics/data/cmsMC_private/']
-    flist[0] += 'BParking_Tag_Bd_MuNuDstst_Pi0_SoftQCDnonD_scale5_TuneCP5_ISGW2_PUGENOnly_10-2-3/'
-    flist[0] += 'test_GEN-SIM.root'
+    flist = ['/storage/af/user/ocerri/BPhysics/data/cmsMC_private/']
+    # flist[0] += 'BParking_Tag_Bd_MuNuDstst_Pi0_SoftQCDnonD_scale5_TuneCP5_ISGW2_PUGENOnly_10-2-3'
+    flist[0] += 'BParking_Tag_Bd_DstD0X_SoftQCDnonD_scale5_TuneCP5_PUGENOnly_10-2-3'
+    flist[0] += '/test_GEN-SIM.root'
 
 
 for i in range(len(flist)):

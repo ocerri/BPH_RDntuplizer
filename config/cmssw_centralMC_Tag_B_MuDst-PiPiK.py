@@ -51,14 +51,13 @@ elif args.inputFiles:
         flist = args.inputFiles
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
-    # fdefault += 'inputFiles_CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8.txt'
 
     fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     # fdefault += 'inputFiles_CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
 
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:3]
+    flist = flist[:5]
 
 for i in range(len(flist)):
     if os.path.isfile(flist[i]):
@@ -116,7 +115,7 @@ process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
 
 process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
         decayTreeVecOut = cms.InputTag("B2MuDstDT","outputVecNtuplizer", ""),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
@@ -164,4 +163,4 @@ process.p = cms.Path(
 #############   Overall settings    ################
 '''
 
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
