@@ -102,6 +102,10 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     iEvent.getByToken(PrunedParticlesSrc_, PrunedGenParticlesHandle);
     unsigned int N_PrunedGenParticles = PrunedGenParticlesHandle->size();
 
+    // Get packedGenParticles
+    edm::Handle<std::vector<pat::PackedGenParticle>> PackedGenParticlesHandle;
+    iEvent.getByToken(PackedParticlesSrc_, PackedGenParticlesHandle);
+
     edm::Handle<map<string, vector<float>>> outMapHandle;
     iEvent.getByToken(decayTreeOutSrc_, outMapHandle);
     vector<float> muCharge;
@@ -154,7 +158,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       float best_dR = 1e9;
       float best_dpt = 1e9;
       int best_pdgId = 0;
-      for(auto p : (*PrunedGenParticlesHandle)) {
+      for(auto p : (*PackedGenParticlesHandle)) {
         if (p.charge() == 0 || p.pt() < 5) continue;
         auto dR = vtxu::dR(muTLV.Phi(), p.phi(), muTLV.Eta(), p.eta());
         auto dpt = fabs( p.pt() - muTLV.Pt() ) / p.pt();
@@ -466,9 +470,6 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         (*outputVecNtuplizer)["MC_addTk_pdgIdMotherMother"].push_back(0);
     }
     if (AddTkCharge.size() > 0) {
-      // Get packedGenParticles
-      edm::Handle<std::vector<pat::PackedGenParticle>> PackedGenParticlesHandle;
-      iEvent.getByToken(PackedParticlesSrc_, PackedGenParticlesHandle);
       // unsigned int N_PackedGenParticles = PackedGenParticlesHandle->size();
       for(auto packGenP : (*PackedGenParticlesHandle)) {
         if (packGenP.charge() == 0) continue;

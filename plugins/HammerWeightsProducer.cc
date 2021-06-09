@@ -249,8 +249,12 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       }
 
       iEvent.put(move(outputNtuplizer), "outputNtuplizer");
-
-      if (2*N_evets_weights_produced < N_evets_analyzed || 1 - ((float)N_evets_weights_produced)/N_evets_analyzed < 0.05) return;
+      cout << N_evets_weights_produced << "/" << N_evets_analyzed << endl;
+      bool lessThanHalfProduced = 2*N_evets_weights_produced < N_evets_analyzed;
+      bool veryFewMissing = 1 - ((float)N_evets_weights_produced)/N_evets_analyzed < 0.05;
+      bool moreThanOne = N_evets_analyzed - N_evets_weights_produced > 1;
+      if (lessThanHalfProduced) return;
+      else if (veryFewMissing || !moreThanOne ) return;
       else exit(1);
     }
     // cout << "i_B retieved: " << i_B << endl;
