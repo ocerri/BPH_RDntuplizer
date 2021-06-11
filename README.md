@@ -3,7 +3,7 @@
 Code to produce ntuples for the R(D*) analysis. They can be produced with FWLite or with the full CMSSW.
 
 ## Installing instructions
-Has to run on lxplus.
+Has to run on a CMS cluster (caltech T2, lxplus, etc.)
 
 ```
 cmsrel CMSSW_10_2_3
