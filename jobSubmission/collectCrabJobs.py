@@ -5,9 +5,10 @@ import humanfriendly
 
 parser = argparse.ArgumentParser()
 parser.add_argument ('inputDir', help='list of directories', nargs='+')
+parser.add_argument ('outputDir', default='/storage/af/user/ocerri/BPhysics/data/cmsRD/', help='list of directories')
 parser.add_argument ('-k', '--keepGoing', help='Skip corrupted files', action='store_true')
 args = parser.parse_args()
-# example: python collectCrabJobs.py /mnt/hadoop/store/user/ocerri/ParkingBPH*/*_RDntuplizer_B2JpsiKst_200123
+# example: python collectCrabJobs.py /storage/cms/store/user/$USER/ParkingBPH*/*_B2JpsiKst_200123
 
 for dir in args.inputDir:
     print 20*'#' + 50*'-' + 20*'#'
@@ -24,8 +25,7 @@ for dir in args.inputDir:
         print 'No <ParkingBPH> dir found'
         raise
 
-    outpath = '/storage/user/ocerri/BPhysics/data/cmsRD/'
-    outpath += dlist[i_BPH]
+    outpath = os.path.join(args.outputDir, dlist[i_BPH])
     if not os.path.isdir(outpath):
         os.makedirs(outpath)
 
