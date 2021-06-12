@@ -1,22 +1,24 @@
 cd CMSSW_10_2_3/src
+cd ntuplizer
 cmsenv
+
 export PATH=/cvmfs/sft.cern.ch/lcg/contrib/CMake/3.14.2/Linux-x86_64/bin:${PATH}
 export PATH=/cvmfs/sft.cern.ch/lcg/contrib/gcc/5.2/x86_64-centos7/bin/:${PATH}
 export BOOST_ROOT=/cvmfs/sft.cern.ch/lcg/releases/Boost/1.66.0-f50b5/x86_64-centos7-gcc7-opt/
 export HEPMC_DIR=/cvmfs/sft.cern.ch/lcg/external/HepMC/2.06.08/x86_64-slc6-gcc48-opt
-mkdir ntuplizer
-cd ntuplizer
 
 wget https://gitlab.com/mpapucci/Hammer/-/archive/master/Hammer-master.tar.gz
 tar -xf Hammer-master.tar.gz
+
+# HAND FIX --> Change ln 79 of Hammer-master/src/Amplitudes/AmplBDstarDPiLepNu.cc to: const FourMomentum& pPion = pDstarmes - pDmes;
+
 mkdir Hammer-build
 cd Hammer-build
 
-# Change ln 79 of Hammer-master/src/Amplitudes/AmplBDstarDPiLepNu.cc to: const FourMomentum& pPion = pDstarmes - pDmes;
-cmake -DCMAKE_INSTALL_PREFIX=../Hammer-1.1.0 -DENABLE_TESTS=ON -DWITH_ROOT=OFF -DWITH_EXAMPLES=OFF -DINSTALL_EXTERNAL_DEPENDENCIES=ON -DWITH_PYTHON=OFF -DBUILD_SHARED_LIBS=ON ../Hammer-master -DCMAKE_CXX_COMPILER=/cvmfs/sft.cern.ch/lcg/contrib/gcc/5.2/x86_64-centos7/bin/gcc -DCMAKE_CXX_FLAGS="-Wno-maybe-uninitialized"
+export CXXFLAGS="-Wno-error=maybe-uninitialized -Wno-maybe-uninitialized"
+cmake -DCMAKE_INSTALL_PREFIX=../Hammer-install -DENABLE_TESTS=ON -DWITH_ROOT=OFF -DWITH_EXAMPLES=OFF -DINSTALL_EXTERNAL_DEPENDENCIES=ON -DWITH_PYTHON=OFF -DBUILD_SHARED_LIBS=ON ../Hammer-master -DCMAKE_CXX_COMPILER=/cvmfs/sft.cern.ch/lcg/contrib/gcc/5.2/x86_64-centos7/bin/gcc -DCMAKE_CXX_FLAGS="-Wno-maybe-uninitialized"
 make -j24
 
-export CXXFLAGS="-Wno-error=maybe-uninitialized -Wno-maybe-uninitialized"
 
 ----- OLD -----
 #Download the source file from https://hammer.physics.lbl.gov/files/
