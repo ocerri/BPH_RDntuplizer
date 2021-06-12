@@ -66,4 +66,10 @@ Running FWLite
 python FWLite_master.py config/cfg_myconfig.py
 ```
 
-For notes on how to run the ntuplization jobs check [notes.txt](jobSubmission/notes.txt) file.
+To run the MC ntuplization jobs check [notes.txt](jobSubmission/notes.txt) file.
+
+### Real data ntuplization
+
+Real data ntuplization is done through CRAB. The submission script is [jobSubmission/submitCMSSWCrabJobs.py](jobSubmission/submitCMSSWCrabJobs.py).
+While jobs are running the status can be checked with [jobSubmission/checkCrabStatus.py](jobSubmission/checkCrabStatus.py).
+Finally the output can be collected using [jobSubmission/collectCrabJobs.py](jobSubmission/collectCrabJobs.py).
