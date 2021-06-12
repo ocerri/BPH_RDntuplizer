@@ -66,4 +66,4 @@ Running FWLite
 python FWLite_master.py config/cfg_myconfig.py
 ```
 
-For notes on how to run the ntuplization jobs check [notes.txt](notes.txt) file.
+For notes on how to run the ntuplization jobs check [notes.txt](jobSubmission/notes.txt) file.
