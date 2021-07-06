@@ -4,7 +4,7 @@ import datetime
 from glob import glob
 
 forceMC = False
-prod_samples = yaml.load(open('samples.yml'))
+prod_samples = yaml.full_load(open('samples.yml'))
 
 for k, d in prod_samples['samples'].iteritems():
     if 'data_' in k:
@@ -16,7 +16,7 @@ for k, d in prod_samples['samples'].iteritems():
                 print 'Already present'
             else:
                 print 'Creating files list'
-                cmd = 'das_client --query="file dataset={}" --limit=0 > {}'.format(dataset, fname)
+                cmd = 'dasgoclient --query="file dataset={}" --limit=0 > {}'.format(dataset, fname)
                 os.system(cmd)
                 print '\nTotal number of files:'
                 os.system('cat '+fname+' | wc -l')
@@ -34,13 +34,13 @@ for k, d in prod_samples['samples'].iteritems():
         for p in d['parts']:
             print p
             if p.endswith('/USER'):
-                cmd = 'das_client --query="file dataset={}'.format(p)
+                cmd = 'dasgoclient --query="file dataset={}'.format(p)
                 cmd += ' instance=prod/phys03'
                 cmd += '"'
                 cmd += ' --limit=0 >> ' + fname
                 os.system(cmd)
             elif p.endswith('/MINIAODSIM'):
-                cmd = 'das_client --query="file dataset={}'.format(p)
+                cmd = 'dasgoclient --query="file dataset={}'.format(p)
                 cmd += '"'
                 cmd += ' --limit=0 >> ' + fname
                 os.system(cmd)
