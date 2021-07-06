@@ -4,7 +4,7 @@ import datetime
 from glob import glob
 
 forceMC = False
-prod_samples = yaml.load(open('samples.yml'))
+prod_samples = yaml.full_load(open('samples.yml'))
 
 for k, d in prod_samples['samples'].iteritems():
     if 'data_' in k:
