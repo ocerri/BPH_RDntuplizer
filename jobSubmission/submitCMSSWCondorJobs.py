@@ -45,6 +45,10 @@ if __name__ == "__main__":
         print 'You have to run from the BPH_RDntuplizer directory'
         exit()
 
+    if 'X509_USER_PROXY' not in os.environ:
+	print "X509_USER_PROXY environment variable not set"
+	exit(1)
+
     '''
     ######################## Prepare output ###################################
     '''
