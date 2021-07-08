@@ -9,3 +9,4 @@ production/*.txt
 *tmp*
 *test*
 crab.log
+*.swp
