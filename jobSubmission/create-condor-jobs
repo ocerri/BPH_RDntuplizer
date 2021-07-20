@@ -1,0 +1,215 @@
+#!/usr/bin/env python
+"""
+This is a short script to create submission files for the ntuplizer. To run it:
+
+    $ process="CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    $ python jobSubmission/create-condor-jobs -i production/inputFiles_$process.txt -o ~/BPhysics/$process/ntuples/out_CAND.root -c config/cmssw_centralMC_Tag_B_MuDst-PiPiK.py --maxtime 30m -N 5 -f
+
+This will create the necessary job submission files and add new entries to the database ~/state.db. You can then run submit-condor-jobs to actually submit them.
+
+To browse the database you can run:
+
+    $ sqlite3 ~/state.db
+    sqlite> select * from ntuplizer_jobs;
+"""
+import os, sys, subprocess, re
+
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
+def createBatchName(a):
+    try:
+        aux = os.path.basename(a.input_file[0]).replace('inputFiles_', '').replace('.txt', '').replace('.root', '')
+        n = aux
+    except:
+        n = a.maxtime
+    return n
+
+if __name__ == "__main__":
+    import sqlite3
+    from os.path import join
+    import uuid
+    from glob import glob
+    import argparse
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument ('-N', '--nFilePerJob', type=int, help='Number of files per job', default=10)
+    parser.add_argument ('-i', '--input_file', type=str, default='', help='Input file template for glob or list in a txt format', nargs='+')
+    parser.add_argument ('-o', '--output_file', type=str, default='', help='Output root file template')
+    parser.add_argument ('-c', '--config', required=True, type=str, help='Config file for cmsRUn')
+    parser.add_argument ('--maxtime', help='Max wall run time [s=seconds, m=minutes, h=hours, d=days]', default='8h')
+    parser.add_argument ('--memory', help='min virtual memory in MB', default='2000')
+    parser.add_argument ('--disk', type=int, help='min disk space in MB', default=4000)
+    parser.add_argument ('--cpu', type=int, help='cpu threads', default=1)
+    parser.add_argument ('--name', type=str, default='ntuples', help='Job batch name')
+    parser.add_argument ('-f', '--force', action='store_true', default=False, help='Force reprocessing')
+    parser.add_argument("--db", type=str, help="database file", default=None)
+
+    args = parser.parse_args()
+
+    if args.db is None:
+        home = os.path.expanduser("~")
+        args.db = join(home,'state.db')
+
+    conn = sqlite3.connect(args.db)
+
+    c = conn.cursor()
+
+    # Create the database table if it doesn't exist
+    c.execute("CREATE TABLE IF NOT EXISTS ntuplizer_jobs ("
+        "id             INTEGER PRIMARY KEY, "
+        "timestamp      DATETIME DEFAULT CURRENT_TIMESTAMP, "
+        "submit_file    TEXT NOT NULL UNIQUE, "
+        "log_file       TEXT NOT NULL UNIQUE, "
+        "output_file    TEXT NOT NULL UNIQUE, "
+        "input_files    TEXT NOT NULL, "
+        "batch_name     TEXT NOT NULL, "
+        "uuid           TEXT NOT NULL, "
+        "batch_uuid     TEXT NOT NULL, "
+        "state          TEXT NOT NULL, "
+        "nretry         INTEGER,"
+        "message        TEXT,"
+        "priority       INTEGER DEFAULT 1)"
+    )
+
+    conn.commit()
+
+    if 'X509_USER_PROXY' not in os.environ:
+	print "X509_USER_PROXY environment variable not set"
+	exit(1)
+
+    '''
+    ######################## Prepare output ###################################
+    '''
+    if not args.output_file:
+        print 'No output file provided'
+        exit()
+
+    if not args.output_file.endswith('.root'):
+        print 'Output file must end with .root'
+        exit()
+
+    outdir = os.path.dirname(args.output_file)
+
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
+    if not os.path.exists(join(outdir,'out')):
+        os.makedirs(join(outdir,'out'))
+
+    if not os.path.exists(join(outdir,'cfg')):
+        os.makedirs(join(outdir,'cfg'))
+
+    '''
+    ################### Prepare input file and division #######################
+    '''
+    if not args.input_file:
+        print 'No input file(s) provided'
+        exit()
+
+    flist = []
+    if len(args.input_file) == 1 and args.input_file[0].endswith('.txt'):
+        with open(args.input_file[0]) as f:
+            for l in f.readlines():
+                flist.append(l[:-1])
+    elif len(args.input_file) == 1:
+        flist = glob(args.input_file[0])
+    elif isinstance(args.input_file, list):
+        flist = args.input_file
+
+    if not args.force:
+        results = c.execute('SELECT id, input_files FROM ntuplizer_jobs ORDER BY timestamp ASC')
+
+        for row in results.fetchall():
+            id, input_files = row
+            input_files = input_files.split(",")
+
+            for filename in input_files:
+                if filename in flist:
+                    print("skipping %s because it's already done" % filename)
+                    flist.remove(filename)
+
+    '''
+    ###################### Check CMSSW and config ############################
+    '''
+
+    if not os.path.exists(args.config):
+        print >> sys.stderr, "Couldn't find config file '%s'" % args.config
+        exit()
+
+    ''' ###################### Creating the sub #############################'''
+    time_scale = {'s':1, 'm':60, 'h':60*60, 'd':60*60*24}
+    maxRunTime = int(args.maxtime[:-1]) * time_scale[args.maxtime[-1]]
+
+    job_submission_dir_path = os.path.dirname(os.path.realpath(__file__))
+
+    os.system('chmod +x %s/CMSSWCondorJob.sh' % job_submission_dir_path)
+    print 'Creating submission scripts'
+
+    # generate a UUID to append to all the filenames so that if we run the same job
+    # twice we don't overwrite the first job
+    batch_id = uuid.uuid1()
+
+    for i, files in enumerate(chunks(flist,args.nFilePerJob)):
+        # generate a UUID to append to all the filenames so that if we run the same job
+        # twice we don't overwrite the first job
+        ID = uuid.uuid1()
+
+        with open(join(outdir,'cfg/file_list_%s_%i.txt' % (batch_id.hex,i)), 'w') as f:
+            f.write('\n'.join(files) + '\n')
+
+        submit_file = os.path.realpath(join(outdir,'jobs_%s_%i.sub' % (batch_id.hex,i)))
+        with open(submit_file, 'w') as fsub:
+            fsub.write('executable    = %s/CMSSWCondorJob.sh\n' % job_submission_dir_path)
+
+            exec_args = job_submission_dir_path
+            exec_args += ' %s' % os.path.realpath(args.config)
+            exec_args += ' %s' % join(outdir,'cfg/file_list_%s_%i.txt' % (batch_id.hex,i))
+            output_file = join(args.output_file.replace('.root', '_%s_%i.root' % (batch_id.hex,i)))
+            exec_args += ' %s' % output_file
+            fsub.write('arguments      = %s\n' % exec_args)
+            log_file = '%s/out/job_%s_%i.log' % (outdir,batch_id.hex,i)
+            fsub.write('output         = %s/out/job_%s_%i.out\n' % (outdir,batch_id.hex,i))
+            fsub.write('error          = %s/out/job_%s_%i.err\n' % (outdir,batch_id.hex,i))
+            fsub.write('log            = %s/out/job_%s_%i.log\n' % (outdir,batch_id.hex,i))
+            fsub.write('+MaxRuntime    = %i\n' % maxRunTime)
+            if os.uname()[1] == 'login-1.hep.caltech.edu':
+                fsub.write('+RunAsOwner = True\n')
+                fsub.write('+InteractiveUser = True\n')
+                # Check for the right one using: ll /cvmfs/singularity.opensciencegrid.org/cmssw/
+                fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel7-m20200724"\n')
+                fsub.write('+SingularityBindCVMFS = True\n')
+                fsub.write('run_as_owner = True\n')
+                fsub.write('RequestDisk = %i\n' % args.disk)
+                fsub.write('request_memory = ifthenelse(MemoryUsage =!= undefined, MAX({{MemoryUsage + 1024, {0}}}), {0})\n'.format(args.memory)) # Dynamic allocation
+                fsub.write('RequestCpus = %i\n' % args.cpu)
+            fsub.write('+JobBatchName  = %s\n' % args.name)
+            fsub.write('+UUID  = "%s"\n' % ID.hex)
+            fsub.write('x509userproxy  = $ENV(X509_USER_PROXY)\n')
+            fsub.write('on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)\n')
+            # Send the job to Held state on failure.
+            fsub.write('on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)\n')
+            # Periodically retry the jobs for 3 times with an interval 20 mins.
+            fsub.write('periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) > (60*10))\n')
+            fsub.write('max_retries    = 5\n')
+            fsub.write('requirements   = Machine =!= LastRemoteHost && regexp("blade-.*", TARGET.Machine)\n')
+            fsub.write('universe = vanilla\n')
+            fsub.write('queue 1\n')
+
+        c.execute("INSERT INTO ntuplizer_jobs ("
+            "submit_file    , "
+            "log_file       , "
+            "output_file    , "
+            "input_files    , "
+            "batch_name     , "
+            "batch_uuid     , "
+            "uuid           , "
+            "state          , "
+            "nretry         ) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, 'NEW', NULL)",
+            (submit_file, log_file, output_file, ','.join(files), '%s_%s' % (args.name,createBatchName(args)), batch_id.hex, ID.hex))
+
+    conn.commit()

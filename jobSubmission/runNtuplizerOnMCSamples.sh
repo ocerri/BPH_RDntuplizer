@@ -32,12 +32,12 @@ output=$HOME/BPhysics/data/cmsMC
 
 for process in "${processes[@]}"; do
     echo $process
-    output_dir=$output/$process/ntuples/
+    output_dir=$output/$process/ntuples/B2DstMu
     if [ -d "$output_dir" ]; then
 	echo "skipping $process because $output_dir exists";
     else
 	mkdir -p $output_dir
-	python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o $output_dir/out_CAND.root -c config/cmssw_centralMC_Tag_B_MuDst-PiPiK.py --maxtime 30m -N 5 -f
+	python jobSubmission/create-condor-jobs -i production/inputFiles_$process.txt -o $output_dir/out_CAND.root -c config/cmssw_centralMC_Tag_B_MuDst-PiPiK.py -N 5
 	sleep 1
     fi
 done

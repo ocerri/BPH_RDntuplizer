@@ -1,0 +1,247 @@
+#!/usr/bin/env python
+"""
+This is a short script to help manage submitting jobs to the grid. To submit
+jobs first run the create-condor-jobs script:
+
+    $ process="CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    $ python jobSubmission/create-condor-jobs -i production/inputFiles_$process.txt -o ~/BPhysics/$process/ntuples/out_CAND.root -c config/cmssw_centralMC_Tag_B_MuDst-PiPiK.py --maxtime 30m -N 5 -f
+
+or use the runNtuplizerOnMCSamples.sh shell script:
+
+    $ sh jobSubmission/runNtuplizerOnMCSamples.sh
+
+This will create all the submit files necessary and add entries to a sqlite database ~/state.db. Next, you can run this script to actually submit the jobs to condor:
+
+    $ python jobSubmission/submit-condor-jobs --max-jobs 100 --log-level verbose --logfile ~/submit.log
+
+Currently this script will *not* automatically resubmit any jobs but will
+instead mark any jobs that failed, and the user can then update the database to
+mark these as "RETRY".
+"""
+from subprocess import check_call, check_output
+from os.path import join
+import subprocess
+import json
+import os
+import sys
+import ROOT
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(dir_path)
+from logger import Logger
+
+log = Logger()
+
+def get_njobs():
+    """
+    Returns the total number of jobs in the job queue.
+    """
+    log.debug("condor_q -json")
+    output = check_output(["condor_q","-json"])
+
+    if not output:
+        return 0
+
+    data = json.loads(output)
+
+    return len(data)
+
+def get_job_status(row, data=None):
+    """
+    Check to see if a given grid job is finished. Returns the following statuses:
+
+        0    Unexpanded
+        1    Idle
+        2    Running
+        3    Removed
+        4    Completed
+        5    Held
+        6    Submission_err
+        7    Job failed
+        8    Success
+
+    These come from the JobStatus entry in condor_q. The values here come from
+    http://pages.cs.wisc.edu/~adesmet/status.html.
+    """
+    if data is None:
+        log.debug('condor_q -json --attributes UUID,JobStatus --constraint \'UUID == "%s"\'' % row['uuid'])
+        output = check_output(["condor_q","-json","--attributes","UUID,JobStatus","--constraint",'UUID == "%s"' % row['uuid']])
+
+        if output:
+            data = json.loads(output)
+        else:
+            data = []
+
+    for entry in data:
+        if entry['UUID'] == row['uuid']:
+            return entry['JobStatus']
+
+    # If there's no entry from condor_q the job is done. Now, we check to see
+    # if it completed successfully. Note: Jobs often don't complete
+    # successfully because I've noticed that even though I have specified in my
+    # submit file that the node should have modules, many of them don't!
+    #
+    # Update: With the new queue statement, I have no way of knowing if a job
+    # hasn't been submitted yet, or if it is done. Therefore, we assume here
+    # that if the log file doesn't exist, it hasn't run yet.
+
+    try:
+        with open(row['log_file']) as f:
+            if "return value 0" in f.read():
+                # Job completed successfully
+                pass
+            else:
+                log.warn("Log file '%s' doesn't contain the string 'return value 0'. Assuming job failed." % row['log_file'])
+                return 7
+    except IOError:
+        log.debug("Log file '%s' doesn't exist. Assuming job hasn't started running." % row['log_file'])
+        return 2
+
+    try:
+        f = ROOT.TFile(row['output_file'])
+        tree = f.Get("outA/Tevts")
+        for event in tree:
+            pass
+        return 8
+    except IOError:
+        log.warn("ROOT file '%s' doesn't exist. Assuming job failed." % row['output_file'])
+        return 7
+    except Exception as e:
+        log.warn("Error opening ROOT file '%s': %s. Assuming job failed." % (row['output_file'],str(e)))
+        return 7
+
+    return 7
+
+def main(conn, max_jobs):
+    c = conn.cursor()
+
+    results = c.execute('SELECT id, submit_file, log_file, output_file, batch_name, uuid, state, nretry FROM ntuplizer_jobs ORDER BY timestamp ASC')
+
+    njobs = get_njobs()
+
+    stats = {}
+
+    log.debug("condor_q -json --attributes UUID,JobStatus")
+    output = check_output(["condor_q","-json","--attributes","UUID,JobStatus"])
+
+    if output:
+        data = json.loads(output)
+    else:
+        data = []
+
+    for row in results.fetchall():
+        id, submit_file, log_file, output_file, batch_name, uuid, state, nretry = row
+
+        if state not in stats:
+            stats[state] = 1
+        else:
+            stats[state] += 1
+
+        if state == 'NEW':
+            if njobs >= max_jobs:
+                log.verbose("Skipping job %i because there are already %i jobs in the queue" % (id,njobs))
+                continue
+
+            log.notice("submitting %s\n" % submit_file)
+            cmd = ['condor_submit',row['submit_file'],'-batch-name',batch_name]
+            try:
+                log.debug(" ".join(cmd))
+                check_call(cmd)
+            except subprocess.CalledProcessError as e:
+                log.warn("failed to submit file")
+                c.execute("UPDATE ntuplizer_jobs SET state = 'FAILED', message = ? WHERE id = ?", ("failed to submit job: %s" % str(e),id))
+            else:
+                log.notice("Successfully submitted job %i" % id)
+                c.execute("UPDATE ntuplizer_jobs SET state = 'RUNNING', nretry = ? WHERE id = ?", (0,id))
+                njobs += 1
+        elif state == 'RUNNING':
+            # check to see if it's completed
+            job_status = get_job_status(row, data=data)
+
+            if job_status in (0,1,2,4):
+                # nothing to do!
+                log.verbose("Still waiting for job %i to finish" % id)
+            elif job_status == 3:
+                c.execute("UPDATE ntuplizer_jobs SET state = 'FAILED', message = ? WHERE id = ?", ("job was removed",id))
+            elif job_status == 8:
+                # Success!
+                log.notice("Job %i completed successfully!" % id)
+                c.execute("UPDATE ntuplizer_jobs SET state = 'SUCCESS' WHERE id = ?", (id,))
+            elif job_status == 5:
+                # For now, I don't do anything for held jobs. I can mark them
+                # manually as failed or retry in the database.
+                pass
+            elif job_status == 7:
+                c.execute("UPDATE ntuplizer_jobs SET state = 'FAILED', message = ? WHERE id = ?", ("job failed", id))
+            else:
+                # Don't know what to do here for Removed or Submission_err
+                log.warn("Job %i is in the state %i. Don't know what to do." % (id, job_status))
+        elif state == 'RETRY':
+            if njobs >= max_jobs:
+                log.verbose("Skipping job %i because there are already %i jobs in the queue" % (id,njobs))
+                continue
+
+            log.notice("resubmitting %s\n" % submit_file)
+            cmd = ['condor_submit',row['submit_file'],'-batch-name',batch_name]
+            try:
+                log.debug(" ".join(cmd))
+                check_call(cmd)
+            except subprocess.CalledProcessError as e:
+                log.warn("failed to submit file")
+                c.execute("UPDATE ntuplizer_jobs SET state = 'FAILED', message = ? WHERE id = ?", ("failed to submit job: %s" % str(e),id))
+            else:
+                log.notice("Successfully resubmitted job %i" % id)
+                c.execute("UPDATE ntuplizer_jobs SET state = 'RUNNING', nretry = COALESCE(nretry + 1,0) WHERE id = ?", (row['id'],))
+                njobs += 1
+        elif state in ('SUCCESS','FAILED'):
+            # Nothing to do here
+            pass
+        else:
+            log.warn("Job %i is in the unknown state '%s'." % (id,state))
+            
+        conn.commit()
+
+    log.notice("Stats on jobs in the database:")
+    for state, value in stats.iteritems():
+        log.notice("    %s: %i" % (state,value))
+
+if __name__ == '__main__':
+    import argparse
+    import os
+    import sqlite3
+    import traceback
+    import datetime
+    import sys
+
+    parser = argparse.ArgumentParser("submit grid jobs", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--db", type=str, help="database file", default=None)
+    parser.add_argument('--loglevel',
+                        help="logging level (debug, verbose, notice, warning)",
+                        default='notice')
+    parser.add_argument('--logfile', default=None, help="filename for log file")
+    parser.add_argument('--max-retries', type=int, default=2, help="maximum number of times to try and resubmit a grid job")
+    parser.add_argument('--max-jobs', type=int, default=100, help="maximum number of jobs in the grid queue at any time")
+    args = parser.parse_args()
+
+    log.set_verbosity(args.loglevel)
+
+    if args.logfile:
+        log.set_logfile(args.logfile)
+
+    if args.db is None:
+        home = os.path.expanduser("~")
+        args.db = join(home,'state.db')
+
+    conn = sqlite3.connect(args.db)
+
+    conn.row_factory = sqlite3.Row
+
+    c = conn.cursor()
+
+    try:
+        main(conn, args.max_jobs)
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        log.warn(traceback.format_exc())
+        sys.exit(1)
