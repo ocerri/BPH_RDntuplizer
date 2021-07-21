@@ -1,0 +1,4 @@
+/store/mc/RunIIAutumn18MiniAOD/BdToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/MINIAODSIM/Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/130000/EEE34ADE-EAF0-BB46-B211-85BC2DD79723.root
+/store/mc/RunIIAutumn18MiniAOD/BdToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/MINIAODSIM/Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/130000/80E29C1C-6980-C741-B13A-8B249F82F0B9.root
+/store/mc/RunIIAutumn18MiniAOD/BdToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/MINIAODSIM/Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/130000/0C87DE4A-3207-CA4C-AF88-906F9C029AA0.root
+/store/mc/RunIIAutumn18MiniAOD/BdToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/MINIAODSIM/Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/130000/C002A61F-3F34-9D42-B75F-60397FAAEDF0.root

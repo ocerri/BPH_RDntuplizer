@@ -150,35 +150,35 @@ samples:
       
   ######## D*Hc background
   
-#   Bd_DstDu:
-#     dataset: CP_BdToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
-#     parts:
-#       - /BdToDStarD0_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
-      
-#   Bd_DstDd:
-#     dataset: CP_BdToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
-#     parts:
-#       - /BdToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
-      
-#   Bd_DstDs:
-#     dataset: CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
-#     parts:
-#       - /BdToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
-      
-#   Bu_DstDu:
-#     dataset: CP_BuToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
-#     parts:
-#       - /BuToDStarD0_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
-      
-#   Bu_DstDd:
-#     dataset: CP_BuToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
-#     parts:
-#       - /BuToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
-      
-#   Bs_DstDs:
-#     dataset: CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
-#     parts:
-#       - /BsToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+  Bd_DstDu:
+    dataset: CP_BdToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
+    parts:
+      - /BdToDStarD0_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+    
+  Bd_DstDd:
+    dataset: CP_BdToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
+    parts:
+      - /BdToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+    
+  Bd_DstDs:
+    dataset: CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
+    parts:
+      - /BdToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+    
+  Bu_DstDu:
+    dataset: CP_BuToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
+    parts:
+      - /BuToDStarD0_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+    
+  Bu_DstDd:
+    dataset: CP_BuToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
+    parts:
+      - /BuToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+    
+  Bs_DstDs:
+    dataset: CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
+    parts:
+      - /BsToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
 
   ######## Old MC
 
