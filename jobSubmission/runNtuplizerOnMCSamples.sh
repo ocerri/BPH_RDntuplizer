@@ -26,6 +26,12 @@ declare -a processes=(
     "CP_BsToTauNuDstK_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     "CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     "CP_General_BuToJpsiK_BMuonFilter_TuneCP5_13TeV-pythia8-evtgen"
+    #"CP_BdToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BuToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BuToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
 )
 
 output=$HOME/BPhysics/data/cmsMC
