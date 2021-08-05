@@ -123,14 +123,16 @@ if __name__ == "__main__":
     if not args.force:
         results = c.execute('SELECT id, input_files FROM ntuplizer_jobs ORDER BY timestamp ASC')
 
+        already_processed = []
         for row in results.fetchall():
             id, input_files = row
             input_files = input_files.split(",")
+            already_processed.extend(input_files)
 
-            for filename in input_files:
-                if filename in flist:
-                    print("skipping %s because it's already done" % filename)
-                    flist.remove(filename)
+        for filename in input_files:
+            if filename in flist:
+                print("skipping %s because it's already done" % filename)
+                flist.remove(filename)
 
     '''
     ###################### Check CMSSW and config ############################
