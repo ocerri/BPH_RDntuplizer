@@ -134,8 +134,6 @@ if __name__ == "__main__":
                 print("skipping %s because it's already done" % filename)
                 flist.remove(filename)
 
-    sys.exit(0)
-
     '''
     ###################### Check CMSSW and config ############################
     '''
