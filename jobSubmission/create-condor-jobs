@@ -129,10 +129,12 @@ if __name__ == "__main__":
             input_files = input_files.split(",")
             already_processed.extend(input_files)
 
-        for filename in input_files:
+        for filename in already_processed:
             if filename in flist:
                 print("skipping %s because it's already done" % filename)
                 flist.remove(filename)
+
+    sys.exit(0)
 
     '''
     ###################### Check CMSSW and config ############################
