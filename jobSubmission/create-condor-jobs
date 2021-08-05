@@ -120,6 +120,9 @@ if __name__ == "__main__":
     elif isinstance(args.input_file, list):
         flist = args.input_file
 
+    # Use a set here so we get O(1) complexity for flist.remove()
+    flist = set(flist)
+
     if not args.force:
         results = c.execute('SELECT id, input_files FROM ntuplizer_jobs ORDER BY timestamp ASC')
 
