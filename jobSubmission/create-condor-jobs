@@ -120,17 +120,22 @@ if __name__ == "__main__":
     elif isinstance(args.input_file, list):
         flist = args.input_file
 
+    # Use a set here so we get O(1) complexity for flist.remove()
+    flist = set(flist)
+
     if not args.force:
         results = c.execute('SELECT id, input_files FROM ntuplizer_jobs ORDER BY timestamp ASC')
 
+        already_processed = []
         for row in results.fetchall():
             id, input_files = row
             input_files = input_files.split(",")
+            already_processed.extend(input_files)
 
-            for filename in input_files:
-                if filename in flist:
-                    print("skipping %s because it's already done" % filename)
-                    flist.remove(filename)
+        for filename in already_processed:
+            if filename in flist:
+                print("skipping %s because it's already done" % filename)
+                flist.remove(filename)
 
     '''
     ###################### Check CMSSW and config ############################
