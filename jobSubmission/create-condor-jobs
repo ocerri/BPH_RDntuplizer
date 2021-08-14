@@ -54,6 +54,16 @@ if __name__ == "__main__":
         home = os.path.expanduser("~")
         args.db = join(home,'state.db')
 
+    '''
+    ###################### Check CMSSW and config ############################
+    '''
+
+    if not os.path.exists(args.config):
+        print >> sys.stderr, "Couldn't find config file '%s'" % args.config
+        exit()
+
+    config = os.path.basename(args.config)
+
     conn = sqlite3.connect(args.db)
 
     c = conn.cursor()
@@ -63,6 +73,7 @@ if __name__ == "__main__":
         "id             INTEGER PRIMARY KEY, "
         "timestamp      DATETIME DEFAULT CURRENT_TIMESTAMP, "
         "submit_file    TEXT NOT NULL UNIQUE, "
+        "config         TEXT, "
         "log_file       TEXT NOT NULL UNIQUE, "
         "output_file    TEXT NOT NULL UNIQUE, "
         "input_files    TEXT NOT NULL, "
@@ -124,26 +135,19 @@ if __name__ == "__main__":
     flist = set(flist)
 
     if not args.force:
-        results = c.execute('SELECT id, input_files FROM ntuplizer_jobs ORDER BY timestamp ASC')
+        results = c.execute('SELECT id, config, input_files FROM ntuplizer_jobs ORDER BY timestamp ASC')
 
         already_processed = []
         for row in results.fetchall():
-            id, input_files = row
+            id, prev_config, input_files = row
             input_files = input_files.split(",")
-            already_processed.extend(input_files)
+            already_processed.extend(zip([prev_config]*len(input_files),input_files))
 
-        for filename in already_processed:
-            if filename in flist:
-                print("skipping %s because it's already done" % filename)
+        for prev_config, filename in already_processed:
+            if (filename in flist) and (config == prev_config):
                 flist.remove(filename)
 
-    '''
-    ###################### Check CMSSW and config ############################
-    '''
-
-    if not os.path.exists(args.config):
-        print >> sys.stderr, "Couldn't find config file '%s'" % args.config
-        exit()
+    flist = list(flist)
 
     ''' ###################### Creating the sub #############################'''
     time_scale = {'s':1, 'm':60, 'h':60*60, 'd':60*60*24}
@@ -206,6 +210,7 @@ if __name__ == "__main__":
 
         c.execute("INSERT INTO ntuplizer_jobs ("
             "submit_file    , "
+            "config         , "
             "log_file       , "
             "output_file    , "
             "input_files    , "
@@ -214,7 +219,7 @@ if __name__ == "__main__":
             "uuid           , "
             "state          , "
             "nretry         ) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, 'NEW', NULL)",
-            (submit_file, log_file, output_file, ','.join(files), '%s_%s' % (args.name,createBatchName(args)), batch_id.hex, ID.hex))
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'NEW', NULL)",
+            (submit_file, config, log_file, output_file, ','.join(files), '%s_%s' % (args.name,createBatchName(args)), batch_id.hex, ID.hex))
 
     conn.commit()
