@@ -31,7 +31,7 @@
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
 #define __dmDst_max__ 0.15 // loose cut
 #define __dm_DstMiunsD0_max__ 0.004
-#define __mass_D0pismu_max__ 1000. // Some reasonable cut on the mass
+#define __mass_D0pismu_max__ 8. // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
 #define __mass_D0pismupi_max__ 10. // Some reasonable cut on the mass
 
@@ -300,11 +300,13 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             // Vertex fitting from B and Dst products
             auto BKinTree = vtxu::FitB_D0pismu(iSetup, D0, pis, trgMu);
             auto res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
-            if(!res.isValid || res.chi2 > 50) continue;
+            // cout << "[DEBUG]: pval(D0pimu) = " << res.pval << endl;
+            if(!res.isValid || res.chi2 > 50 || res.pval < 0.001) continue;
             updateCounter(11, countersFlag);
 
             BKinTree->movePointerToTheTop();
             auto mass_D0pismu = BKinTree->currentParticle()->currentState().mass();
+            // cout << "[DEBUG]: m(D0pimu) = " << mass_D0pismu << endl;
             if (mass_D0pismu > __mass_D0pismu_max__) continue; // Last cut! from now on always save
             updateCounter(12, countersFlag);
             if (verbose) {cout << "B->D* mu found\n";}

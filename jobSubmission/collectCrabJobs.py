@@ -5,7 +5,7 @@ import humanfriendly
 
 parser = argparse.ArgumentParser()
 parser.add_argument ('inputDir', help='list of directories', nargs='+')
-parser.add_argument ('outputDir', default='/storage/af/user/ocerri/BPhysics/data/cmsRD/', help='list of directories')
+parser.add_argument ('outputDir', default='/storage/af/group/rdst_analysis/BPhysics/data/cmsRD/', help='list of directories')
 parser.add_argument ('-k', '--keepGoing', help='Skip corrupted files', action='store_true')
 args = parser.parse_args()
 # example: python collectCrabJobs.py /storage/cms/store/user/$USER/ParkingBPH*/*_B2JpsiKst_200123
