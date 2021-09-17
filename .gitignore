@@ -5,7 +5,6 @@
 ocerri.cc
 jobSubmission/crab_*
 jobSubmission/tmp
-production/*.txt
 *tmp*
 *test*
 crab.log
