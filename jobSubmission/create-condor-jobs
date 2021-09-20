@@ -189,7 +189,7 @@ if __name__ == "__main__":
                 fsub.write('+RunAsOwner = True\n')
                 fsub.write('+InteractiveUser = True\n')
                 # Check for the right one using: ll /cvmfs/singularity.opensciencegrid.org/cmssw/
-                fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel7-m20200724"\n')
+                fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel7"\n')
                 fsub.write('+SingularityBindCVMFS = True\n')
                 fsub.write('run_as_owner = True\n')
                 fsub.write('RequestDisk = %i\n' % args.disk)
