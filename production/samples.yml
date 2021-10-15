@@ -10,6 +10,8 @@ common:
 
 
 samples:
+  # data_Run2018A: #B and C is the same
+  #   dataset: /ParkingBPH{}/Run2018A-05May2019-v1/MINIAOD
 
   data_Run2018D:
     dataset: /ParkingBPH{}/Run2018D-05May2019promptD-v1/MINIAOD
@@ -111,12 +113,16 @@ samples:
   Bd_MuNuDstPiPi:
     dataset: CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
-      - /BdToDStarPiPiMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM
+      # D** width = 0
+      # - /BdToDStarPiPiMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM
+      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bd_MuNuDstst_PiPi_SoftQCDnonD_scale5_TuneCP5_ISGW2_211005-1449-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bd_MuNuDstst_PiPi_SoftQCDnonD_scale5_TuneCP5_ISGW2_211007-1358-c21dec93027231dc6f615dfe5c662834/USER
 
   Bu_MuNuDstPiPi:
     dataset: CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
-      - /BuToDStarPiPiMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM
+      # - /BuToDStarPiPiMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM
+      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bu_MuNuDstst_PiPi_SoftQCDnonD_scale5_TuneCP5_ISGW2_211007-1358-c21dec93027231dc6f615dfe5c662834/USER
 
   Bu_TauNuDstPi:
     dataset: CP_BuToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
@@ -131,12 +137,14 @@ samples:
   Bd_TauNuDstPiPi:
     dataset: CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
-      - /BdToDStarPiPiTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+      # - /BdToDStarPiPiTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bd_TauNuDstst_PiPi_SoftQCDnonD_scale5_TuneCP5_ISGW2_211007-1354-c21dec93027231dc6f615dfe5c662834/USER
 
   Bu_TauNuDstPiPi:
     dataset: CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
-      - /BuToDStarPiPiTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+      # - /BuToDStarPiPiTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bu_TauNuDstst_PiPi_SoftQCDnonD_scale5_TuneCP5_ISGW2_211007-1355-c21dec93027231dc6f615dfe5c662834/USER
 
   Bs_MuNuDstK:
     dataset: CP_BsToMuNuDstK_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
@@ -173,38 +181,42 @@ samples:
   Bu_DstDd:
     dataset: CP_BuToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
-      - /BuToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+      # - /BuToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM #Bugged
+      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bu_DstDdX_SoftQCDnonD_scale5_TuneCP5_210923-0242-c21dec93027231dc6f615dfe5c662834/USER
+      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bu_DstDdX_SoftQCDnonD_scale5_TuneCP5_210924-0241-c21dec93027231dc6f615dfe5c662834/USER
+      # - /BuToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM # New updated one
 
   Bs_DstDs:
     dataset: CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
-      - /BsToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
+      - /BsToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM # no Bs selection
+      # - /BsToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM # improved one
 
   ######## Old MC
 
-  B0_JpsiKst_PUc0:
-    dataset: BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_PUc0_10-2-3
-    parts:
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_200605-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_200612-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_201119-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_201211-c21dec93027231dc6f615dfe5c662834/USER
-
-  B0_MuNuDmst_PUc0:
-    dataset: BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
-    parts:
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200325-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200408-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200411-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200430-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200503-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200504-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200509-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201110-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201112-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201113-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201115-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201117-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201207-c21dec93027231dc6f615dfe5c662834/USER
+  # B0_JpsiKst_PUc0:
+  #   dataset: BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_PUc0_10-2-3
+  #   parts:
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_200605-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_200612-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_201119-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_201211-c21dec93027231dc6f615dfe5c662834/USER
+  #
+  # B0_MuNuDmst_PUc0:
+  #   dataset: BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3
+  #   parts:
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200325-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200326-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200408-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200411-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200420-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200430-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200503-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200504-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_200509-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201110-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201112-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201113-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201115-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201117-c21dec93027231dc6f615dfe5c662834/USER
+  #     - /cmsMC_private_PUc0_10-2-3/ocerri-BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_201207-c21dec93027231dc6f615dfe5c662834/USER

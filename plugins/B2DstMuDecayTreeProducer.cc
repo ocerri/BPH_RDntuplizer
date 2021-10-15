@@ -415,7 +415,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             vector<double> tksAdd_etaError = {};
             vector<double> tksAdd_phi = {};
             vector<double> tksAdd_phiError = {};
-            vector<double> tksAdd_dz = {};
+            // vector<double> tksAdd_dz = {};
             vector<double> tksAdd_sigdca_vtxB = {};
             vector<double> tksAdd_cos_PV = {};
             if(verbose) {cout << "Looking for additional tracks" << endl;}
@@ -471,7 +471,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               tksAdd_etaError.push_back(tk->etaError());
               tksAdd_phi.push_back(refit_pi_p4.Phi());
               tksAdd_phiError.push_back(tk->phiError());
-              tksAdd_dz.push_back(tk->dz(bestVtx.position()));
+              // tksAdd_dz.push_back(tk->dz(bestVtx.position()));
               tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
               tksAdd_cos_PV.push_back(vtxu::computePointingCos(bestVtx, vtxB, refit_pi));
               N_compatible_tk++;
@@ -488,7 +488,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_etaError"] = {};
               (*outputVecNtuplizer)["tksAdd_phi"] = {};
               (*outputVecNtuplizer)["tksAdd_phiError"] = {};
-              (*outputVecNtuplizer)["tksAdd_dz"] = {};
+              // (*outputVecNtuplizer)["tksAdd_dz"] = {};
               (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
               (*outputVecNtuplizer)["tksAdd_cos_PV"] = {};
             }
@@ -506,7 +506,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_etaError"].push_back(tksAdd_etaError[i]);
               (*outputVecNtuplizer)["tksAdd_phi"].push_back(tksAdd_phi[i]);
               (*outputVecNtuplizer)["tksAdd_phiError"].push_back(tksAdd_phiError[i]);
-              (*outputVecNtuplizer)["tksAdd_dz"].push_back(tksAdd_dz[i]);
+              // (*outputVecNtuplizer)["tksAdd_dz"].push_back(tksAdd_dz[i]);
               (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
               (*outputVecNtuplizer)["tksAdd_cos_PV"].push_back(tksAdd_cos_PV[i]);
             }

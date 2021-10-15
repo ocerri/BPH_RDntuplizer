@@ -453,8 +453,8 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputVecNtuplizer)["MC_addTk_dEta"] = {};
     (*outputVecNtuplizer)["MC_addTk_dPhi"] = {};
     (*outputVecNtuplizer)["MC_addTk_dPt"] = {};
-    (*outputVecNtuplizer)["MC_addTk_dz"] = {};
-    (*outputVecNtuplizer)["MC_addTk_dxy"] = {};
+    // (*outputVecNtuplizer)["MC_addTk_dz"] = {};
+    // (*outputVecNtuplizer)["MC_addTk_dxy"] = {};
     (*outputVecNtuplizer)["MC_addTk_pdgId"] = {};
     (*outputVecNtuplizer)["MC_addTk_pdgIdMother"] = {};
     (*outputVecNtuplizer)["MC_addTk_pdgIdMotherMother"] = {};
@@ -463,8 +463,8 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         (*outputVecNtuplizer)["MC_addTk_dEta"].push_back(0);
         (*outputVecNtuplizer)["MC_addTk_dPhi"].push_back(0);
         (*outputVecNtuplizer)["MC_addTk_dPt"].push_back(-1);
-        (*outputVecNtuplizer)["MC_addTk_dz"].push_back(0);
-        (*outputVecNtuplizer)["MC_addTk_dxy"].push_back(0);
+        // (*outputVecNtuplizer)["MC_addTk_dz"].push_back(0);
+        // (*outputVecNtuplizer)["MC_addTk_dxy"].push_back(0);
         (*outputVecNtuplizer)["MC_addTk_pdgId"].push_back(0);
         (*outputVecNtuplizer)["MC_addTk_pdgIdMother"].push_back(0);
         (*outputVecNtuplizer)["MC_addTk_pdgIdMotherMother"].push_back(0);
@@ -486,8 +486,8 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
             (*outputVecNtuplizer)["MC_addTk_dEta"][i] = dEta;
             (*outputVecNtuplizer)["MC_addTk_dPhi"][i] = dPhi;
             (*outputVecNtuplizer)["MC_addTk_dPt"][i] = dPt;
-            (*outputVecNtuplizer)["MC_addTk_dz"][i] = packGenP.dz();
-            (*outputVecNtuplizer)["MC_addTk_dxy"][i] = packGenP.dxy();
+            // (*outputVecNtuplizer)["MC_addTk_dz"][i] = packGenP.dz();
+            // (*outputVecNtuplizer)["MC_addTk_dxy"][i] = packGenP.dxy();
             (*outputVecNtuplizer)["MC_addTk_pdgId"][i] = packGenP.pdgId();
             (*outputVecNtuplizer)["MC_addTk_pdgIdMother"][i] = packGenP.mother(0)->pdgId();
             if (packGenP.mother(0)->mother(0)) {

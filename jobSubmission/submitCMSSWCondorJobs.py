@@ -23,7 +23,7 @@ def createBatchName(a):
     return n
 
 #_____________________________________________________________________________________________________________
-#example line: python jobSubmission/submitCMSSWCondorJobs.py -i /eos/user/o/ocerri/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/jobs_out/*MINIAODSIM*.root -o /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsMC_private/BPH_Tag-B0_MuNuDmst-pD0bar-kp_13TeV-pythia8_SoftQCD_PTFilter5_0p0-evtgen_HQET2_central_PU35_10-2-3_v0/MuDst_candidates/out.root -f -c config/cmssw_privateMC_Tag_MuDmst-pD0bar-kp.py --maxtime 8h -N 5 --name MC
+#example line: python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o $outLoc/$process/ntuples_B2DstMu/out_CAND.root -c $config --maxtime 120m -N 8 -f
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
@@ -155,6 +155,11 @@ if __name__ == "__main__":
         fsub.write('\n')
         fsub.write('+MaxRuntime    = '+str(maxRunTime))
         fsub.write('\n')
+        if maxRunTime >= 7800:
+            fsub.write('+JobQueue="Normal"')
+        else:
+            fsub.write('+JobQueue="Short"')
+        fsub.write('\n')
         if os.uname()[1] == 'login-1.hep.caltech.edu':
             fsub.write('+RunAsOwner = True')
             fsub.write('\n')
@@ -182,9 +187,9 @@ if __name__ == "__main__":
         fsub.write('\n')
         fsub.write('on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)')   # Send the job to Held state on failure.
         fsub.write('\n')
-        fsub.write('periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) > (60*10))')   # Periodically retry the jobs for 3 times with an interval 20 mins.
+        fsub.write('periodic_release =  (NumJobStarts < 3) && ((CurrentTime - EnteredCurrentStatus) > (60*10))')   # Periodically retry the jobs for 3 times with an interval 20 mins.
         fsub.write('\n')
-        fsub.write('max_retries    = 5')
+        fsub.write('max_retries    = 3')
         fsub.write('\n')
         fsub.write('requirements   = Machine =!= LastRemoteHost && regexp("blade-.*", TARGET.Machine)')
         fsub.write('\n')

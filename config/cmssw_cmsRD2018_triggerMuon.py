@@ -8,17 +8,13 @@ process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
 
-# Needed for transient track builder
-# process.load('Configuration.StandardSequences.Services_cff')
-# process.load('Configuration.EventContent.EventContent_cff')
 process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
-# process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '102X_dataRun2_v11', '')
 
 '''
 ############ Command line args ################
@@ -26,6 +22,7 @@ process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12
 
 args = VarParsing.VarParsing('analysis')
 args.register('inputFile', '', args.multiplicity.list, args.varType.string, "Input file or template for glob")
+args.register('useLocalLumiList', 1, args.multiplicity.singleton, args.varType.int, "Flag to use local lumi list")
 args.outputFile = ''
 args.parseArguments()
 
@@ -39,10 +36,7 @@ process.maxEvents = cms.untracked.PSet(
 
 from glob import glob
 if args.inputFile:
-    if len(args.inputFile) == 1 and '*' in args.inputFile[0]:
-        flist = glob(args.inputFile[0])
-    else:
-        flist = args.inputFile
+    flist = args.inputFile
 elif args.inputFiles:
     if len(args.inputFiles) == 1 and args.inputFiles[0].endswith('.txt'):
         with open(args.inputFiles[0]) as f:
@@ -51,35 +45,40 @@ elif args.inputFiles:
         flist = args.inputFiles
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
-
-    fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
-    # fdefault += 'inputFiles_CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
-
+    fdefault += 'inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:5]
+    import numpy as np
+    flist = np.random.choice(flist, size=5, replace=False)
+    # flist = ['/store/data/Run2018D/ParkingBPH5/MINIAOD/05May2019promptD-v1/230005/F31C64F8-800A-974E-8458-FC06FEC9442D.root']
 
-for i in range(len(flist)):
-    if os.path.isfile(flist[i]):
-        flist[i] = 'file:' + flist[i]
+# print 'Trying to get a local copy'
+# for i in range(len(flist)):
+#     if flist[i].startswith('file:'):
+#         print 'Already set to local'
+#         continue
+#     print 'Looking for: /mnt/hadoop' + flist[i]
+#     if os.path.isfile('/mnt/hadoop' + flist[i]):
+#         print 'Found'
+#         flist[i] = 'file:/mnt/hadoop' + flist[i]
 
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring(tuple(flist)),
-                            # inputCommands=cms.untracked.vstring('keep *',
-                            #                                     'drop GenLumiInfoHeader_generator__SIM'),
-                            # skipBadFiles=cms.untracked.bool(True)
+                            fileNames = cms.untracked.vstring(tuple(flist))
                            )
-# process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
+if args.useLocalLumiList:
+    lumiListFile = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/Cert_314472-325175_13TeV_17SeptEarlyReReco2018ABC_PromptEraD_Collisions18_JSON.txt'
+    if os.path.isfile(lumiListFile):
+        import FWCore.PythonUtilities.LumiList as LumiList
+        process.source.lumisToProcess = LumiList.LumiList(filename = lumiListFile).getVLuminosityBlockRange()
 
 '''
 #####################   Output   ###################
 '''
-
 if args.outputFile == '.root':
-    outname = 'B2DstMu_CAND.root'
+    outname = 'triggerMu_CAND.root'
 elif args.outputFile.startswith('_numEvent'):
-    outname = 'B2DstMu_CAND' + args.outputFile
+    outname = 'triggerMu_CAND' + args.outputFile
 else:
     outname = args.outputFile
 
@@ -94,35 +93,9 @@ process.TFileService = cms.Service("TFileService",
 #################   Sequence    ####################
 '''
 
-process.trgF = cms.EDFilter("TriggerMuonsFilter",
+process.trgF = cms.EDFilter("TriggerMuonsFilterLight",
         muon_charge = cms.int32(0),
-        isMC = cms.int32(1),
-        verbose = cms.int32(0)
-)
-
-process.B2MuDstDT = cms.EDProducer("B2DstMuDecayTreeProducer",
-        trgMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
-        charge_muon = cms.int32(0), # if 0 accept both charges
-        charge_K = cms.int32(+1), # charges relative to the muon charge
-        charge_pi = cms.int32(-1), # charges relative to the muon charge
-        charge_pis = cms.int32(-1), # charges relative to the muon charge
-        verbose = cms.int32(0)
-)
-
-process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
-        verbose = cms.int32(0)
-)
-
-process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
-        decayTreeVecOut = cms.InputTag("B2MuDstDT","outputVecNtuplizer", ""),
-        verbose = cms.int32(0)
-)
-
-process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
-        decayOfInterest = cms.vstring('BD*MuNu', 'BD*TauNu'),
-        inputFFScheme = cms.vstring(#'BD', 'ISGW2',
-                                    'BD*', 'ISGW2'
-        ),
+        isMC = cms.int32(0),
         verbose = cms.int32(0)
 )
 
@@ -139,10 +112,6 @@ process.outA = cms.EDAnalyzer("FlatTreeWriter",
 
 process.p = cms.Path(
                     process.trgF +
-                    process.B2MuDstDT +
-                    process.B2MuDstDTFilter+
-                    process.MCpart +
-                    process.HammerWeights +
                     process.outA
                     )
 
