@@ -1,4 +1,4 @@
-import os
+import os, commands
 import argparse
 from glob import glob
 
@@ -6,6 +6,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument ('inputDir', type=str, default='tmp/crab_*', help='Input dir template for glob', nargs='+')
 parser.add_argument ('--report', default=False, action='store_true')
 parser.add_argument ('--long', default=False, action='store_true')
+parser.add_argument ('--short', default=False, action='store_true')
 parser.add_argument ('--verboseErrors', default=False, action='store_true')
 parser.add_argument ('--brilcalc', default=False, action='store_true')
 args = parser.parse_args()
@@ -22,7 +23,19 @@ for dir in args.inputDir:
             cmd += ' --verboseErrors'
         if args.long:
             cmd += ' --long'
-        os.system(cmd)
+        if args.short:
+            stats, output = commands.getstatusoutput(cmd)
+            outLines = output.split('\n')
+            print outLines[0][outLines[0].find('tmp/crab_') + 9: ]
+            for i, l in enumerate(outLines):
+                if l.startswith('Jobs status:'):
+                    jf = 1
+                    while '%' in outLines[i+jf]:
+                        jf += 1
+                    print '\n'.join(outLines[i:i+jf])
+                    break
+        else:
+            os.system(cmd)
 
         if args.report:
             print '\n' + 70*'~' + '\n'
@@ -48,6 +61,7 @@ for dir in args.inputDir:
                     cmd += ' /afs/cern.ch/user/o/ocerri/cernbox/BPhysics/data/cmsRD/lumiReport/'
                 cmd += os.path.basename(dir)[5:] + '_bricalc.csv'
                 os.system(cmd)
-        print 20*'#' + 50*'-' + 20*'#' + '\n\n'
-
-print 'For info on exit codes visit: https://twiki.cern.ch/twiki/bin/viewauth/CMSPublic/JobExitCodes'
+        if not args.short:
+            print 20*'#' + 50*'-' + 20*'#' + '\n\n'
+if not args.short:
+    print 'For info on exit codes visit: https://twiki.cern.ch/twiki/bin/viewauth/CMSPublic/JobExitCodes'
