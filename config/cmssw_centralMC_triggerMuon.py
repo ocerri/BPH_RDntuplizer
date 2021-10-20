@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, numpy
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 
@@ -58,7 +58,8 @@ else:
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
     # flist = flist[:5]
-    flist = flist[-2:]
+    # flist = flist[-2:]
+    flist = list(numpy.random.choice(flist, 3, replace=False))
 
 for i in range(len(flist)):
     if os.path.isfile(flist[i]):

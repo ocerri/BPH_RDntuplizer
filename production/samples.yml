@@ -182,15 +182,15 @@ samples:
     dataset: CP_BuToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
       # - /BuToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM #Bugged
-      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bu_DstDdX_SoftQCDnonD_scale5_TuneCP5_210923-0242-c21dec93027231dc6f615dfe5c662834/USER
-      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bu_DstDdX_SoftQCDnonD_scale5_TuneCP5_210924-0241-c21dec93027231dc6f615dfe5c662834/USER
-      # - /BuToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM # New updated one
+      # - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bu_DstDdX_SoftQCDnonD_scale5_TuneCP5_210923-0242-c21dec93027231dc6f615dfe5c662834/USER
+      # - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bu_DstDdX_SoftQCDnonD_scale5_TuneCP5_210924-0241-c21dec93027231dc6f615dfe5c662834/USER
+      - /BuToDStarD_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM # New updated one
 
   Bs_DstDs:
     dataset: CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
-      - /BsToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM # no Bs selection
-      # - /BsToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM # improved one
+      # - /BsToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM # no Bs selection
+      - /BsToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM # improved one
 
   ######## Old MC
 
