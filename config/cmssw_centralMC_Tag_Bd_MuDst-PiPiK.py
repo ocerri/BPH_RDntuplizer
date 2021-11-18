@@ -52,8 +52,9 @@ elif args.inputFiles:
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
 
-    fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
+    # fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     # fdefault += 'inputFiles_CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
+    fdefault += 'inputFiles_CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
 
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
@@ -119,7 +120,7 @@ process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
 
 process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
         decayTreeVecOut = cms.InputTag("B2MuDstDT","outputVecNtuplizer", ""),
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
 process.HammerWeights = cms.EDProducer("HammerWeightsProducer",

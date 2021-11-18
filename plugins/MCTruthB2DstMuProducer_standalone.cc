@@ -67,7 +67,7 @@ private:
 
     // ----------member data ---------------------------
     edm::EDGetTokenT<vector<reco::GenParticle>> GenParticlesSrc_;
-    // edm::EDGetTokenT<vector<pat::PackedGenParticle>> PackedParticlesSrc_;
+    edm::EDGetTokenT<vector<pat::PackedGenParticle>> PackedParticlesSrc_;
 
 
     double mass_mu = 0.1056583745;
@@ -85,7 +85,7 @@ MCTruthB2DstMuProducer_standalone::MCTruthB2DstMuProducer_standalone(const edm::
 {
     verbose = iConfig.getParameter<int>( "verbose" );
     GenParticlesSrc_ = consumes<vector<reco::GenParticle>>(iConfig.getParameter<edm::InputTag>( "genParticlesCollection" ));
-    // PackedParticlesSrc_ = consumes<vector<pat::PackedGenParticle>>(edm::InputTag("packedGenParticles"));
+    PackedParticlesSrc_ = consumes<vector<pat::PackedGenParticle>>(edm::InputTag("packedGenParticles"));
 
     produces<map<string, float>>("outputNtuplizer");
     produces<map<string, vector<float>>>("outputVecNtuplizer");
@@ -99,6 +99,11 @@ void MCTruthB2DstMuProducer_standalone::produce(edm::Event& iEvent, const edm::E
     edm::Handle<std::vector<reco::GenParticle>> GenParticlesHandle;
     iEvent.getByToken(GenParticlesSrc_, GenParticlesHandle);
     unsigned int N_PrunedGenParticles = GenParticlesHandle->size();
+
+    // Get packedGenParticles
+    edm::Handle<std::vector<pat::PackedGenParticle>> PackedGenParticlesHandle;
+    iEvent.getByToken(PackedParticlesSrc_, PackedGenParticlesHandle);
+    unsigned int N_PackedGenParticles = PackedGenParticlesHandle->size();
 
 
     // Output collection
@@ -194,8 +199,61 @@ void MCTruthB2DstMuProducer_standalone::produce(edm::Event& iEvent, const edm::E
 
     }
 
+
+    vector<uint> bOgIdx;
+    int bSelAncestorIdx = -1;
+    for(unsigned int i = 0; i < N_PrunedGenParticles && i_B >=0; i++) {
+      auto p = (*GenParticlesHandle)[i];
+      int pId = abs(p.pdgId());
+
+      if ( (pId/100)%10 != 5 && (pId/1000)%10 != 5 ) continue;
+
+      bool bMother = false;
+      for (uint j=0; j < p.numberOfMothers(); j++) {
+        int mID = abs(p.mother(j)->pdgId());
+        if ( (mID/100)%10 == 5 || (mID/1000)%10 == 5 ) bMother = true;
+      }
+      if (bMother) continue;
+      if (verbose) {
+        cout << "idx: " << i << ", mother: " << p.mother()->pdgId() <<endl;
+        auxPrintDau(&p, -1);
+      }
+      if (auxIsAncestor(&p, &((*GenParticlesHandle)[i_B])   )) {
+        bSelAncestorIdx = i;
+        if (verbose) {cout << "Anchestor of selected B" << endl;}
+      }
+      else bOgIdx.push_back(i);
+      if (verbose) {cout << endl;}
+    }
+
+    float BB_dR = 1e9;
+    float BB_dphi = 1e9;
+    float BB_mass = -1;
+    if (bSelAncestorIdx != -1 && bOgIdx.size()>0 ) {
+      auto bAncestor = (*GenParticlesHandle)[bSelAncestorIdx];
+      TLorentzVector lAnc;
+      lAnc.SetPtEtaPhiM(bAncestor.pt(), bAncestor.eta(), bAncestor.phi(), bAncestor.mass());
+      for (auto idx : bOgIdx) {
+        auto p = (*GenParticlesHandle)[idx];
+        auto dR = vtxu::dR(p.phi(), bAncestor.phi(), p.eta(), bAncestor.eta());
+        if (dR < BB_dR) {
+          if (verbose) {cout << "Chosen " << idx << endl;}
+          BB_dR = dR;
+          BB_dphi = vtxu::dPhi(p.phi(), bAncestor.phi());
+          TLorentzVector lp;
+          lp.SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
+          BB_mass = (lp + lAnc).M();
+        }
+      }
+    }
+    // assert(bOgIdx.size() == 2);
+
     (*outputNtuplizer)["MC_nB2DstMuX"] = nB2DstMuX;
 
+    (*outputNtuplizer)["MC_nAddOgB"] = bOgIdx.size();
+    (*outputNtuplizer)["MC_bestBB_dR"] = BB_dR;
+    (*outputNtuplizer)["MC_bestBB_dphi"] = BB_dphi;
+    (*outputNtuplizer)["MC_bestBB_mass"] = BB_mass;
 
     map<string, TLorentzVector> p4;
     p4["B"] = TLorentzVector();
@@ -229,6 +287,27 @@ void MCTruthB2DstMuProducer_standalone::produce(edm::Event& iEvent, const edm::E
 
     if(i_B >= 0){
       auto p = (*GenParticlesHandle)[i_B];
+
+      // auto bPart = p.mother();
+      // cout << p.pdgId() << " <-- " << bPart->pdgId() << flush;
+      // while (bPart->numberOfMothers() > 0) {
+      //   int mId = abs(bPart->mother()->pdgId());
+      //   if (mId == 5 || (mId/ 100)%10 == 5 || (mId/1000)%10 == 5) {
+      //     bPart = bPart->mother();
+      //     cout <<  " <-- " << bPart->pdgId() << flush;
+      //   }
+      //   else break;
+      // }
+      // cout << endl;
+      //
+      // auto oPart = bPart->numberOfMothers()>0 ? bPart->mother() : bPart;
+      // cout << oPart->pdgId() << " -->" << flush;
+      // for(uint nDau=0; nDau < oPart->numberOfDaughters(); nDau++) {
+      //   cout << " " << oPart->daughter(nDau)->pdgId() << flush;
+      // }
+      // cout << endl;
+
+
       vtx["B"] = p.vertex();
       p4["B"].SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
       (*outputVecNtuplizer)["MC_decay"].push_back(p.mother()->pdgId());
@@ -294,6 +373,20 @@ void MCTruthB2DstMuProducer_standalone::produce(edm::Event& iEvent, const edm::E
 
       (*outputNtuplizer)["MC_mu_TransvIP_vtxDst"] = vtxu::computeDCA_linApprox(vtx["Dst"], vtx["mu"], mu.momentum(), true);
       (*outputNtuplizer)["MC_mu_IP_vtxDst"] = vtxu::computeDCA_linApprox(vtx["Dst"], vtx["mu"], mu.momentum(), false);
+
+
+      if (verbose) {cout << "Looking for additional particle from the selected B -> D*Mu+X decay"<< endl;}
+      for(int j = 0; ((uint)j) < N_PackedGenParticles; j++) {
+        // if (j == j_Dst || j == j_mu || j == i_B) continue;
+        auto pp = (*PackedGenParticlesHandle)[j];
+        if (!auxIsAncestor(&p, &pp)) continue;
+        if (auxIsAncestor(&Dst, &pp)) continue;
+        if (fabs(mu.pt() - pp.pt())/mu.pt() < 0.001 && fabs(mu.eta() - pp.eta()) < 0.01) continue;
+        if (abs(pp.pdgId()) == 12 || abs(pp.pdgId()) == 14 || abs(pp.pdgId()) == 14) continue;
+
+        if (verbose) {cout << j << ": " << pp.pdgId() << endl;}
+      }
+      if (verbose) {cout << "--------------\n\n" << endl;}
     }
 
 

@@ -105,6 +105,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     // Get packedGenParticles
     edm::Handle<std::vector<pat::PackedGenParticle>> PackedGenParticlesHandle;
     iEvent.getByToken(PackedParticlesSrc_, PackedGenParticlesHandle);
+    unsigned int N_PackedGenParticles = PackedGenParticlesHandle->size();
 
     edm::Handle<map<string, vector<float>>> outMapHandle;
     iEvent.getByToken(decayTreeOutSrc_, outMapHandle);
@@ -314,6 +315,59 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputNtuplizer)["MC_idxCand"] = i_cand;
     (*indexBmc) = i_B;
 
+    if (verbose) { cout << "Looking for B meson pair production kinematic" << endl;}
+    vector<uint> bOgIdx;
+    int bSelAncestorIdx = -1;
+    for(unsigned int i = 0; i < N_PrunedGenParticles && i_B >=0; i++) {
+      auto p = (*PrunedGenParticlesHandle)[i];
+      int pId = abs(p.pdgId());
+
+      if ( (pId/100)%10 != 5 && (pId/1000)%10 != 5 ) continue;
+
+      bool bMother = false;
+      for (uint j=0; j < p.numberOfMothers(); j++) {
+        int mID = abs(p.mother(j)->pdgId());
+        if ( (mID/100)%10 == 5 || (mID/1000)%10 == 5 ) bMother = true;
+      }
+      if (bMother) continue;
+      if (verbose) {
+        cout << "idx: " << i << ", mother: " << p.mother()->pdgId() <<endl;
+        auxPrintDau(&p, -1);
+      }
+      if (   i_B>=0 && auxIsAncestor(&p, &((*PrunedGenParticlesHandle)[i_B]))   ) {
+        bSelAncestorIdx = i;
+        if (verbose) {cout << "Anchestor of selected B" << endl;}
+      }
+      else bOgIdx.push_back(i);
+      if (verbose) {cout << endl;}
+    }
+
+    float BB_dR = 1e9;
+    float BB_dphi = 1e9;
+    float BB_mass = -1;
+    if (bSelAncestorIdx != -1 && bOgIdx.size()>0 ) {
+      auto bAncestor = (*PrunedGenParticlesHandle)[bSelAncestorIdx];
+      TLorentzVector lAnc;
+      lAnc.SetPtEtaPhiM(bAncestor.pt(), bAncestor.eta(), bAncestor.phi(), bAncestor.mass());
+      for (auto idx : bOgIdx) {
+        auto p = (*PrunedGenParticlesHandle)[idx];
+        auto dR = vtxu::dR(p.phi(), bAncestor.phi(), p.eta(), bAncestor.eta());
+        if (dR < BB_dR) {
+          if (verbose) {cout << "Chosen " << idx << endl;}
+          BB_dR = dR;
+          BB_dphi = vtxu::dPhi(p.phi(), bAncestor.phi());
+          TLorentzVector lp;
+          lp.SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
+          BB_mass = (lp + lAnc).M();
+        }
+      }
+    }
+
+    (*outputNtuplizer)["MC_nAddOgB"] = bOgIdx.size();
+    (*outputNtuplizer)["MC_bestBB_dR"] = BB_dR;
+    (*outputNtuplizer)["MC_bestBB_dphi"] = BB_dphi;
+    (*outputNtuplizer)["MC_bestBB_mass"] = BB_mass;
+
 
     float recoMuon_match_BMuon = 0;
     map<string, TLorentzVector> p4;
@@ -345,6 +399,10 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputNtuplizer)["MC_mu_TransvIP_PV"] = 0;
     (*outputNtuplizer)["MC_mu_TransvIP_vtxDst"] = 0;
     (*outputNtuplizer)["MC_mu_IP_vtxDst"] = 0;
+
+    (*outputNtuplizer)["MC_nAddCharged"] = 0;
+    (*outputNtuplizer)["MC_addCharged_SumQ"] = 0;
+    (*outputNtuplizer)["MC_nAddNeutral"] = 0;
 
     if(i_B >= 0){
       auto p = (*PrunedGenParticlesHandle)[i_B];
@@ -417,6 +475,28 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
 
       (*outputNtuplizer)["MC_mu_TransvIP_vtxDst"] = vtxu::computeDCA_linApprox(vtx["Dst"], vtx["mu"], mu.momentum(), true);
       (*outputNtuplizer)["MC_mu_IP_vtxDst"] = vtxu::computeDCA_linApprox(vtx["Dst"], vtx["mu"], mu.momentum(), false);
+
+      if (verbose) {cout << "Looking for additional particle from the selected B -> D*Mu+X decay"<< endl;}
+      for(int j = 0; ((uint)j) < N_PackedGenParticles; j++) {
+        auto pp = (*PackedGenParticlesHandle)[j];
+        if (!auxIsAncestor(&p, &pp)) continue;
+        if (auxIsAncestor(&Dst, &pp)) continue;
+        if (fabs(mu.pt() - pp.pt())/mu.pt() < 0.001 && fabs(mu.eta() - pp.eta()) < 0.01) continue;
+        if (abs(pp.pdgId()) == 12 || abs(pp.pdgId()) == 14 || abs(pp.pdgId()) == 14) continue;
+
+        if (verbose) {cout << j << ": " << pp.pdgId() << flush;}
+        if (pp.charge() == 0) {
+          (*outputNtuplizer)["MC_nAddNeutral"] += 1;
+          if (verbose) { cout << " (neutral: " << (*outputNtuplizer)["MC_nAddNeutral"] << ")" << endl;}
+        }
+        else {
+          (*outputNtuplizer)["MC_nAddCharged"] += 1;
+          (*outputNtuplizer)["MC_addCharged_SumQ"] += pp.charge();
+          if (verbose) { cout << " (charged: " << (*outputNtuplizer)["MC_nAddCharged"] << ", sum: " << (*outputNtuplizer)["MC_addCharged_SumQ"] << ")" << endl;}
+
+        }
+      }
+      if (verbose) {cout << "<--\n\n" << endl;}
     }
 
     (*outputNtuplizer)["recoMuon_match_BMuon"] = recoMuon_match_BMuon;
@@ -450,6 +530,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
 
 
     (*outputVecNtuplizer)["MC_addTkFlag"] = {};
+    (*outputVecNtuplizer)["MC_addTk_fromMainB"] = {};
     (*outputVecNtuplizer)["MC_addTk_dEta"] = {};
     (*outputVecNtuplizer)["MC_addTk_dPhi"] = {};
     (*outputVecNtuplizer)["MC_addTk_dPt"] = {};
@@ -460,6 +541,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputVecNtuplizer)["MC_addTk_pdgIdMotherMother"] = {};
     for (uint i = 0; i < AddTkCharge.size(); i++) {
         (*outputVecNtuplizer)["MC_addTkFlag"].push_back(-1);
+        (*outputVecNtuplizer)["MC_addTk_fromMainB"].push_back(0);
         (*outputVecNtuplizer)["MC_addTk_dEta"].push_back(0);
         (*outputVecNtuplizer)["MC_addTk_dPhi"].push_back(0);
         (*outputVecNtuplizer)["MC_addTk_dPt"].push_back(-1);
@@ -471,7 +553,10 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     }
     if (AddTkCharge.size() > 0) {
       // unsigned int N_PackedGenParticles = PackedGenParticlesHandle->size();
-      for(auto packGenP : (*PackedGenParticlesHandle)) {
+      // for(auto packGenP : (*PackedGenParticlesHandle)) {
+      if (verbose) {cout << "Matching additional tracks: " << AddTkCharge.size() << endl;}
+      for(int j = 0; ((uint)j) < N_PackedGenParticles; j++) {
+        auto packGenP = (*PackedGenParticlesHandle)[j];
         if (packGenP.charge() == 0) continue;
         if (packGenP.pt() < 0.2) continue;
         for (uint i = 0; i < AddTkCharge.size(); i++) {
@@ -483,6 +568,14 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
           float dPt = fabs(packGenP.pt() - AddTkPt[i])/packGenP.pt();
           if (hypot(dEta, dPhi) < 0.002 && dPt < 0.03) {
             (*outputVecNtuplizer)["MC_addTkFlag"][i] = 1;
+            if ( auxIsAncestor(&((*PrunedGenParticlesHandle)[i_B]), &packGenP) ) {
+              (*outputVecNtuplizer)["MC_addTk_fromMainB"][i] = 1;
+            }
+            if (verbose) {
+              cout << j << " match " << i << ": " << packGenP.pdgId();
+              if ((*outputVecNtuplizer)["MC_addTk_fromMainB"][i]) {cout << " from main B";}
+              cout << endl;
+            }
             (*outputVecNtuplizer)["MC_addTk_dEta"][i] = dEta;
             (*outputVecNtuplizer)["MC_addTk_dPhi"][i] = dPhi;
             (*outputVecNtuplizer)["MC_addTk_dPt"][i] = dPt;
@@ -496,6 +589,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
           }
         }
       }
+      if (verbose) {cout << "<--\n"<< endl;}
     }
 
 

@@ -63,12 +63,12 @@ samples:
 
   ######## Ancillary
 
-  B0_JpsiKst_General:
+  Bd_JpsiKst_General:
     dataset: CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
       - /BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-N1_102X_upgrade2018_realistic_v15-v1/MINIAODSIM
 
-  B0_JpsiKst_private:
+  Bd_JpsiKst_private:
     dataset: BParking_Bd_JpsiKst_SoftQCDnonD_scale5_TuneCP5_HELAMP_PUc2_10-2-3
     parts:
       - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Bd_JpsiKst_SoftQCDnonD_scale5_TuneCP5_HELAMP_210429-0938-c21dec93027231dc6f615dfe5c662834/USER

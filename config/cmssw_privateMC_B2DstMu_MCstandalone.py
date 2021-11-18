@@ -50,21 +50,23 @@ elif args.inputFiles:
     else:
         flist = args.inputFiles
 else:
-    # fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
-    # fdefault += 'inputFiles_BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
+    fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
+    # fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
+    fdefault += 'inputFiles_CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
+
     # fdefault += 'inputFiles_BP_Tag_B0_TauNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     # fdefault += 'inputFiles_BP_Tag_Bp_MuNuDstst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     # fdefault += 'inputFiles_BP_Tag_B0_DstmDp_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     # fdefault += 'inputFiles_BP_Tag_B0_MuNuDstst_PipPim_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
 
-    # with open(fdefault) as f:
-    #     flist = [l[:-1] for l in f.readlines()]
-    #     flist = flist[:5]
+    with open(fdefault) as f:
+        flist = [l[:-1] for l in f.readlines()]
+        flist = flist[:5]
 
-    flist = ['/storage/af/user/ocerri/BPhysics/data/cmsMC_private/']
-    # flist[0] += 'BParking_Tag_Bd_MuNuDstst_Pi0_SoftQCDnonD_scale5_TuneCP5_ISGW2_PUGENOnly_10-2-3'
-    flist[0] += 'BParking_Tag_Bd_DstD0X_SoftQCDnonD_scale5_TuneCP5_PUGENOnly_10-2-3'
-    flist[0] += '/test_GEN-SIM.root'
+    # flist = ['/storage/af/user/ocerri/BPhysics/data/cmsMC_private/']
+    # # flist[0] += 'BParking_Tag_Bd_MuNuDstst_Pi0_SoftQCDnonD_scale5_TuneCP5_ISGW2_PUGENOnly_10-2-3'
+    # flist[0] += 'BParking_Tag_Bd_DstD0X_SoftQCDnonD_scale5_TuneCP5_PUGENOnly_10-2-3'
+    # flist[0] += '/test_GEN-SIM.root'
 
 
 for i in range(len(flist)):

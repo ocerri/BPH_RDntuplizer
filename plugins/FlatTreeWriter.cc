@@ -65,7 +65,7 @@ FlatTreeWriter::FlatTreeWriter( const edm::ParameterSet & cfg ) :
 
 void FlatTreeWriter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  if(verbose){cout << "--------------------- Tree Wirter -----------------------" << endl;}
+  if(verbose){cout << "--------------------- Tree Writer -----------------------" << endl;}
   isRealData = iEvent.isRealData() ? 1 : 0 ;
   runNum     = iEvent.id().run();
   lumiNum    = iEvent.luminosityBlock();
