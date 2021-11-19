@@ -112,7 +112,7 @@ def get_job_status(row, data=None):
 
     return 7
 
-def main(conn, max_jobs):
+def main(conn, max_jobs, max_retries):
     c = conn.cursor()
 
     results = c.execute('SELECT id, submit_file, log_file, output_file, batch_name, uuid, state, nretry FROM ntuplizer_jobs ORDER BY timestamp ASC')
@@ -172,7 +172,10 @@ def main(conn, max_jobs):
                 # manually as failed or retry in the database.
                 pass
             elif job_status == 7:
-                c.execute("UPDATE ntuplizer_jobs SET state = 'FAILED', message = ? WHERE id = ?", ("job failed", id))
+                if nretry >= max_retries:
+                    c.execute("UPDATE ntuplizer_jobs SET state = 'FAILED', message = ? WHERE id = ?", ("job failed", id))
+                else:
+                    c.execute("UPDATE ntuplizer_jobs SET state = 'RETRY', message = ? WHERE id = ?", ("job failed", id))
             else:
                 # Don't know what to do here for Removed or Submission_err
                 log.warn("Job %i is in the state %i. Don't know what to do." % (id, job_status))
@@ -198,7 +201,7 @@ def main(conn, max_jobs):
             pass
         else:
             log.warn("Job %i is in the unknown state '%s'." % (id,state))
-            
+
         conn.commit()
 
     log.notice("Stats on jobs in the database:")
@@ -220,7 +223,7 @@ if __name__ == '__main__':
                         default='notice')
     parser.add_argument('--logfile', default=None, help="filename for log file")
     parser.add_argument('--max-retries', type=int, default=2, help="maximum number of times to try and resubmit a grid job")
-    parser.add_argument('--max-jobs', type=int, default=100, help="maximum number of jobs in the grid queue at any time")
+    parser.add_argument('--max-jobs', type=int, default=1000, help="maximum number of jobs in the grid queue at any time")
     args = parser.parse_args()
 
     log.set_verbosity(args.loglevel)
@@ -239,7 +242,7 @@ if __name__ == '__main__':
     c = conn.cursor()
 
     try:
-        main(conn, args.max_jobs)
+        main(conn, args.max_jobs, args.max_retries)
         conn.commit()
         conn.close()
     except Exception as e:

@@ -100,11 +100,20 @@ $ ./jobSubmission/submit-condor-jobs --max-jobs 1000
 
 This script is meant to be run from a cron job, so you can also set up a cron job like:
 
+(Tony settings)
 ```
 HOME=/storage/af/user/[username]
 PATH=/usr/bin
 
 0 * * * * source $HOME/.bashrc; ~/RDstAnalysis/CMSSW_10_2_3/src/ntuplizer/BPH_RDntuplizer/jobSubmission/submit-condor-jobs --max-jobs 100 --loglevel notice --logfile $HOME/submit.log
+```
+
+(Olmo settings)
+```
+HOME=/storage/af/user/ocerri
+PATH=/usr/bin
+
+0 * * * * source $HOME/.bash_profile; source /cvmfs/cms.cern.ch/cmsset_default.sh; cd $HOME/work/CMSSW_10_2_3/src; eval `scramv1 runtime -sh`; cd ntuplizer/BPH_RDntuplizer; ./jobSubmission/submit-condor-jobs --max-jobs 1000 --loglevel notice --logfile $HOME/submit.log 2>&1 >> $HOME/crontab.log
 ```
 
 It will loop over the entries in the database, and for any that are in the

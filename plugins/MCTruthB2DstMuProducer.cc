@@ -314,8 +314,9 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputNtuplizer)["MC_nB2DstMuX"] = nB2DstMuX;
     (*outputNtuplizer)["MC_idxCand"] = i_cand;
     (*indexBmc) = i_B;
+    if (verbose) {cout<< "---\ni_B: "<<i_B<<"---"<< endl;}
 
-    if (verbose) { cout << "Looking for B meson pair production kinematic" << endl;}
+    if (verbose) { cout << "\nLooking for B meson pair production kinematic" << endl;}
     vector<uint> bOgIdx;
     int bSelAncestorIdx = -1;
     for(unsigned int i = 0; i < N_PrunedGenParticles && i_B >=0; i++) {
@@ -568,7 +569,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
           float dPt = fabs(packGenP.pt() - AddTkPt[i])/packGenP.pt();
           if (hypot(dEta, dPhi) < 0.002 && dPt < 0.03) {
             (*outputVecNtuplizer)["MC_addTkFlag"][i] = 1;
-            if ( auxIsAncestor(&((*PrunedGenParticlesHandle)[i_B]), &packGenP) ) {
+            if ( i_B >= 0 && auxIsAncestor(&((*PrunedGenParticlesHandle)[i_B]), &packGenP) ) {
               (*outputVecNtuplizer)["MC_addTk_fromMainB"][i] = 1;
             }
             if (verbose) {

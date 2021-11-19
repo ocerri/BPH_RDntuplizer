@@ -29,10 +29,11 @@ process=CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
 process=CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
 process=CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
 
+process=CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
 process=CP_BuToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
 process=CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
 
-python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o $outLoc/$process/ntuples_B2DstMu/out_CAND.root -c $config --maxtime 120m -N 8 -f
+python jobSubmission/submitCMSSWCondorJobs.py -i production/inputFiles_$process.txt -o $outLoc/$process/ntuples_B2DstMu_211118/out_CAND.root -c $config --maxtime 120m -N 8 -f
 # N 50 for private production and 3/4 for central production
 
 

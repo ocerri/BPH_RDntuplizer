@@ -39,12 +39,12 @@ if __name__ == "__main__":
     parser.add_argument ('-N', '--nFilePerJob', type=int, help='Number of files per job', default=10)
     parser.add_argument ('-i', '--input_file', type=str, default='', help='Input file template for glob or list in a txt format', nargs='+')
     parser.add_argument ('-o', '--output_file', type=str, default='', help='Output root file template')
-    parser.add_argument ('-c', '--config', required=True, type=str, help='Config file for cmsRUn')
+    parser.add_argument ('-c', '--config', required=True, type=str, help='Config file for cmsRun')
+    parser.add_argument ('-t', '--ntuples_tag', required=True, type=str, help='Ntuples tag')
     parser.add_argument ('--maxtime', help='Max wall run time [s=seconds, m=minutes, h=hours, d=days]', default='8h')
     parser.add_argument ('--memory', help='min virtual memory in MB', default='2000')
     parser.add_argument ('--disk', type=int, help='min disk space in MB', default=4000)
     parser.add_argument ('--cpu', type=int, help='cpu threads', default=1)
-    parser.add_argument ('--name', type=str, default='ntuples', help='Job batch name')
     parser.add_argument ('-f', '--force', action='store_true', default=False, help='Force reprocessing')
     parser.add_argument("--db", type=str, help="database file", default=None)
 
@@ -74,6 +74,7 @@ if __name__ == "__main__":
         "timestamp      DATETIME DEFAULT CURRENT_TIMESTAMP, "
         "submit_file    TEXT NOT NULL UNIQUE, "
         "config         TEXT, "
+        "ntuples_tag    TEXT, "
         "log_file       TEXT NOT NULL UNIQUE, "
         "output_file    TEXT NOT NULL UNIQUE, "
         "input_files    TEXT NOT NULL, "
@@ -114,6 +115,9 @@ if __name__ == "__main__":
     if not os.path.exists(join(outdir,'cfg')):
         os.makedirs(join(outdir,'cfg'))
 
+    if not os.path.exists(join(outdir,'sub')):
+        os.makedirs(join(outdir,'sub'))
+
     '''
     ################### Prepare input file and division #######################
     '''
@@ -135,19 +139,24 @@ if __name__ == "__main__":
     flist = set(flist)
 
     if not args.force:
-        results = c.execute('SELECT id, config, input_files FROM ntuplizer_jobs ORDER BY timestamp ASC')
+        results = c.execute('SELECT id, config, ntuples_tag, input_files FROM ntuplizer_jobs ORDER BY timestamp ASC')
 
         already_processed = []
         for row in results.fetchall():
-            id, prev_config, input_files = row
+            id, prev_config, prev_ntuples_tag, input_files = row
             input_files = input_files.split(",")
-            already_processed.extend(zip([prev_config]*len(input_files),input_files))
+            already_processed.extend(zip([prev_config]*len(input_files),[prev_ntuples_tag]*len(input_files),input_files))
 
-        for prev_config, filename in already_processed:
-            if (filename in flist) and (config == prev_config):
+        for prev_config, prev_ntuples_tag, filename in already_processed:
+            if (filename in flist) and (config == prev_config) and (args.ntuples_tag == prev_ntuples_tag):
                 flist.remove(filename)
 
     flist = list(flist)
+    if len(flist) == 0:
+        print 'No files to be processed. (Did you forgot to change the batch tag?)'
+        exit()
+    else:
+        print 'Creating jobs for {} files'.format(len(flist))
 
     ''' ###################### Creating the sub #############################'''
     time_scale = {'s':1, 'm':60, 'h':60*60, 'd':60*60*24}
@@ -170,7 +179,7 @@ if __name__ == "__main__":
         with open(join(outdir,'cfg/file_list_%s_%i.txt' % (batch_id.hex,i)), 'w') as f:
             f.write('\n'.join(files) + '\n')
 
-        submit_file = os.path.realpath(join(outdir,'jobs_%s_%i.sub' % (batch_id.hex,i)))
+        submit_file = os.path.realpath(join(outdir,'sub/jobs_%s_%i.sub' % (batch_id.hex,i)))
         with open(submit_file, 'w') as fsub:
             fsub.write('executable    = %s/CMSSWCondorJob.sh\n' % job_submission_dir_path)
 
@@ -185,6 +194,10 @@ if __name__ == "__main__":
             fsub.write('error          = %s/out/job_%s_%i.err\n' % (outdir,batch_id.hex,i))
             fsub.write('log            = %s/out/job_%s_%i.log\n' % (outdir,batch_id.hex,i))
             fsub.write('+MaxRuntime    = %i\n' % maxRunTime)
+            if maxRunTime >= 7800:
+                fsub.write('+JobQueue="Normal"\n')
+            else:
+                fsub.write('+JobQueue="Short"\n')
             if os.uname()[1] == 'login-1.hep.caltech.edu':
                 fsub.write('+RunAsOwner = True\n')
                 fsub.write('+InteractiveUser = True\n')
@@ -195,7 +208,7 @@ if __name__ == "__main__":
                 fsub.write('RequestDisk = %i\n' % args.disk)
                 fsub.write('request_memory = ifthenelse(MemoryUsage =!= undefined, MAX({{MemoryUsage + 1024, {0}}}), {0})\n'.format(args.memory)) # Dynamic allocation
                 fsub.write('RequestCpus = %i\n' % args.cpu)
-            fsub.write('+JobBatchName  = %s\n' % args.name)
+            fsub.write('+JobBatchName  = %s\n' % args.ntuples_tag)
             fsub.write('+UUID  = "%s"\n' % ID.hex)
             fsub.write('x509userproxy  = $ENV(X509_USER_PROXY)\n')
             fsub.write('on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)\n')
@@ -211,6 +224,7 @@ if __name__ == "__main__":
         c.execute("INSERT INTO ntuplizer_jobs ("
             "submit_file    , "
             "config         , "
+            "ntuples_tag    , "
             "log_file       , "
             "output_file    , "
             "input_files    , "
@@ -219,7 +233,9 @@ if __name__ == "__main__":
             "uuid           , "
             "state          , "
             "nretry         ) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'NEW', NULL)",
-            (submit_file, config, log_file, output_file, ','.join(files), '%s_%s' % (args.name,createBatchName(args)), batch_id.hex, ID.hex))
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'NEW', NULL)",
+            (submit_file, config, args.ntuples_tag, log_file, output_file, ','.join(files), '%s_%s' % (args.ntuples_tag,createBatchName(args)), batch_id.hex, ID.hex))
+
+    print 'Created {} jobs'.format(i+1)
 
     conn.commit()
