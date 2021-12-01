@@ -314,7 +314,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     (*outputNtuplizer)["MC_nB2DstMuX"] = nB2DstMuX;
     (*outputNtuplizer)["MC_idxCand"] = i_cand;
     (*indexBmc) = i_B;
-    if (verbose) {cout<< "---\ni_B: "<<i_B<<"---"<< endl;}
+    if (verbose) {cout<< "---\ni_B: "<<i_B<<"\n---"<< endl;}
 
     if (verbose) { cout << "\nLooking for B meson pair production kinematic" << endl;}
     vector<uint> bOgIdx;

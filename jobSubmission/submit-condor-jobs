@@ -222,7 +222,7 @@ if __name__ == '__main__':
                         help="logging level (debug, verbose, notice, warning)",
                         default='notice')
     parser.add_argument('--logfile', default=None, help="filename for log file")
-    parser.add_argument('--max-retries', type=int, default=2, help="maximum number of times to try and resubmit a grid job")
+    parser.add_argument('--max-retries', type=int, default=5, help="maximum number of times to try and resubmit a grid job")
     parser.add_argument('--max-jobs', type=int, default=1000, help="maximum number of jobs in the grid queue at any time")
     args = parser.parse_args()
 

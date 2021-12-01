@@ -160,7 +160,7 @@ if __name__ == "__main__":
         else:
             fsub.write('+JobQueue="Short"')
         fsub.write('\n')
-        if os.uname()[1] == 'login-1.hep.caltech.edu':
+        if os.uname()[1] == 'login-2.hep.caltech.edu':
             fsub.write('+RunAsOwner = True')
             fsub.write('\n')
             fsub.write('+InteractiveUser = True')

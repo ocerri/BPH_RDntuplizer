@@ -198,16 +198,16 @@ if __name__ == "__main__":
                 fsub.write('+JobQueue="Normal"\n')
             else:
                 fsub.write('+JobQueue="Short"\n')
-            if os.uname()[1] == 'login-1.hep.caltech.edu':
-                fsub.write('+RunAsOwner = True\n')
-                fsub.write('+InteractiveUser = True\n')
-                # Check for the right one using: ll /cvmfs/singularity.opensciencegrid.org/cmssw/
-                fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel7"\n')
-                fsub.write('+SingularityBindCVMFS = True\n')
-                fsub.write('run_as_owner = True\n')
-                fsub.write('RequestDisk = %i\n' % args.disk)
-                fsub.write('request_memory = ifthenelse(MemoryUsage =!= undefined, MAX({{MemoryUsage + 1024, {0}}}), {0})\n'.format(args.memory)) # Dynamic allocation
-                fsub.write('RequestCpus = %i\n' % args.cpu)
+            # if os.uname()[1] == 'login-1.hep.caltech.edu':
+            fsub.write('+RunAsOwner = True\n')
+            fsub.write('+InteractiveUser = True\n')
+            # Check for the right one using: ll /cvmfs/singularity.opensciencegrid.org/cmssw/
+            fsub.write('+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/cmssw/cms:rhel7"\n')
+            fsub.write('+SingularityBindCVMFS = True\n')
+            fsub.write('run_as_owner = True\n')
+            fsub.write('RequestDisk = %i\n' % args.disk)
+            fsub.write('request_memory = ifthenelse(MemoryUsage =!= undefined, MAX({{MemoryUsage + 1024, {0}}}), {0})\n'.format(args.memory)) # Dynamic allocation
+            fsub.write('RequestCpus = %i\n' % args.cpu)
             fsub.write('+JobBatchName  = %s\n' % args.ntuples_tag)
             fsub.write('+UUID  = "%s"\n' % ID.hex)
             fsub.write('x509userproxy  = $ENV(X509_USER_PROXY)\n')

@@ -77,7 +77,7 @@ ntuplizer on all the BdToDstarMuNu Monte Carlo, you would run:
 
 ```console
 $ process="CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-$ python jobSubmission/create-condor-jobs -i production/inputFiles_$process.txt -o ~/BPhysics/$process/ntuples/out_CAND.root -c config/cmssw_centralMC_Tag_B_MuDst-PiPiK.py -N 5
+$ python jobSubmission/create-condor-jobs -i production/inputFiles_$process.txt -o ~/BPhysics/$process/ntuples/out_CAND.root -c config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py -N 5
 ```
 
 You can then browse the submissions in the sqlite database by running:

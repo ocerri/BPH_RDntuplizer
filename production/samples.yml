@@ -28,12 +28,12 @@ samples:
   #  MC
   #
 
-  # Mu_Enriched:
-  #   # Fragment: https://cms-pdmv.cern.ch/mcm/requests?prepid=BTV-RunIISummer19UL18GEN-00019&page=0&shown=524415
-  #   dataset: CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8
-  #   parts:
-  #     - /QCD_Pt-15to20_MuEnrichedPt5_TuneCP5_13TeV_pythia8/RunIISummer19UL18MiniAOD-106X_upgrade2018_realistic_v11_L1v1-v2/MINIAODSIM
-  #     - /QCD_Pt-20to30_MuEnrichedPt5_TuneCP5_13TeV_pythia8/RunIISummer19UL18MiniAOD-106X_upgrade2018_realistic_v11_L1v1-v2/MINIAODSIM
+  Mu_Enriched:
+    # Fragment: https://cms-pdmv.cern.ch/mcm/requests?prepid=BTV-RunIISummer19UL18GEN-00019&page=0&shown=524415
+    dataset: CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8
+    parts:
+      - /QCD_Pt-15to20_MuEnrichedPt5_TuneCP5_13TeV_pythia8/RunIISummer19UL18MiniAOD-106X_upgrade2018_realistic_v11_L1v1-v2/MINIAODSIM
+      - /QCD_Pt-20to30_MuEnrichedPt5_TuneCP5_13TeV_pythia8/RunIISummer19UL18MiniAOD-106X_upgrade2018_realistic_v11_L1v1-v2/MINIAODSIM
   #     - /QCD_Pt-30to50_MuEnrichedPt5_TuneCP5_13TeV_pythia8/RunIISummer19UL18MiniAOD-106X_upgrade2018_realistic_v11_L1v1-v2/MINIAODSIM
   #     - /QCD_Pt-50to80_MuEnrichedPt5_TuneCP5_13TeV_pythia8/RunIISummer19UL18MiniAOD-106X_upgrade2018_realistic_v11_L1v1-v2/MINIAODSIM
   #     - /QCD_Pt-80to120_MuEnrichedPt5_TuneCP5_13TeV_pythia8/RunIISummer19UL18MiniAOD-106X_upgrade2018_realistic_v11_L1v1-v2/MINIAODSIM
@@ -118,6 +118,11 @@ samples:
       - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bd_MuNuDstst_PiPi_SoftQCDnonD_scale5_TuneCP5_ISGW2_211005-1449-c21dec93027231dc6f615dfe5c662834/USER
       - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bd_MuNuDstst_PiPi_SoftQCDnonD_scale5_TuneCP5_ISGW2_211007-1358-c21dec93027231dc6f615dfe5c662834/USER
 
+  Bd_MuNuDstPiPi_v2:
+    dataset: CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v2
+    parts:
+      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bd_MuNuDstst_PiPi_SoftQCDnonD_scale5_TuneCP5_ISGW2_v2_211123-2219-c21dec93027231dc6f615dfe5c662834/USER
+
   Bu_MuNuDstPiPi:
     dataset: CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
@@ -191,6 +196,15 @@ samples:
     parts:
       # - /BsToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v1/MINIAODSIM # no Bs selection
       - /BsToDStarDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM # improved one
+
+
+  ######## Other background
+
+  DstKu_KuToMu:
+    dataset: BParking_Tag_DstKu_KutoMu_SoftQCDnonD_scale5_TuneCP5
+    parts:
+      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_DstKu_KutoMu_SoftQCDnonD_scale5_TuneCP5_211123-1720-c21dec93027231dc6f615dfe5c662834/USER
+
 
   ######## Old MC
 

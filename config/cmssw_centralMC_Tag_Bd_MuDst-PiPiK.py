@@ -120,7 +120,7 @@ process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
 
 process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
         decayTreeVecOut = cms.InputTag("B2MuDstDT","outputVecNtuplizer", ""),
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
 process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
