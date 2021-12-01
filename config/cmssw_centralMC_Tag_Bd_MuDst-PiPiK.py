@@ -123,13 +123,13 @@ process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
         verbose = cms.int32(1)
 )
 
-process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
-        decayOfInterest = cms.vstring('BD*MuNu', 'BD*TauNu'),
-        inputFFScheme = cms.vstring(#'BD', 'ISGW2',
-                                    'BD*', 'ISGW2'
-        ),
-        verbose = cms.int32(0)
-)
+# process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
+#         decayOfInterest = cms.vstring('BD*MuNu', 'BD*TauNu'),
+#         inputFFScheme = cms.vstring(#'BD', 'ISGW2',
+#                                     'BD*', 'ISGW2'
+#         ),
+#         verbose = cms.int32(0)
+# )
 
 cfg_name = os.path.basename(sys.argv[0])
 f = open(os.environ['CMSSW_BASE']+'/src/ntuplizer/BPH_RDntuplizer/.git/logs/HEAD')

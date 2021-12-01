@@ -6,6 +6,16 @@
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 
+template<>
+inline
+bool edm::Wrapper<std::pair<const std::basic_string<char,std::char_traits<char> >,std::vector<float> >>::hasSwap_() const {
+  return true;
+}
+
+template<>
+inline
+void edm::Wrapper<std::pair<const std::basic_string<char,std::char_traits<char> >,std::vector<float> >>::swapProduct_(WrapperBase* newProduct) {}
+
 
 namespace {
   struct dictionary {
