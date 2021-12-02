@@ -151,6 +151,11 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
     (*outputVecNtuplizer)["trgMu_eta"].push_back(muon.eta());
     (*outputVecNtuplizer)["trgMu_phi"].push_back(muon.phi());
     (*outputVecNtuplizer)["trgMu_charge"].push_back(muon.charge());
+    (*outputVecNtuplizer)["trgMu_looseId"].push_back(muon.isLooseMuon());
+    (*outputVecNtuplizer)["trgMu_mediumId"].push_back(muon.isMediumMuon());
+    (*outputVecNtuplizer)["trgMu_tightId"].push_back(muon.isTightMuon(primaryVtx));
+    (*outputVecNtuplizer)["trgMu_softIdPV"].push_back(muon.isSoftMuon(primaryVtx));
+
     if(!muon.innerTrack().isNull()) {
       auto tk = muon.innerTrack();
       (*outputVecNtuplizer)["trgMu_dz"].push_back(tk->dz(primaryVtx.position()));

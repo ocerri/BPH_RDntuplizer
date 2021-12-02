@@ -49,17 +49,15 @@ else:
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
     flist = flist[:5]
-    flist = ['/store/data/Run2018D/ParkingBPH5/MINIAOD/05May2019promptD-v1/230005/F31C64F8-800A-974E-8458-FC06FEC9442D.root']
+    # flist = ['/store/data/Run2018D/ParkingBPH5/MINIAOD/05May2019promptD-v1/230005/F31C64F8-800A-974E-8458-FC06FEC9442D.root']
 
 # print 'Trying to get a local copy'
-# for i in range(len(flist)):
-#     if flist[i].startswith('file:'):
-#         print 'Already set to local'
-#         continue
-#     print 'Looking for: /mnt/hadoop' + flist[i]
-#     if os.path.isfile('/mnt/hadoop' + flist[i]):
-#         print 'Found'
-#         flist[i] = 'file:/mnt/hadoop' + flist[i]
+for i in range(len(flist)):
+    if os.path.isfile(flist[i]):
+        flist[i] = 'file:' + flist[i]
+    elif flist[i].startswith('/store/data/'):
+        if os.path.isfile('/storage/cms' + flist[i]):
+            flist[i] = 'file:' + '/storage/cms' + flist[i]
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist))

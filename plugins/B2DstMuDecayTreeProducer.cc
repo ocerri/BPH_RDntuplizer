@@ -44,7 +44,6 @@ public:
 
     explicit B2DstMuDecayTreeProducer(const edm::ParameterSet &iConfig);
     void AddTLVToOut(TLorentzVector, string, map<string, vector<float>>*);
-    bool qualityMuonID(pat::Muon, reco::Vertex);
     void updateCounter(int, vector<bool>&);
     double Mass_varM(TLorentzVector, double, TLorentzVector, double);
 
@@ -143,20 +142,18 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       updateCounter(1, countersFlag);
 
       vector<reco::Vertex> possibleVtxs = {};
-      // bool softMuForPV = false;
       for(uint i_vtx = 0; i_vtx<vtxHandle->size(); i_vtx++) {
         auto vtx = (*vtxHandle)[i_vtx];
         if(vtx.normalizedChi2() > 1.5) continue;
-        bool isSoft = trgMu.isSoftMuon(vtx);
-        if(isSoft){
-          possibleVtxs.push_back(vtx);
-          // if (i_vtx==0) softMuForPV = true;
-        }
+        possibleVtxs.push_back(vtx);
+        // bool isSoft = trgMu.isSoftMuon(vtx);
+        // if(isSoft){
+        // }
       }
       if (possibleVtxs.size() == 0) continue;
+      if (!trgMu.isMediumMuon()) continue;
       updateCounter(2, countersFlag);
 
-      // if (!trgMu.isSoftMuon(primaryVtx)) continue;
       n_mu++;
       /*
       ############################################################################
@@ -534,6 +531,23 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["mu_dcaL_vtxDst"].push_back(dcaL.first);
             (*outputVecNtuplizer)["mu_sigdcaL_vtxDst"].push_back(fabs(dcaL.first)/dcaL.second);
 
+            (*outputVecNtuplizer)["mu_isGlobalMuon"].push_back(trgMu.isGlobalMuon());
+            (*outputVecNtuplizer)["mu_trackerStandalonePosLocalChi2"].push_back(trgMu.combinedQuality().chi2LocalPosition);
+            if ( !trgMu.globalTrack().isNull() )
+            {
+              (*outputVecNtuplizer)["mu_globalTkNormChi2"].push_back(trgMu.globalTrack()->normalizedChi2());
+            }
+            else {
+              (*outputVecNtuplizer)["mu_globalTkNormChi2"].push_back( 99999. );
+            }
+            (*outputVecNtuplizer)["mu_kickFinder"].push_back(trgMu.combinedQuality().trkKink);
+            (*outputVecNtuplizer)["mu_segmentCompatibility"].push_back(	trgMu.segmentCompatibility() );
+
+            (*outputVecNtuplizer)["mu_looseId"].push_back(trgMu.isLooseMuon());
+            (*outputVecNtuplizer)["mu_mediumId"].push_back(trgMu.isMediumMuon());
+            (*outputVecNtuplizer)["mu_tightId"].push_back(trgMu.isTightMuon(bestVtx));
+            (*outputVecNtuplizer)["mu_softIdBestVtx"].push_back(trgMu.isSoftMuon(bestVtx));
+
             GlobalPoint auxp2(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
             dca = vtxu::computeDCA(iSetup, trgMu, auxp2);
             (*outputVecNtuplizer)["mu_dca_vtxDstMu"].push_back(dca.first);
@@ -640,22 +654,6 @@ void B2DstMuDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<strin
   (*outv)[n+"_eta"].push_back(v.Eta());
   (*outv)[n+"_phi"].push_back(v.Phi());
   return;
-}
-
-bool B2DstMuDecayTreeProducer::qualityMuonID(pat::Muon m, reco::Vertex pVtx) {
-  if(m.innerTrack().isNull()) return false;
-
-  if (!m.isSoftMuon(pVtx)) return false;
-  // if(m.innerTrack()->hitPattern().pixelLayersWithMeasurement() < 2) return false;
-  // if(!m.innerTrack()->quality(reco::TrackBase::highPurity)) return false;
-  // if(!m.isGood("TMOneStationTight")) return false;
-  if(m.innerTrack()->normalizedChi2() > 1.8) return false;
-
-  double dxy = m.innerTrack()->dxy(pVtx.position());
-  float sigdxy = fabs(dxy)/m.innerTrack()->dxyError();
-  if (sigdxy < 2) return false;
-
-  return true;
 }
 
 void B2DstMuDecayTreeProducer::updateCounter(int idx, vector<bool> &cF) {

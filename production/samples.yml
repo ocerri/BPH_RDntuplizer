@@ -27,7 +27,7 @@ samples:
   #
   #  MC
   #
-
+  # Runs on 10_6, i.e. needs different dev area than the other samples
   Mu_Enriched:
     # Fragment: https://cms-pdmv.cern.ch/mcm/requests?prepid=BTV-RunIISummer19UL18GEN-00019&page=0&shown=524415
     dataset: CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8
