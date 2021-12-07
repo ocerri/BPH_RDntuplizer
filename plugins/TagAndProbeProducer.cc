@@ -234,7 +234,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     cout << "\n MUONS LIST" << endl;
     for (auto muon : (*muonHandle)) {
         cout << Form("id:%d  pt:%.1f  eta:%.1f  phi:%.1f", muon.pdgId(), muon.pt(), muon.eta(), muon.phi());
-        cout << Form(" tightID:%d softID:%d trgBPH:%d", muon.isTightMuon(primaryVtx), muon.isSoftMuon(primaryVtx), muon.triggered("HLT_Mu*_IP*_part*_v*"));
+        cout << Form(" tightID:%d mediumID:%d softID:%d trgBPH:%d", muon.isTightMuon(primaryVtx), muon.isMediumMuon(), muon.isSoftMuon(primaryVtx), muon.triggered("HLT_Mu*_IP*_part*_v*"));
         if(muon.pt() > 5.5) {
           auto out = matchL1Muon(muon, *l1MuonHandle);
           cout << ", L1 match " << get<0>(out) << Form(": dR=%.4f, dpt=%.3f", get<1>(out), get<2>(out));
@@ -307,6 +307,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
         outMap["mTag_HLT_" + tag] = mTag.triggered(trgPath.c_str());
       }
       outMap["mTag_tightID"] = mTag.isTightMuon(primaryVtx);
+      outMap["mTag_mediumID"] = mTag.isMediumMuon();
       outMap["mTag_softID"] = mTag.isSoftMuon(primaryVtx);
 
       auto out = matchL1Muon(mTag, *l1MuonHandle);
@@ -327,6 +328,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       outMap["mTag_HLT_Mu_IP"] = -1;
       for(auto tag : triggerTag) outMap["mTag_HLT_" + tag] = -1;
       outMap["mTag_tightID"] = -1;
+      outMap["mTag_mediumID"] = -1;
       outMap["mTag_softID"] = -1;
       outMap["mTag_L1_pt"] = -1;
       outMap["mTag_L1_eta"] = -999;
@@ -358,6 +360,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
       outMap["mProbe_HLT_" + tag] = mProbe.triggered(trgPath.c_str());
     }
     outMap["mProbe_tightID"] = mProbe.isTightMuon(primaryVtx);
+    outMap["mProbe_mediumID"] = mProbe.isMediumMuon();
     outMap["mProbe_softID"] = mProbe.isSoftMuon(primaryVtx);
     if (muonIDScaleFactors) {
       if (outMap["mProbe_softID"]) {
