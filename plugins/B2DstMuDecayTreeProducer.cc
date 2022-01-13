@@ -421,6 +421,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               if( i_tk==i_K || i_tk==i_pi || i_tk==i_pis) continue;
 
               const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
+              /* Discard any tracks with at least one missing hit in the first
+               * pixel barrel layer. */
+              if (ptk.lostInnerHits() > 0) continue;
               if (!ptk.hasTrackDetails()) continue;
               //Require a charged hadron
               if (abs(ptk.pdgId()) != 211 ) continue;
