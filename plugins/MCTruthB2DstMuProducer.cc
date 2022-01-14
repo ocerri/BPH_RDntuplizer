@@ -593,6 +593,29 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
       if (verbose) {cout << "<--\n"<< endl;}
     }
 
+    (*outputVecNtuplizer)["MC_addPiChain_charge"] = {};
+    (*outputVecNtuplizer)["MC_addPiChain_motherPdgId"] = {};
+    (*outputVecNtuplizer)["MC_addPiChain_pt"] = {};
+    (*outputVecNtuplizer)["MC_addPiChain_eta"] = {};
+    (*outputVecNtuplizer)["MC_addPiChain_phi"] = {};
+    if (i_B > 0) {
+      for(int j = 0; ((uint)j) < N_PackedGenParticles; j++) {
+        auto packGenP = (*PackedGenParticlesHandle)[j];
+        if (abs(packGenP.pdgId()) != 211) continue;
+        if (abs(packGenP.mother(0)->pdgId()) == 411) continue;
+        if (abs(packGenP.mother(0)->pdgId()) == 421) continue;
+        if (abs(packGenP.mother(0)->pdgId()) == 413) continue;
+        if (abs(packGenP.mother(0)->pdgId()) == 423) continue;
+
+        if ( !auxIsAncestor(&((*PrunedGenParticlesHandle)[i_B]), &packGenP) ) continue;
+        (*outputVecNtuplizer)["MC_addPiChain_charge"].push_back(packGenP.charge());
+        (*outputVecNtuplizer)["MC_addPiChain_motherPdgId"].push_back(packGenP.mother(0)->pdgId());
+        (*outputVecNtuplizer)["MC_addPiChain_pt"].push_back(packGenP.pt());
+        (*outputVecNtuplizer)["MC_addPiChain_eta"].push_back(packGenP.eta());
+        (*outputVecNtuplizer)["MC_addPiChain_phi"].push_back(packGenP.phi());
+      }
+    }
+
 
     iEvent.put(move(outputNtuplizer), "outputNtuplizer");
     iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");

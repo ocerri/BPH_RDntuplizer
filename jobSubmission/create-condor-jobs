@@ -188,6 +188,7 @@ if __name__ == "__main__":
             exec_args += ' %s' % join(outdir,'cfg/file_list_%s_%i.txt' % (batch_id.hex,i))
             output_file = join(args.output_file.replace('.root', '_%s_%i.root' % (batch_id.hex,i)))
             exec_args += ' %s' % output_file
+            exec_args += ' %s/out/fjr_%s_%i.xml' % (outdir,batch_id.hex,i) # Framework job report
             fsub.write('arguments      = %s\n' % exec_args)
             log_file = '%s/out/job_%s_%i.log' % (outdir,batch_id.hex,i)
             fsub.write('output         = %s/out/job_%s_%i.out\n' % (outdir,batch_id.hex,i))
