@@ -567,10 +567,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["sigdxy_K_PV"].push_back(sigdxy_K_PV);
             (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
             (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
+            (*outputVecNtuplizer)["K_lostInnerHits"].push_back(K.lostInnerHits());
             AddTLVToOut(vtxu::getTLVfromCand(K, mass_K), string("K"), &(*outputVecNtuplizer));
             (*outputVecNtuplizer)["sigdxy_pi_PV"].push_back(sigdxy_pi_PV);
             (*outputVecNtuplizer)["pi_norm_chi2"].push_back(pi_norm_chi2);
             (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
+            (*outputVecNtuplizer)["pi_lostInnerHits"].push_back(pi.lostInnerHits());
             AddTLVToOut(vtxu::getTLVfromCand(pi, mass_pi), string("pi"), &(*outputVecNtuplizer));
             double m = (vtxu::getTLVfromCand(pi, mass_pi) + vtxu::getTLVfromCand(K, mass_K)).M();
             (*outputVecNtuplizer)["massb_piK"].push_back(m);
@@ -604,6 +606,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["sigdxy_pis_PV"].push_back(sigdxy_pis_PV);
             (*outputVecNtuplizer)["pis_norm_chi2"].push_back(pis_norm_chi2);
             (*outputVecNtuplizer)["pis_N_valid_hits"].push_back(pis_N_valid_hits);
+            (*outputVecNtuplizer)["pis_lostInnerHits"].push_back(pis.lostInnerHits());
             AddTLVToOut(vtxu::getTLVfromCand(pis, mass_pi), string("pis"), &(*outputVecNtuplizer));
 
             (*outputVecNtuplizer)["chi2_D0pis"].push_back(res_D0pis.chi2);
