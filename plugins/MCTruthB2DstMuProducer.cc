@@ -601,7 +601,7 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     if (i_B > 0) {
       for(int j = 0; ((uint)j) < N_PackedGenParticles; j++) {
         auto packGenP = (*PackedGenParticlesHandle)[j];
-        if (abs(packGenP.pdgId()) != 211) continue;
+        if (abs(packGenP.pdgId()) != 211 && abs(packGenP.pdgId()) != 111) continue;
         if (abs(packGenP.mother(0)->pdgId()) == 411) continue;
         if (abs(packGenP.mother(0)->pdgId()) == 421) continue;
         if (abs(packGenP.mother(0)->pdgId()) == 413) continue;
