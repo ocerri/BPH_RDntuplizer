@@ -73,6 +73,8 @@ def get_job_status(row, data=None):
             data = []
 
     for entry in data:
+        if 'UUID' not in entry:
+            continue
         if entry['UUID'] == row['uuid']:
             return entry['JobStatus']
 
