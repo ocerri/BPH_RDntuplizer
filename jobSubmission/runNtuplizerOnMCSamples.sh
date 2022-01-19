@@ -13,7 +13,7 @@
 
 outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsMC
 
-ntuplesName=ntuples_B2DstMu_test
+ntuplesName=ntuples_B2DstMu_220114
 
 config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
 
@@ -44,16 +44,16 @@ declare -a processes=(
     #
     # Private production --> Should be run N = 40/50
     "CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v2"
-    # "CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
 )
 
 for process in "${processes[@]}"; do
     echo $process
     output_dir=$outLoc/$process/$ntuplesName
     mkdir -p $output_dir
-    python jobSubmission/create-condor-jobs -i production/inputFiles_$process.txt -o $output_dir/out_CAND.root -c $config -t $ntuplesName -N 5 --maxtime 120m
+    python jobSubmission/create-condor-jobs -i production/inputFiles_$process.txt -o $output_dir/out_CAND.root -c $config -t $ntuplesName -N 40 --maxtime 120m
     sleep 1
 done
 

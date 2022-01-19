@@ -356,11 +356,42 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["sigdxy_vtxD0pismu_PV"].push_back(sigdxy_vtxD0pismu_PV);
 
             float localVertexDensity = 0;
+            float localVertexDensity_30mm = 0;
+            float localVertexDensity_10mm = 0;
+            float localVertexDensity_5mm = 0;
+            float localVertexDensity_2mm = 0;
+            float localVertexDensity_1mm = 0;
+            float localVertexDensity_cos800 = 0;
+            float localVertexDensity_cos950 = 0;
+            float localVertexDensity_cos990 = 0;
+            float localVertexDensity_cos995 = 0;
+            float localVertexDensity_cos999 = 0;
             for(auto vtx : (*vtxHandle)) {
               float dz = bestVtx.position().z() - vtx.position().z();
               if(fabs(dz) < 1.5*__dzMax__) localVertexDensity++;
+              if(fabs(dz) < 1.5) localVertexDensity_30mm++;
+              if(fabs(dz) < 0.5) localVertexDensity_10mm++;
+              if(fabs(dz) < 0.25) localVertexDensity_5mm++;
+              if(fabs(dz) < 0.1) localVertexDensity_2mm++;
+              if(fabs(dz) < 0.05) localVertexDensity_1mm++;
+              auto cos = vtxu::computePointingCos(vtx, vtxB, D0pismu);
+              if (cos > 0.800) localVertexDensity_cos800++;
+              if (cos > 0.950) localVertexDensity_cos950++;
+              if (cos > 0.990) localVertexDensity_cos990++;
+              if (cos > 0.995) localVertexDensity_cos995++;
+              if (cos > 0.999) localVertexDensity_cos999++;
             }
             (*outputVecNtuplizer)["localVertexDensity"].push_back(localVertexDensity/(2*1.5*__dzMax__));
+            (*outputVecNtuplizer)["localVertexDensity_30mm"].push_back(localVertexDensity_30mm);
+            (*outputVecNtuplizer)["localVertexDensity_10mm"].push_back(localVertexDensity_10mm);
+            (*outputVecNtuplizer)["localVertexDensity_5mm"].push_back(localVertexDensity_5mm);
+            (*outputVecNtuplizer)["localVertexDensity_2mm"].push_back(localVertexDensity_2mm);
+            (*outputVecNtuplizer)["localVertexDensity_1mm"].push_back(localVertexDensity_1mm);
+            (*outputVecNtuplizer)["localVertexDensity_cos800"].push_back(localVertexDensity_cos800);
+            (*outputVecNtuplizer)["localVertexDensity_cos950"].push_back(localVertexDensity_cos950);
+            (*outputVecNtuplizer)["localVertexDensity_cos990"].push_back(localVertexDensity_cos990);
+            (*outputVecNtuplizer)["localVertexDensity_cos995"].push_back(localVertexDensity_cos995);
+            (*outputVecNtuplizer)["localVertexDensity_cos999"].push_back(localVertexDensity_cos999);
 
             /*
             ############################################################################
