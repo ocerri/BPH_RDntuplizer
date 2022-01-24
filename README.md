@@ -16,26 +16,30 @@ cd ntuplizer
 
 Install [Hammer](https://gitlab.com/mpapucci/Hammer/-/tree/master)
 ```
+wget https://hammer.physics.lbl.gov/Hammer-1.2.1-Source.tar.gz
+tar -xzf Hammer-1.2.1-Source.tar.gz
+mkdir Hammer-build
+cd Hammer-build
+
 export PATH=/cvmfs/sft.cern.ch/lcg/contrib/CMake/3.14.2/Linux-x86_64/bin:${PATH}
 export BOOST_ROOT=/cvmfs/sft.cern.ch/lcg/releases/Boost/1.66.0-f50b5/x86_64-centos7-gcc7-opt/
 export HEPMC_DIR=/cvmfs/sft.cern.ch/lcg/external/HepMC/2.06.08/x86_64-slc6-gcc48-opt
 
-cp -r /storage/af/user/ocerri/public_html/Hammer-0.9.0-Source ./
-mkdir Hammer-0.9.0-build
-cd Hammer-0.9.0-build
 
-cmake -DCMAKE_INSTALL_PREFIX=../Hammer-0.9.0 -DENABLE_TESTS=ON -DWITH_ROOT=OFF -DWITH_EXAMPLES=OFF -DINSTALL_EXTERNAL_DEPENDENCIES=ON -DWITH_PYTHON=OFF -DBUILD_SHARED_LIBS=ON ../Hammer-0.9.0-Source
+cmake -DCMAKE_INSTALL_PREFIX=../Hammer-install -DENABLE_TESTS=ON -DWITH_ROOT=OFF -DWITH_EXAMPLES=OFF -DINSTALL_EXTERNAL_DEPENDENCIES=ON -DWITH_PYTHON=OFF -DBUILD_SHARED_LIBS=ON -DFORCE_YAMLCPP_INSTALL=ON -DCMAKE_CXX_FLAGS="-pthread" -DBOOST_ROOT=/cvmfs/sft.cern.ch/lcg/releases/Boost/1.64.0-0809c/x86_64-centos7-gcc7-opt/ ../Hammer-1.2.1-Source
+
 make -j24
 make install -j24
 
 cd $CMSSW_BASE/lib/slc7_amd64_gcc700
-cp ../../src/ntuplizer/Hammer-0.9.0/lib64/*.so.* ./
-cp ../../src/ntuplizer/Hammer-0.9.0/lib64/Hammer/*.so.* ./
-cd $CMSSW_BASE/src/ntuplizer/Hammer-0.9.0-build
-ctest
+cp ../../src/ntuplizer/Hammer-install/lib64/*.so.* ./
+cp ../../src/ntuplizer/Hammer-install/lib64/Hammer/*.so.* ./
+cd $CMSSW_BASE/src/ntuplizer/Hammer-build
+
+ctest -V
 
 cd ..
-rm -rf Hammer-0.9.0-*
+rm -rf Hammer-1.2.1-Source.tar.gz Hammer-build
 ```
 
 
