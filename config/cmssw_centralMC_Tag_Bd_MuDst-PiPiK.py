@@ -8,6 +8,7 @@ process = cms.Process('BPHRDntuplizer', eras.Run2_2018)
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
 
+
 # Needed for transient track builder
 # process.load('Configuration.StandardSequences.Services_cff')
 # process.load('Configuration.EventContent.EventContent_cff')
@@ -52,10 +53,10 @@ elif args.inputFiles:
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
 
-    # fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
+    fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     # fdefault += 'inputFiles_CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     # fdefault += 'inputFiles_CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
-    fdefault += 'inputFiles_CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v2.txt'
+    # fdefault += 'inputFiles_CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v2.txt'
 
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
@@ -121,7 +122,7 @@ process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
 
 process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
         decayTreeVecOut = cms.InputTag("B2MuDstDT","outputVecNtuplizer", ""),
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
 process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
@@ -129,7 +130,7 @@ process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
         inputFFScheme = cms.vstring(#'BD', 'ISGW2',
                                     'BD*', 'ISGW2'
         ),
-        verbose = cms.int32(0)
+        verbose = cms.int32(1)
 )
 
 cfg_name = os.path.basename(sys.argv[0])
@@ -168,5 +169,6 @@ process.p = cms.Path(
 '''
 #############   Overall settings    ################
 '''
-
+# process.MessageLogger.cerr.threshold = "DEBUG"
+# process.MessageLogger.debugModules = ["*"]
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
