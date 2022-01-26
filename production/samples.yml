@@ -123,6 +123,11 @@ samples:
     parts:
       - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bd_MuNuDstst_PiPi_SoftQCDnonD_scale5_TuneCP5_ISGW2_v2_211123-2219-c21dec93027231dc6f615dfe5c662834/USER
 
+  Bd_MuNuDstPiPi_v3:
+    dataset: CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3
+    parts:
+      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bd_MuNuDstPiPi_SoftQCDnonD_scale5_TuneCP5_220121-2049-c21dec93027231dc6f615dfe5c662834/USER
+
   Bu_MuNuDstPiPi:
     dataset: CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
