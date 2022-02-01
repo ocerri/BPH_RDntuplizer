@@ -53,9 +53,10 @@ elif args.inputFiles:
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
 
-    fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
-    # fdefault += 'inputFiles_CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
+    # fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
+    fdefault += 'inputFiles_CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     # fdefault += 'inputFiles_CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
+    # fdefault += 'inputFiles_CP_BuToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     # fdefault += 'inputFiles_CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v2.txt'
 
     with open(fdefault) as f:
@@ -126,9 +127,14 @@ process.MCpart = cms.EDProducer("MCTruthB2DstMuProducer",
 )
 
 process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
-        decayOfInterest = cms.vstring('BD*MuNu', 'BD*TauNu'),
+        decayOfInterest = cms.vstring('BD*MuNu', 'BD*TauNu', 'BD**MuNu'),
         inputFFScheme = cms.vstring(#'BD', 'ISGW2',
-                                    'BD*', 'ISGW2'
+                                    'BD*', 'ISGW2',
+                                    # 'BD**', 'ISGW2',
+                                    'BD**1', 'ISGW2',
+                                    'BD**2*', 'ISGW2',
+                                    'BD**0*', 'ISGW2',
+                                    'BD**1*', 'ISGW2',
         ),
         verbose = cms.int32(1)
 )
