@@ -27,7 +27,9 @@ export HEPMC_DIR=/cvmfs/sft.cern.ch/lcg/external/HepMC/2.06.08/x86_64-slc6-gcc48
 
 
 cmake -DCMAKE_INSTALL_PREFIX=../Hammer-install -DENABLE_TESTS=ON -DWITH_ROOT=OFF -DWITH_EXAMPLES=OFF -DINSTALL_EXTERNAL_DEPENDENCIES=ON -DWITH_PYTHON=OFF -DBUILD_SHARED_LIBS=ON -DFORCE_YAMLCPP_INSTALL=ON -DCMAKE_CXX_FLAGS="-pthread" -DBOOST_ROOT=/cvmfs/sft.cern.ch/lcg/releases/Boost/1.64.0-0809c/x86_64-centos7-gcc7-opt/ ../Hammer-1.2.1-Source
-
+```
+Change ln 79 of `Hammer-1.2.1-Source/src/Amplitudes/AmplBDstarDPiLepNu.cc` from `const FourMomentum& pPion = daughters[4].momentum();` to `const FourMomentum& pPion = pDstarmes - pDmes;`. Then continue to compilation.
+```
 make -j24
 make install -j24
 
