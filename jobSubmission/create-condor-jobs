@@ -218,7 +218,7 @@ if __name__ == "__main__":
             # Periodically retry the jobs for 3 times with an interval 20 mins.
             fsub.write('periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) > (60*10))\n')
             fsub.write('max_retries    = 5\n')
-            fsub.write('requirements   = Machine =!= LastRemoteHost && regexp("blade-.*", TARGET.Machine)\n')
+            fsub.write('requirements   = Machine =!= LastRemoteHost\n')# && regexp("blade-.*", TARGET.Machine)\n')
             fsub.write('universe = vanilla\n')
             fsub.write('queue 1\n')
 
