@@ -237,19 +237,19 @@ private:
     const double centralValCLN[4] = {1.122, 1.270, 0.852, 1.14};
 
     const vector<string> varNameCLN = {"eig1", "eig2", "eig3", "R0"};
-    // const double eigVarCLN[4][4][2] = {
-    //   {{-0.02102485,  0.02102485}, {-0.02293032,  0.02293032}, { 0.01652843, -0.01652843}, {0, 0}},
-    //   {{-0.01105955,  0.01105955}, { 0.01215074, -0.01215074}, { 0.00278883, -0.00278883}, {0, 0}},
-    //   {{ 0.00341205, -0.00341205}, { 0.00159999, -0.00159999}, { 0.00655998, -0.00655998}, {0, 0}},
-    //   {{0, 0}, {0, 0}, {0, 0}, {+0.11, -0.11}}
-    // };
-
     const double eigVarCLN[4][4][2] = {
-      {{ -0.0420, 0.0420}, { -0.0459, 0.0459}, { 0.0331, -0.0331},  {0, 0}},
-      {{ -0.0221, 0.0221}, { 0.0243, -0.0243}, { 0.0056, -0.0056},  {0, 0}},
-      {{ 0.0068, -0.0068}, { 0.0032, -0.0032}, { 0.0131, -0.0131},  {0, 0}},
-      {{0, 0}, {0, 0}, {0, 0}, {+0.22, -0.22}}
+      {{-0.02102485,  0.02102485}, {-0.02293032,  0.02293032}, { 0.01652843, -0.01652843}, {0, 0}},
+      {{-0.01105955,  0.01105955}, { 0.01215074, -0.01215074}, { 0.00278883, -0.00278883}, {0, 0}},
+      {{ 0.00341205, -0.00341205}, { 0.00159999, -0.00159999}, { 0.00655998, -0.00655998}, {0, 0}},
+      {{0, 0}, {0, 0}, {0, 0}, {+0.11, -0.11}}
     };
+
+    // const double eigVarCLN[4][4][2] = {
+    //   {{ -0.0420, 0.0420}, { -0.0459, 0.0459}, { 0.0331, -0.0331},  {0, 0}},
+    //   {{ -0.0221, 0.0221}, { 0.0243, -0.0243}, { 0.0056, -0.0056},  {0, 0}},
+    //   {{ 0.0068, -0.0068}, { 0.0032, -0.0032}, { 0.0131, -0.0131},  {0, 0}},
+    //   {{0, 0}, {0, 0}, {0, 0}, {+0.22, -0.22}}
+    // };
 
 
     // ########## BLPR parameters ##############
@@ -467,7 +467,9 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       bool isD1 = (d_absId == 10413 || d_absId == 10423);
       bool isD1st = (d_absId == 20413 || d_absId == 20423);
       bool isD2st = (d_absId == 415 || d_absId == 425);
-      bool isDstst = (isD1 || isD1st || isD2st);
+      bool isD2S = (d_absId == 100411 || d_absId == 100421);
+      bool isDst2S = (d_absId == 100413 || d_absId == 100423);
+      bool isDstst = (isD1 || isD1st || isD2st || isD2S || isDst2S);
       if (isDstst) Dstst_indecay = true;
       if (isDst) Dst_indecay = true;
       if(isTau) {
@@ -523,8 +525,14 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       B2DstLNu_Dst2DPi.addVertex(idxDst, Dstvtx_idxs);
     }
 
-    hammer.addProcess(B2DstLNu_Dst2DPi);
-    hammer.processEvent();
+    try {
+      hammer.addProcess(B2DstLNu_Dst2DPi);
+      hammer.processEvent();
+    }
+    catch (const std::exception& e) {
+      cout << "[ERROR] In processing Hammer event with message" << e.what() << endl;
+      return;
+    }
 
 
     if (Dst_indecay) {
@@ -534,6 +542,7 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       hammer.setFFEigenvectors("BtoD*", "CLNVar", settingsCLN);
       auto weightsCLN = hammer.getWeights("SchmeCLN");
       if(!weightsCLN.empty()) {
+        N_evets_weights_produced++;
         if(verbose) {cout << "CLNCentral: " << flush;}
         for(auto elem: weightsCLN) {
           if(isnan(elem.second)) {
@@ -636,6 +645,7 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       // hammer.setFFEigenvectors("BtoD**", "BLRVar", settings_central);
       auto weightsDstst_BLR = hammer.getWeights("SchmeBLR_Dstst");
       if(!weightsDstst_BLR.empty()) {
+        N_evets_weights_produced++;
         if(verbose) {cout << "Dstst_BLRCentral: " << flush;}
         for(auto elem: weightsDstst_BLR) {
           if(isnan(elem.second)) {
@@ -697,40 +707,30 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
 
         if(verbose) {cout << endl;}
 
-        (*outputNtuplizer)["wh_CLNCentral"] = 0;
+      }
+      else {
+        (*outputNtuplizer)["wh_Dstst_BLRCentral"] = 1;
         for(int i=0; i<4; i++) { //Loop over eigenVar
           for (int j=0; j<2; j++) { //Loop over pos/neg direction
-            string var_name = "CLN" + varNameCLN[i];
+            string var_name = "DststN_BLR" + varNameDststN_BLR[i];
             var_name += j==0? "Up" : "Down";
-            (*outputNtuplizer)["wh_" + var_name] = 0;
+            (*outputNtuplizer)["wh_" + var_name] = 1;
           }
         }
 
-        (*outputNtuplizer)["wh_BLPRCentral"] = 0;
-        for(int i=0; i<7; i++) { //Loop over eigenVar
-        for (int j=0; j<2; j++) { //Loop over pos/neg direction
-          string var_name = "BLPR" + varNameBLPR[i];
-          var_name += j==0? "Up" : "Down";
-          (*outputNtuplizer)["wh_" + var_name] = 0;
+        for(int i=0; i<3; i++) { //Loop over eigenVar
+          for (int j=0; j<2; j++) { //Loop over pos/neg direction
+            string var_name = "DststW_BLR" + varNameDststW_BLR[i];
+            var_name += j==0? "Up" : "Down";
+            (*outputNtuplizer)["wh_" + var_name] = 1.;
+          }
         }
-      }
+
       }
     }
 
     // cout << "[DEBUG] Check this part on how to handle empty weights" << endl;
     if (!Dst_indecay && ! Dstst_indecay) return;
-
-    // bool weightsDst_ok = !weightsCLN.empty() && !weightsBLPR.empty();
-    // bool weightsDstst_ok = !weightsDstst_BLR.empty();
-    // if(weightsDst_ok || weightsDstst_ok) N_evets_weights_produced++;
-    // else if (weightsCLN.empty() && weightsBLPR.empty() && weightsDstst_BLR.empty()) return;
-    // else {
-    //   cout << "CLN is empty: " << weightsCLN.empty() << endl;
-    //   cout << "BLPR is empty: " << weightsBLPR.empty() << endl;
-    //   cout << "Dtst BLR is empty: " << weightsDstst_BLR.empty() << endl;
-    //   exit(666);
-    // }
-
 
     iEvent.put(move(outputNtuplizer), "outputNtuplizer");
     return;

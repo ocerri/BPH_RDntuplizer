@@ -134,6 +134,11 @@ samples:
       # - /BuToDStarPiPiMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen/RunIIAutumn18MiniAOD-Custom_RDStar_BParking_102X_upgrade2018_realistic_v15-v2/MINIAODSIM
       - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bu_MuNuDstst_PiPi_SoftQCDnonD_scale5_TuneCP5_ISGW2_211007-1358-c21dec93027231dc6f615dfe5c662834/USER
 
+  Bu_MuNuDstPiPi_v3:
+    dataset: CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3
+    parts:
+      - /cmsMC_private_PUc2_10-2-3/ocerri-BParking_Tag_Bu_MuNuDstPiPi_SoftQCDnonD_scale5_TuneCP5_220201-1820-c21dec93027231dc6f615dfe5c662834/USER
+
   Bu_TauNuDstPi:
     dataset: CP_BuToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen
     parts:
