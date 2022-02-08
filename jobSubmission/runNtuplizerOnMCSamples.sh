@@ -13,7 +13,7 @@
 
 outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsMC
 
-ntuplesName=ntuples_B2DstMu_220201
+ntuplesName=ntuples_B2DstMu_220201_ffD2S
 
 config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
 

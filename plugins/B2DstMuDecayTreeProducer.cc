@@ -342,8 +342,13 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             }
             auto bestVtx = possibleVtxs[i_best];
 
-            // (*outputVecNtuplizer)["vtx_D0pismu_z"].push_back(vtxB.z());
-            // (*outputVecNtuplizer)["vtx_PV_z"].push_back(bestVtx.z());
+            (*outputVecNtuplizer)["vtx_PV_x"].push_back(bestVtx.position().x());
+            (*outputVecNtuplizer)["vtx_PV_y"].push_back(bestVtx.position().y());
+            (*outputVecNtuplizer)["vtx_PV_z"].push_back(bestVtx.position().z());
+
+            (*outputVecNtuplizer)["vtx_B_decay_x"].push_back(vtxB->position().x());
+            (*outputVecNtuplizer)["vtx_B_decay_y"].push_back(vtxB->position().y());
+            (*outputVecNtuplizer)["vtx_B_decay_z"].push_back(vtxB->position().z());
 
             auto cos_D0pismu_PV = vtxu::computePointingCos(bestVtx, vtxB, D0pismu);
             auto cosT_D0pismu_PV = vtxu::computePointingCosTransverse(bestVtx, vtxB, D0pismu);
