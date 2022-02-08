@@ -30,8 +30,7 @@ cmake -DCMAKE_INSTALL_PREFIX=../Hammer-install -DENABLE_TESTS=ON -DWITH_ROOT=OFF
 ```
 Change ln 79 of `Hammer-1.2.1-Source/src/Amplitudes/AmplBDstarDPiLepNu.cc` from `const FourMomentum& pPion = daughters[4].momentum();` to `const FourMomentum& pPion = pDstarmes - pDmes;`. Then continue to compilation.
 ```
-make -j24
-make install -j24
+make -j24; make install -j24
 
 cd $CMSSW_BASE/lib/slc7_amd64_gcc700
 cp ../../src/ntuplizer/Hammer-install/lib64/*.so.* ./

@@ -201,6 +201,76 @@ public:
         }
       }
 
+      vector<string> processes_D2s = {"B0D(2s)-MuNu", "B-D(2s)0MuNu"};
+      for(auto proc : processes_D2s) {
+        auto aux_den = hammer.getDenominatorRate(proc);
+        if (aux_den == 0) {
+          if (verbose) {cout << "Process: " << proc << " not evaluated, skipping" << endl;}
+        }
+        else {
+          if (verbose) {cout << "Process: " << proc << endl;}
+          outRate["den_D2s"] = aux_den;
+          map<string, double> settings;
+          for(auto n: parNameD2S_BLOP) settings["delta_" + n] = 0;
+          hammer.setFFEigenvectors("BtoD(2s)", "BLOPVar", settings);
+          outRate["D2sBLOP_central"] = hammer.getRate(proc, "SchmeBLOP_D2s");
+          if(verbose) { cout << Form("D(2s) BLOP central rate: %1.3e (ratio = %.3f)", outRate["D2sBLOP_central"], outRate["D2sBLOP_central"]/outRate["den_D2s"]) << endl;}
+
+
+          for(int i=0; i<5; i++) { //Loop over eigenVar
+            for (int j=0; j<2; j++) { //Loop over pos/neg direction
+              map<string, double> settings;
+              for (int k=0; k<9; k++) { //Loop over parameters
+                settings["delta_" + parNameD2S_BLOP[k]] = eigVarD2S_BLOP[i][k][j];
+              }
+              hammer.setFFEigenvectors("BtoD(2s)", "BLOPVar", settings);
+              auto rate = hammer.getRate(proc, "SchmeBLOP_D2s");
+              string var_name = "D2sBLOP_" + varNameD2S_BLOP[i];
+              var_name += j==0? "Up" : "Down";
+              outRate[var_name] = rate;
+              if(verbose) {cout << var_name << Form(": %1.3e", rate) << endl;}
+            }
+          }
+          break;
+        }
+      }
+
+
+      vector<string> processes_D2sst = {"B0D(2s)*-MuNu", "B-D(2s)*0MuNu"};
+      for(auto proc : processes_D2sst) {
+        auto aux_den = hammer.getDenominatorRate(proc);
+        if (aux_den == 0) {
+          if (verbose) {cout << "Process: " << proc << " not evaluated, skipping" << endl;}
+        }
+        else {
+          if (verbose) {cout << "Process: " << proc << endl;}
+          outRate["den_D2sst"] = aux_den;
+          map<string, double> settings;
+          for(auto n: parNameD2S_BLOP) settings["delta_" + n] = 0;
+          hammer.setFFEigenvectors("BtoD(2s)*", "BLOPVar", settings);
+          outRate["D2sstBLOP_central"] = hammer.getRate(proc, "SchmeBLOP_D2s");
+          if(verbose) { cout << Form("D(2s)* BLOP central rate: %1.3e (ratio = %.3f)", outRate["D2sstBLOP_central"], outRate["D2sstBLOP_central"]/outRate["den_D2sst"]) << endl;}
+
+
+          for(int i=0; i<5; i++) { //Loop over eigenVar
+            for (int j=0; j<2; j++) { //Loop over pos/neg direction
+              map<string, double> settings;
+              for (int k=0; k<9; k++) { //Loop over parameters
+                settings["delta_" + parNameD2S_BLOP[k]] = eigVarD2S_BLOP[i][k][j];
+              }
+              hammer.setFFEigenvectors("BtoD(2s)*", "BLOPVar", settings);
+              auto rate = hammer.getRate(proc, "SchmeBLOP_D2s");
+              string var_name = "D2sstBLOP_" + varNameD2S_BLOP[i];
+              var_name += j==0? "Up" : "Down";
+              outRate[var_name] = rate;
+              if(verbose) {cout << var_name << Form(": %1.3e", rate) << endl;}
+            }
+          }
+          break;
+        }
+      }
+
+
       if (outRate.size()) {
         edm::Service<TFileService> fs;
         TTree* tree = fs->make<TTree>( "Trate", Form("Rates from Hammer"));
@@ -292,6 +362,20 @@ private:
     };
 
 
+    // For the D(2S) and D(2S)*, fitted by Michele on ISGW2
+    const vector<string> parNameD2S_BLOP = {"RhoSq", "Cur",  "chi11", "chi21", "chi2p", "chi31", "chi3p", "eta1", "etap"};
+    const double centralValD2S_BLOP[9] = {  -0.266,  -0.465, -0.120,  0.046,   0.144,   -0.077,  0.037,   -0.465,  0.168};
+    const vector<string> varNameD2S_BLOP = {"RhoSq", "chi11", "chi21", "chi31", "eta1"};
+    const double eigVarD2S_BLOP[5][9][2] = {
+      {{0.2, -0.2}, {0, 0},      {0, 0},      {0, 0},        {0, 0},      {0, 0},        {0, 0},        {0, 0},      {0, 0}     },
+      {{0, 0},      {0, 0},      {0.1, -0.1}, {0, 0},        {0, 0},      {0, 0},        {0, 0},        {0, 0},      {0, 0}     },
+      {{0, 0},      {0, 0},      {0, 0},      {0.04, -0.04}, {0, 0},      {0, 0},        {0, 0},        {0, 0},      {0, 0}     },
+      {{0, 0},      {0, 0},      {0, 0},      {0, 0},        {0, 0},      {0.07, -0.07}, {0, 0},        {0, 0},      {0, 0}     },
+      {{0, 0},      {0, 0},      {0, 0},      {0, 0},        {0, 0},      {0, 0},        {0, 0},        {0.4, -0.4}, {0, 0}     },
+    };
+
+
+
     int N_evets_weights_produced = 0;
     int N_evets_analyzed = 0;
 };
@@ -321,9 +405,10 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
       if(verbose){cout << "\t" << inputFFScheme_[i] << ": " << inputFFScheme_[i+1] << endl;}
     }
     hammer.setFFInputScheme(inputFFScheme);
-    hammer.addFFScheme("SchmeCLN",       {{"BD*",  "CLNVar"}, {"BD**", "ISGW2"}});
-    hammer.addFFScheme("SchmeBLPR",      {{"BD*",  "BLPRVar"}, {"BD**", "ISGW2"}});
-    hammer.addFFScheme("SchmeBLR_Dstst", {{"BD*",  "ISGW2"}, {"BD**1", "BLRVar"}, {"BD**2*", "BLRVar"}, {"BD**0*","BLRVar"}, {"BD**1*", "BLRVar"}});
+    hammer.addFFScheme("SchmeCLN",       {{"BD*",  "CLNVar"}, {"BD**", "ISGW2"}, {"BD2sall", "ISGW2"}});
+    hammer.addFFScheme("SchmeBLPR",      {{"BD*",  "BLPRVar"}, {"BD**", "ISGW2"}, {"BD2sall", "ISGW2"}});
+    hammer.addFFScheme("SchmeBLR_Dstst", {{"BD*",  "ISGW2"}, {"BD**1", "BLRVar"}, {"BD**2*", "BLRVar"}, {"BD**0*","BLRVar"}, {"BD**1*", "BLRVar"}, {"BD2sall", "ISGW2"}});
+    hammer.addFFScheme("SchmeBLOP_D2s",  {{"BD*",  "ISGW2"}, {"BD**", "ISGW2"}, {"BD2sall", "BLOPVar"}});
     hammer.initRun();
 
     // ################# CLN for D* ##############################
@@ -345,10 +430,15 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
     hammer.setOptions(centralValuesOpt);
 
     // ################# BLR for D** ##############################
-    centralValuesOpt = "BtoD**BLR: {";
+    centralValuesOpt = "BtoD**nBLR: {";
     for(auto i=0; i<7; i++) {
       centralValuesOpt += Form("%s: %f, ", parNameDststN_BLR[i].c_str(), centralValDststN_BLR[i]);
     }
+    centralValuesOpt += "}";
+    if (verbose) {cout << "[Hammer]: BLR for D** central values\n\t" << centralValuesOpt << endl;}
+    hammer.setOptions(centralValuesOpt);
+
+    centralValuesOpt = "BtoD**wBLR: {";
     for(auto i=0; i<5; i++) {
       centralValuesOpt += Form("%s: %f, ", parNameDststW_BLR[i].c_str(), centralValDststW_BLR[i]);
     }
@@ -356,6 +446,18 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
     if (verbose) {cout << "[Hammer]: BLR for D** central values\n\t" << centralValuesOpt << endl;}
     hammer.setOptions(centralValuesOpt);
 
+
+    // ################# BLOP for D(2S) ##############################
+    centralValuesOpt = "BtoD2sallBLOP: {";
+    for(auto i=0; i<9; i++) {
+      centralValuesOpt += Form("%s: %f, ", parNameD2S_BLOP[i].c_str(), centralValD2S_BLOP[i]);
+    }
+    centralValuesOpt += "}";
+    if (verbose) {cout << "[Hammer]: BLOP for D(2S) central values\n\t" << centralValuesOpt << endl;}
+    hammer.setOptions(centralValuesOpt);
+
+
+    // ######## Products declaration ####################
     produces<map<string, float>>("outputNtuplizer");
 }
 
@@ -406,6 +508,15 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       for(int i=0; i<3; i++) { //Loop over eigenVar
         for (int j=0; j<2; j++) { //Loop over pos/neg direction
           string var_name = "DststW_BLR" + varNameDststW_BLR[i];
+          var_name += j==0? "Up" : "Down";
+          (*outputNtuplizer)["wh_" + var_name] = 0;
+        }
+      }
+
+      (*outputNtuplizer)["wh_D2S_BLOPCentral"] = 1e-9;
+      for(int i=0; i<5; i++) { //Loop over eigenVar
+        for (int j=0; j<2; j++) { //Loop over pos/neg direction
+          string var_name = "D2S_BLOP" + varNameD2S_BLOP[i];
           var_name += j==0? "Up" : "Down";
           (*outputNtuplizer)["wh_" + var_name] = 0;
         }
@@ -725,8 +836,62 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
             (*outputNtuplizer)["wh_" + var_name] = 1.;
           }
         }
+      }
+
+
+      if (verbose) {cout << "Computing Hammer weights for D2S decay" << endl;}
+      map<string, double> settings_central;
+      for(auto n: parNameD2S_BLOP) settings_central["delta_" + n] = 0;
+      hammer.setFFEigenvectors("BtoD(2s)", "BLOPVar", settings_central);
+      hammer.setFFEigenvectors("BtoD(2s)*", "BLOPVar", settings_central);
+      auto weightsD2S_BLOP = hammer.getWeights("SchmeBLOP_D2s");
+      if(!weightsD2S_BLOP.empty()) {
+        N_evets_weights_produced++;
+        if(verbose) {cout << "D2S_BLOPCentral: " << flush;}
+        for(auto elem: weightsD2S_BLOP) {
+          if(isnan(elem.second)) {
+            cout << "[ERROR]: D2S_BLOPCentral nan weight: " << elem.second << endl;
+            cerr << "[ERROR]: D2S_BLOPCentral nan weight: " << elem.second << endl;
+            assert(false);
+          }
+          (*outputNtuplizer)["wh_D2S_BLOPCentral"] = elem.second;
+          if(verbose) {cout << elem.second << endl;}
+        }
+
+        for(int i=0; i<5; i++) { //Loop over eigenVar
+          for (int j=0; j<2; j++) { //Loop over pos/neg direction
+            map<string, double> settings;
+            for (int k=0; k<9; k++) { //Loop over parameters
+              settings["delta_" + parNameD2S_BLOP[k]] = eigVarD2S_BLOP[i][k][j];
+            }
+
+            hammer.setFFEigenvectors("BtoD(2s)", "BLOPVar", settings);
+            hammer.setFFEigenvectors("BtoD(2s)*", "BLOPVar", settings);
+            auto weights = hammer.getWeights("SchmeBLOP_D2s");
+            string var_name = "D2S_BLOP" + varNameD2S_BLOP[i];
+            var_name += j==0? "Up" : "Down";
+
+            if(verbose) {cout << var_name << ": " << flush;}
+            for(auto elem: weights) {
+              (*outputNtuplizer)["wh_" + var_name] = elem.second;
+              if(verbose) {cout << elem.second << Form(" (Ratio to central = %.3f)", (*outputNtuplizer)["wh_" + var_name]/(*outputNtuplizer)["wh_D2S_BLOPCentral"])<< endl;}
+            }
+          }
+        }
+        if(verbose) {cout << endl;}
 
       }
+      else {
+        (*outputNtuplizer)["wh_D2S_BLOPCentral"] = 1;
+        for(int i=0; i<5; i++) { //Loop over eigenVar
+          for (int j=0; j<2; j++) { //Loop over pos/neg direction
+            string var_name = "D2S_BLOP" + varNameD2S_BLOP[i];
+            var_name += j==0? "Up" : "Down";
+            (*outputNtuplizer)["wh_" + var_name] = 1;
+          }
+        }
+      }
+
     }
 
     // cout << "[DEBUG] Check this part on how to handle empty weights" << endl;
