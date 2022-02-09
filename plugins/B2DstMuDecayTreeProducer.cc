@@ -144,7 +144,24 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
       vector<reco::Vertex> possibleVtxs = {};
       for(uint i_vtx = 0; i_vtx<vtxHandle->size(); i_vtx++) {
         auto vtx = (*vtxHandle)[i_vtx];
-        if(vtx.normalizedChi2() > 1.5) continue;
+        /* Cut on the number of degrees of freedom. The number of degrees of
+         * freedom is calculated as:
+         *
+         *     ndof = -3 + 2*(w_1 + w_2 + ...)
+         *
+         *  where w_1, w_2, etc. are weights for each track associated with the
+         *  vertex. Quoting from https://arxiv.org/pdf/1405.6569.pdf:
+         *
+         *  > In the adaptive vertex fit, each track in the vertex is assigned
+         *  > a weight between 0 and 1, which reflects the likelihood that it
+         *  > genuinely > belongs to the vertex.
+         *
+         *  Therefore, the number of degrees of freedom is strongly correlated
+         *  with the number of tracks. We cut here requiring more than 4 which
+         *  translates roughly to at least 4 "good" tracks. This is because for
+         *  ndof <= 4 the data and MC do not seem to agree, and there is an
+         *  excess of vertices with low ndof in data. */
+        if (vtx.ndof() <= 4) continue;
         possibleVtxs.push_back(vtx);
         // bool isSoft = trgMu.isSoftMuon(vtx);
         // if(isSoft){
@@ -374,7 +391,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             float localVertexDensity_cos990 = 0;
             float localVertexDensity_cos995 = 0;
             float localVertexDensity_cos999 = 0;
-            for(auto vtx : (*vtxHandle)) {
+            for (uint i_vtx = 1; i_vtx < possibleVtxs.size(); i_vtx++) {
+              auto vtx = possibleVtxs[i_vtx];
               float dz = bestVtx.position().z() - vtx.position().z();
               if(fabs(dz) < 1.5*__dzMax__) localVertexDensity++;
               if(fabs(dz) < 1.5) localVertexDensity_30mm++;
