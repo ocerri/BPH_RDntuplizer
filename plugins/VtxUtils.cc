@@ -675,13 +675,15 @@ vtxu::kinFitResuts vtxu::fitQuality(RefCountedKinematicTree t, double pval_thr){
     out.chi2 = t->currentDecayVertex()->chiSquared();
     out.dof = t->currentDecayVertex()->degreesOfFreedom();
     if (out.chi2 < 0) {
-      fprintf(stderr, "error: vertex fit chi2 is less than zero!\n");
+      fprintf(stdout, "[WARNING] Vertex fit chi2 is less than zero!\n");
       out.isGood = false;
-      return out;
+      out.pval = -1;
     }
-    out.pval = ChiSquaredProbability(out.chi2, out.dof);
-    if (pval_thr > 0) {
-      out.isGood = out.pval > pval_thr;
+    else {
+      out.pval = ChiSquaredProbability(out.chi2, out.dof);
+      if (pval_thr > 0) {
+        out.isGood = out.pval > pval_thr;
+      }
     }
   }
   return out;

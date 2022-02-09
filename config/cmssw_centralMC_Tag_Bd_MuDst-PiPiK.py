@@ -53,11 +53,11 @@ elif args.inputFiles:
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
 
-    # fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
+    fdefault += 'inputFiles_CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     # fdefault += 'inputFiles_CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     # fdefault += 'inputFiles_CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     # fdefault += 'inputFiles_CP_BuToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
-    fdefault += 'inputFiles_CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3.txt'
+    # fdefault += 'inputFiles_CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3.txt'
 
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]

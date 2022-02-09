@@ -359,6 +359,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             }
             auto bestVtx = possibleVtxs[i_best];
 
+            (*outputVecNtuplizer)["N_goodVtx"].push_back(possibleVtxs.size());
+
+            (*outputVecNtuplizer)["PV_chi2"].push_back(bestVtx.chi2());
+            (*outputVecNtuplizer)["PV_ndof"].push_back(bestVtx.ndof());
+            (*outputVecNtuplizer)["PV_nTracks"].push_back(bestVtx.nTracks());
+
             (*outputVecNtuplizer)["vtx_PV_x"].push_back(bestVtx.position().x());
             (*outputVecNtuplizer)["vtx_PV_y"].push_back(bestVtx.position().y());
             (*outputVecNtuplizer)["vtx_PV_z"].push_back(bestVtx.position().z());
