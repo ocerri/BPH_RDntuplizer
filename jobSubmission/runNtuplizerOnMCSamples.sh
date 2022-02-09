@@ -26,7 +26,7 @@ declare -a processes=(
     # "BParking_Bd_JpsiKst_SoftQCDnonD_scale5_TuneCP5_HELAMP_PUc2_10-2-3"
     # "CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8"
     #
-    # Central production --> Should be run N = 3/4
+    # Central production --> Should be run N = 3
     "CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_BuToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
@@ -44,8 +44,6 @@ declare -a processes=(
     #
     # Private production --> Should be run N = 75
     # "CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
-    # "CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v2"
-    # "CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
     # "CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"

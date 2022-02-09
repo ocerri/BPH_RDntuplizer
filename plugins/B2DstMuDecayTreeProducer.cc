@@ -397,7 +397,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             float localVertexDensity_cos990 = 0;
             float localVertexDensity_cos995 = 0;
             float localVertexDensity_cos999 = 0;
-            for (uint i_vtx = 1; i_vtx < possibleVtxs.size(); i_vtx++) {
+            for (uint i_vtx = 0; i_vtx < possibleVtxs.size(); i_vtx++) {
               auto vtx = possibleVtxs[i_vtx];
               float dz = bestVtx.position().z() - vtx.position().z();
               if(fabs(dz) < 1.5*__dzMax__) localVertexDensity++;
