@@ -191,6 +191,14 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
   (*outputNtuplizer)["primaryVtx_sig_yz"] = primaryVtx.covariance(1, 2);
   (*outputNtuplizer)["primaryVtx_sig_zz"] = primaryVtx.covariance(2, 2);
 
+  (*outputNtuplizer)["beamSpot_x"] = beamSpotHandle->x0();
+  (*outputNtuplizer)["beamSpot_y"] = beamSpotHandle->y0();
+  (*outputNtuplizer)["beamSpot_z"] = beamSpotHandle->z0();
+  (*outputNtuplizer)["beamSpot_zWidth"] = beamSpotHandle->sigmaZ();
+  (*outputNtuplizer)["beamSpot_xWidth"] = beamSpotHandle->BeamWidthX();
+  (*outputNtuplizer)["beamSpot_yWidth"] = beamSpotHandle->BeamWidthY();
+  (*outputNtuplizer)["beamSpot_dxdz"] = beamSpotHandle->dxdz();
+
   iEvent.put(move(trgMuonsMatched), "trgMuonsMatched");
   iEvent.put(move(outputNtuplizer), "outputNtuplizer");
   iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");
