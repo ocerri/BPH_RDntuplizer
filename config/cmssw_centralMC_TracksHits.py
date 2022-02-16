@@ -11,14 +11,18 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 
 # Needed for transient track builder
 process.load('Configuration.StandardSequences.Services_cff')
+process.load('Configuration.StandardSequences.Reconstruction_cff')
 # process.load('Configuration.EventContent.EventContent_cff')
 process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 # process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.load("RecoTracker/TrackProducer/TrackRefitters_cff")
 process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 process.load("RecoTracker/TransientTrackingRecHit/TransientTrackingRecHitBuilderWithoutRefit_cfi")
-# process.load("RecoTracker/TransientTrackingRecHit/TransientTrackingRecHitBuilder_cfi")
+process.load("RecoTracker/TransientTrackingRecHit/TransientTrackingRecHitBuilder_cfi")
+process.load("Geometry.TrackerNumberingBuilder.trackerNumberingGeometry_cfi")
+process.load("Geometry.TrackerGeometryBuilder.trackerGeometry_cfi")
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v12', '')
@@ -94,11 +98,20 @@ process.source = cms.Source("PoolSource",
 #################   Sequence    ####################
 '''
 
+process.TrackerGeometricDetESModule = cms.ESProducer( "TrackerGeometricDetESModule",
+                                                      fromDDD = cms.bool( True )
+                                                     )
+
+                                                     
+# process.ttrhbwor.ComputeCoarseLocalPositionFromDisk = True
 process.tracksHit = cms.EDAnalyzer("TracksHitsAnalyzer",
         verbose = cms.int32(0)
 )
 
-process.p = cms.Path(process.tracksHit)
+process.p = cms.Path(
+                    process.TrackRefitter+
+                    process.tracksHit
+                    )
 
 
 # DEBUG -- dump the event content
