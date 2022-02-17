@@ -51,7 +51,7 @@ elif args.inputFiles:
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
     # fdefault += 'inputFiles_BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
-    fdefault += 'inputFiles_BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_PUc0_10-2-3.txt'
+    fdefault += 'inputFiles_CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
     flist = flist[:10]
@@ -59,14 +59,17 @@ else:
 for i in range(len(flist)):
     if os.path.isfile(flist[i]):
         flist[i] = 'file:' + flist[i]
+    elif flist[i].startswith('/store/mc/'):
+        if os.path.isfile('/storage/cms' + flist[i]):
+            flist[i] = 'file:' + '/storage/cms' + flist[i]
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist)),
-                            inputCommands=cms.untracked.vstring('keep *',
-                                                                'drop GenLumiInfoHeader_generator__SIM'),
-                            skipBadFiles=cms.untracked.bool(True)
+                            # inputCommands=cms.untracked.vstring('keep *',
+                            #                                     'drop GenLumiInfoHeader_generator__SIM'),
+                            # skipBadFiles=cms.untracked.bool(True)
                            )
-process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
+# process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
 
 '''
@@ -97,10 +100,11 @@ process.l1bits=cms.EDProducer("L1TriggerResultsConverter",
                               legacyL1=cms.bool(False),
 )
 
-process.TnP = cms.EDFilter("TagAndProbeProducer_MC",
+process.TnP = cms.EDFilter("TagAndProbeTriggerMuonFilter",
         muonIDScaleFactors = cms.int32(1),
         requireTag = cms.int32(1),
-        verbose = cms.int32(0)
+        isMC = cms.int32(1),
+        verbose = cms.int32(1)
 )
 
 

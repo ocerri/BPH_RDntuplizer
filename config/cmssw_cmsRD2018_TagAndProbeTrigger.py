@@ -54,15 +54,13 @@ else:
     i2 = int(nTot*2.0/3.0)
     flist = [flist[i0], flist[i1], flist[i2], flist[-5]]
 
-print 'Trying to get a local copy'
+# print 'Trying to get a local copy'
 for i in range(len(flist)):
-    if flist[i].startswith('file:'):
-        print 'Already set to local'
-        continue
-    # print 'Looking for: /mnt/hadoop' + flist[i]
-    if os.path.isfile('/mnt/hadoop' + flist[i]):
-        # print 'Found'
-        flist[i] = 'file:/mnt/hadoop' + flist[i]
+    if os.path.isfile(flist[i]):
+        flist[i] = 'file:' + flist[i]
+    elif flist[i].startswith('/store/data/'):
+        if os.path.isfile('/storage/cms' + flist[i]):
+            flist[i] = 'file:' + '/storage/cms' + flist[i]
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist))
@@ -101,9 +99,10 @@ process.l1bits=cms.EDProducer("L1TriggerResultsConverter",
                               legacyL1=cms.bool(False),
 )
 
-process.TnP = cms.EDFilter("TagAndProbeProducer",
+process.TnP = cms.EDFilter("TagAndProbeTriggerMuonFilter",
         muonIDScaleFactors = cms.int32(0),
         requireTag = cms.int32(1),
+        isMC = cms.int32(0),
         verbose = cms.int32(0),
 )
 

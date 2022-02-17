@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument ('-t', '--ntuples_tag', required=True, type=str, help='Ntuples tag')
     parser.add_argument ('--maxtime', help='Max wall run time [s=seconds, m=minutes, h=hours, d=days]', default='8h')
     parser.add_argument ('--memory', help='min virtual memory in MB', default='2000')
-    parser.add_argument ('--disk', type=int, help='min disk space in MB', default=4000)
+    parser.add_argument ('--disk', type=int, help='min disk space in KB', default=500000)
     parser.add_argument ('--cpu', type=int, help='cpu threads', default=1)
     parser.add_argument ('-f', '--force', action='store_true', default=False, help='Force reprocessing')
     parser.add_argument("--db", type=str, help="database file", default=None)
@@ -215,9 +215,9 @@ if __name__ == "__main__":
             fsub.write('on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)\n')
             # Send the job to Held state on failure.
             fsub.write('on_exit_hold = (ExitBySignal == True) || (ExitCode != 0)\n')
-            # Periodically retry the jobs for 3 times with an interval 20 mins.
-            fsub.write('periodic_release =  (NumJobStarts < 5) && ((CurrentTime - EnteredCurrentStatus) > (60*10))\n')
-            fsub.write('max_retries    = 5\n')
+            # Periodically retry the jobs for 3 times with an interval 10 mins.
+            fsub.write('periodic_release =  (NumJobStarts < 3) && ((CurrentTime - EnteredCurrentStatus) > (60*10))\n')
+            fsub.write('max_retries    = 3\n')
             fsub.write('requirements   = Machine =!= LastRemoteHost\n')# && regexp("blade-.*", TARGET.Machine)\n')
             fsub.write('universe = vanilla\n')
             fsub.write('queue 1\n')

@@ -7,7 +7,7 @@ import argparse
 #Example: python submitCMSSWCrabJobs.py B2DstMu -e D C
 cfg = {
        # Ancillary
-       'triggerMu': 'cmssw_cmsRD2018_triggerMuon.py',
+       # 'triggerMu': 'cmssw_cmsRD2018_triggerMuon.py',
        'TagAndProbeTrigger': 'cmssw_cmsRD2018_TagAndProbeTrigger.py',
        'B2JpsiKst': 'cmssw_cmsRD2018_Tag_Mu-Probe-B0_JpsiKst-mumuKpi.py',
        # 'B2JpsiK': toBeUpdated

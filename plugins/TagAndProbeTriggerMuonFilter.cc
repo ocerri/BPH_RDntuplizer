@@ -23,6 +23,9 @@
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+
 // L1 trigger
 #include "CondFormats/L1TObjects/interface/L1GtTriggerMenu.h"
 #include "CondFormats/DataRecord/interface/L1GtTriggerMenuRcd.h"
@@ -37,10 +40,10 @@
 
 using namespace std;
 
-class TagAndProbeProducer : public edm::stream::EDFilter<> {
+class TagAndProbeTriggerMuonFilter : public edm::stream::EDFilter<> {
    public:
-      explicit TagAndProbeProducer(const edm::ParameterSet&);
-      ~TagAndProbeProducer() {
+      explicit TagAndProbeTriggerMuonFilter(const edm::ParameterSet&);
+      ~TagAndProbeTriggerMuonFilter() {
         cout << "Total events in output tree: " << tree->GetEntries() << endl;
       };
 
@@ -59,9 +62,15 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
       edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
       edm::EDGetTokenT<reco::BeamSpot> beamSpotSrc_;
 
+      edm::EDGetTokenT<vector<PileupSummaryInfo>> pileupMCSrc_;
+      edm::EDGetTokenT<vector<reco::GenParticle>> PrunedParticlesSrc_;
+
       edm::Service<TFileService> fs;
 
       TH1I* hAllNvts;
+      TH1I* hAllNTrueIntMC;
+      TH1I* hAllVtxX;
+      TH1I* hAllVtxY;
       TH1I* hAllVtxZ;
       TTree* tree;
       map<string, float> outMap;
@@ -74,16 +83,18 @@ class TagAndProbeProducer : public edm::stream::EDFilter<> {
 
       int muonIDScaleFactors = false;
       int requireTag = 1;
+      int isMC = 0;
       int verbose = 0;
 
       double massMu  = 0.10565;
       double massJpsi  = 3.09691;
 
-      TH2D* hMuonIdSF;
+      TH2D* hSoftMuonIdSF;
+      TH2D* hMediumMuonIdSF;
 };
 
 
-TagAndProbeProducer::TagAndProbeProducer(const edm::ParameterSet& iConfig):
+TagAndProbeTriggerMuonFilter::TagAndProbeTriggerMuonFilter(const edm::ParameterSet& iConfig):
   L1triggerBitsSrc_(consumes<BXVector<GlobalAlgBlk>>( edm::InputTag("gtStage2Digis") )),
   L1triggerResultsSrc_(consumes<edm::TriggerResults>( edm::InputTag("l1bits") )),
   triggerBitsSrc_(consumes<edm::TriggerResults>( edm::InputTag("TriggerResults","","HLT") )),
@@ -94,20 +105,30 @@ TagAndProbeProducer::TagAndProbeProducer(const edm::ParameterSet& iConfig):
   beamSpotSrc_( consumes<reco::BeamSpot> ( edm::InputTag("offlineBeamSpot") ) ),
   muonIDScaleFactors( iConfig.getParameter<int>( "muonIDScaleFactors" ) ),
   requireTag( iConfig.getParameter<int>( "requireTag" ) ),
+  isMC( iConfig.getParameter<int>( "isMC" ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
   hAllNvts = fs->make<TH1I>("hAllNvts", "Number of vertexes from all the MINIAOD events", 101, -0.5, 100.5);
+  hAllVtxX = fs->make<TH1I>("hAllVtxX", "X coordinate of vertexes from all the MINIAOD events", 500, -0.05, 0.125);
+  hAllVtxY = fs->make<TH1I>("hAllVtxY", "Y coordinate of vertexes from all the MINIAOD events", 500, -0.1, 0.055);
   hAllVtxZ = fs->make<TH1I>("hAllVtxZ", "Z coordinate of vertexes from all the MINIAOD events", 100, -25, 25);
   tree = fs->make<TTree>( "T", "Events Tree from TAG AND PROBE");
 
+  if(isMC) {
+    hAllNTrueIntMC = fs->make<TH1I>("hAllNTrueIntMC", "Number of true interactions generated in MC", 101, -0.5, 100.5);
+    pileupMCSrc_ = consumes<vector<PileupSummaryInfo>> ( edm::InputTag("slimmedAddPileupInfo") );
+    PrunedParticlesSrc_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
+  }
+
   if (muonIDScaleFactors) {
-    TFile fAux = TFile("/storage/user/ocerri/BPhysics/data/calibration/muonIDscaleFactors/Run2018ABCD_SF_MuonID_Jpsi.root", "READ");
-    hMuonIdSF = (TH2D*) fAux.Get("NUM_SoftID_DEN_genTracks_pt_abseta");
+    TFile fAux = TFile("/storage/af/group/rdst_analysis/BPhysics/data/calibration/muonIDscaleFactors/Run2018ABCD_SF_MuonID_Jpsi.root", "READ");
+    hSoftMuonIdSF = (TH2D*) fAux.Get("NUM_SoftID_DEN_genTracks_pt_abseta");
+    hMediumMuonIdSF = (TH2D*) fAux.Get("NUM_MediumID_DEN_genTracks_pt_abseta");
   }
 
 }
 
-bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+bool TagAndProbeTriggerMuonFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   isRealData = iEvent.isRealData() ? 1 : 0 ;
   runNum     = iEvent.id().run();
   lumiNum    = iEvent.luminosityBlock();
@@ -123,10 +144,40 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   edm::Handle<vector<reco::Vertex>> vtxHandle;
   iEvent.getByToken(vtxSrc_, vtxHandle);
   auto primaryVtx = (*vtxHandle)[0];
+  outMap["PV_0_x"] = primaryVtx.position().x();
+  outMap["PV_0_y"] = primaryVtx.position().y();
+  outMap["PV_0_z"] = primaryVtx.position().z();
+  outMap["PV_1_x"] = (*vtxHandle)[1].position().x();
+  outMap["PV_1_y"] = (*vtxHandle)[1].position().y();
+  outMap["PV_1_z"] = (*vtxHandle)[1].position().z();
   auto nRecoVtx = vtxHandle->size();
   outMap["nVtx"] = nRecoVtx;
   hAllNvts->Fill((int)nRecoVtx);
-  for(auto vtx : (*vtxHandle)) hAllVtxZ->Fill(vtx.position().z());
+  for(auto vtx : (*vtxHandle)) {
+    if (vtx.ndof() <= 4) continue;
+    hAllVtxX->Fill(vtx.position().x());
+    hAllVtxY->Fill(vtx.position().y());
+    hAllVtxZ->Fill(vtx.position().z());
+  }
+
+  edm::Handle<std::vector<reco::GenParticle>> PrunedGenParticlesHandle;
+  if (isMC) {
+    edm::Handle<vector<PileupSummaryInfo>> pileupMCHandle;
+    iEvent.getByToken(pileupMCSrc_, pileupMCHandle);
+    uint idxBX0 = -1;
+    for (uint i=0; i < pileupMCHandle->size(); i++) {
+      if (pileupMCHandle->at(i).getBunchCrossing() == 0) {
+        idxBX0 = i;
+        break;
+      }
+    }
+    float puMC = pileupMCHandle->at(idxBX0).getTrueNumInteractions();
+    outMap["nTrueIntMC"] = puMC;
+    hAllNTrueIntMC->Fill((int)puMC);
+
+    // Get prunedGenParticles
+    iEvent.getByToken(PrunedParticlesSrc_, PrunedGenParticlesHandle);
+  }
 
   edm::Handle<vector<pat::Muon>> muonHandle;
   iEvent.getByToken(muonSrc_, muonHandle);
@@ -134,66 +185,15 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   if(nMuons < 2) return false;
   if (verbose) {cout << "\n\n =================  Event " << eventNum << " =================== " << endl;}
 
+
   edm::Handle<reco::BeamSpot> beamSpotHandle;
   iEvent.getByToken(beamSpotSrc_, beamSpotHandle);
-
-  // L1 triggers NanoAOD
-  // edm::Handle<edm::TriggerResults> L1triggerResults;
-  // iEvent.getByToken(L1triggerResultsSrc_, L1triggerResults);
-
-  // if (verbose) {cout << "======== L1 trigger NanoAOD ======== : " << L1triggerResults->size() << endl;}
-  //
-  // // regex regex_MuNano(".*SingleMu[0-9]+.*");
-  //
-  // for (unsigned int i = 0; i < L1triggerResults->size(); ++i) {
-  //     auto n =  L1triggerResults->name(i);
-  //     auto result = L1triggerResults->accept(i);
-  //     if (verbose) {
-  //       cout << n << ": " << result << endl;
-  //     }
-  // }
-  //
-  // if (verbose) {cout << "====================================" << endl;}
-  //
-  // // L1 trigger
-  //
-  // edm::ESHandle<L1GtTriggerMenu> L1TriggerMenuHandle;
-  // iSetup.get<L1GtTriggerMenuRcd>().get(L1TriggerMenuHandle);
-  //
-  // edm::Handle<BXVector<GlobalAlgBlk>> L1TriggerBitsHandle;
-  // iEvent.getByToken(L1triggerBitsSrc_, L1TriggerBitsHandle);
-  // const std::vector<bool>* l1FinalDecision = &L1TriggerBitsHandle->at(0, 0).getAlgoDecisionFinal();
-  //
-  // auto prescaleColumn = L1TriggerBitsHandle->at(0, 0).getPreScColumn();
-  // outMap["l1PrescaleColumn"] = prescaleColumn;
-  // if (verbose) {cout << "--> L1 prescale column: " << prescaleColumn << endl;}
-  //
-  // vector<string> consideredL1Seeds = {"22", "25", "18er1p5", "14er1p5", "12er1p5", "10er1p5", "9er1p5", "8er1p5", "7er1p5", "6er1p5"};
-  // for (auto ptThr : consideredL1Seeds) {
-  //   string name = "L1_SingleMu"+ptThr;
-  //   outMap[name] = -1;
-  // }
-  //
-  // regex regex_Mu(".*Mu.*");
-  // if (verbose) {cout << "======== L1 trigger results ========" << endl;}
-  //
-  // for (auto const& keyval : L1TriggerMenuHandle->gtAlgorithmAliasMap()) {
-  //   auto name = keyval.first;
-  //   auto idx  = keyval.second.algoBitNumber();
-  //   bool result = (*l1FinalDecision)[idx];
-  //   if (verbose && regex_match(name, regex_Mu)) {
-  //     cout << name << ": " << (int)result << endl;
-  //   }
-  //   for (auto ptThr : consideredL1Seeds) {
-  //     regex auxRegex("L1_SingleMu"+ptThr);
-  //     if (regex_match(name, auxRegex)) {
-  //       outMap[name] = result;
-  //       break;
-  //     }
-  //   }
-  //   // if (regex_match(name, regex_Mu)) outMap[name] = result;
-  // }
-  // if (verbose) {cout << "====================================" << endl;}
+  outMap["beamSpot_x"] = beamSpotHandle->x0();
+  outMap["beamSpot_y"] = beamSpotHandle->y0();
+  outMap["beamSpot_z"] = beamSpotHandle->z0();
+  outMap["beamSpot_zWidth"] = beamSpotHandle->sigmaZ();
+  outMap["beamSpot_xWidth"] = beamSpotHandle->BeamWidthX();
+  outMap["beamSpot_yWidth"] = beamSpotHandle->BeamWidthY();
 
   edm::Handle<BXVector<l1t::Muon>> l1MuonHandle;
   iEvent.getByToken(l1MuonSrc_, l1MuonHandle);
@@ -336,6 +336,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     }
 
 
+    outMap["mProbe_charge"] = mProbe.charge();
     outMap["mProbe_pt"] = mProbe.pt();
     outMap["mProbe_eta"] = mProbe.eta();
     outMap["mProbe_phi"] = mProbe.phi();
@@ -363,12 +364,40 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
     outMap["mProbe_mediumID"] = mProbe.isMediumMuon();
     outMap["mProbe_softID"] = mProbe.isSoftMuon(primaryVtx);
     if (muonIDScaleFactors) {
-      if (outMap["mProbe_softID"]) {
-        auto ix = hMuonIdSF->GetXaxis()->FindBin(min(39.9,mProbe.pt()));
-        auto iy = hMuonIdSF->GetYaxis()->FindBin(min(2.4, fabs(mProbe.eta())));
-        outMap["sfMuonID"] = hMuonIdSF->GetBinContent(ix, iy);
+      double best_dR = 99999999;
+      double best_pt = -1;
+      double best_eta = -999;
+      double best_phi = -999;
+      for (auto genP : (*PrunedGenParticlesHandle)) {
+        if (genP.pdgId() != -mProbe.charge()*13) continue;
+        double dPt = fabs(mProbe.pt() - genP.pt()) / genP.pt();
+        double dR = hypot(mProbe.eta() - genP.eta(), mProbe.phi() - genP.phi());
+        if (dPt < 0.08 && dR < 0.1 && dR < best_dR) {
+          best_dR = dR;
+          best_pt = genP.pt();
+          best_eta = genP.eta();
+          best_phi = genP.phi();
+        }
       }
-      else outMap["sfMuonID"] = 1.;
+      if (verbose) {
+        cout << Form("MC match. dR = %.4f, pt: reco=%.2f mc:%.2f", best_dR, mProbe.pt(), best_pt) << endl;
+      }
+      outMap["MC_mProbe_pt"] = best_pt;
+      outMap["MC_mProbe_eta"] = best_eta;
+      outMap["MC_mProbe_phi"] = best_phi;
+
+      if (outMap["mProbe_softID"] && best_pt > 0) {
+        auto ix = hSoftMuonIdSF->GetXaxis()->FindBin(min(39.9, best_pt));
+        auto iy = hSoftMuonIdSF->GetYaxis()->FindBin(min(2.4, fabs(best_eta)));
+        outMap["sfSoftMuonID"] = hSoftMuonIdSF->GetBinContent(ix, iy);
+      }
+      else outMap["sfSoftMuonID"] = 1.;
+      if (outMap["mProbe_mediumID"] && best_pt > 0) {
+        auto ix = hMediumMuonIdSF->GetXaxis()->FindBin(min(39.9, best_pt));
+        auto iy = hMediumMuonIdSF->GetYaxis()->FindBin(min(2.4, fabs(best_eta)));
+        outMap["sfMediumMuonID"] = hMediumMuonIdSF->GetBinContent(ix, iy);
+      }
+      else outMap["sfMediumMuonID"] = 1.;
     }
 
     if(ptTagMu != -1) {
@@ -405,7 +434,7 @@ bool TagAndProbeProducer::filter(edm::Event& iEvent, const edm::EventSetup& iSet
   return true;
 }
 
-tuple<uint, float, float, float> TagAndProbeProducer::matchL1Muon(pat::Muon muReco, BXVector<l1t::Muon> muonsL1, uint skipIdx) {
+tuple<uint, float, float, float> TagAndProbeTriggerMuonFilter::matchL1Muon(pat::Muon muReco, BXVector<l1t::Muon> muonsL1, uint skipIdx) {
   uint idxMatch = 9999;
   float best_dR = 1e6;
   float best_dpt = 1e6;
@@ -433,7 +462,7 @@ tuple<uint, float, float, float> TagAndProbeProducer::matchL1Muon(pat::Muon muRe
   return out;
 }
 
-void TagAndProbeProducer::addToTree() {
+void TagAndProbeTriggerMuonFilter::addToTree() {
   if (!treeDeclared) {
     if(verbose) {cout << "\nCreating the branches in the output tree:\n";}
     tree->Branch("isRealData", &isRealData);
@@ -453,4 +482,4 @@ void TagAndProbeProducer::addToTree() {
   tree->Fill();
 }
 
-DEFINE_FWK_MODULE(TagAndProbeProducer);
+DEFINE_FWK_MODULE(TagAndProbeTriggerMuonFilter);
