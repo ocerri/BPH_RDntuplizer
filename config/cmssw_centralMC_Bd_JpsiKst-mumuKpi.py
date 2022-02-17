@@ -50,31 +50,34 @@ elif args.inputFiles:
         flist = args.inputFiles
 else:
     fdefault = os.environ['CMSSW_BASE'] + '/src/ntuplizer/BPH_RDntuplizer/production/'
-    # fdefault += 'inputFiles_BP_Tag-Probe_B0_JpsiKst_Hardbbbar_evtgen_HELAMP_PUc0_10-2-3.txt'
+    # fdefault += 'inputFiles_BP_Tag_B0_MuNuDmst_Hardbbbar_evtgen_ISGW2_PUc0_10-2-3.txt'
     fdefault += 'inputFiles_CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:10]
+    flist = flist[:3]
 
 for i in range(len(flist)):
     if os.path.isfile(flist[i]):
         flist[i] = 'file:' + flist[i]
+    elif flist[i].startswith('/store/mc/'):
+        if os.path.isfile('/storage/cms' + flist[i]):
+            flist[i] = 'file:' + '/storage/cms' + flist[i]
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist)),
-                            inputCommands=cms.untracked.vstring('keep *',
-                                                                'drop GenLumiInfoHeader_generator__SIM')
+                            # inputCommands=cms.untracked.vstring('keep *',
+                            #                                     'drop GenLumiInfoHeader_generator__SIM')
                            )
-process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
+# process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
 
 '''
 #####################   Output   ###################
 '''
 if args.outputFile == '.root':
-    outname = 'B2JpsiKst_CAND.root'
+    outname = 'Bd2JpsiKst_CAND.root'
 elif args.outputFile.startswith('_numEvent'):
-    outname = 'B2JpsiKst_CAND' + args.outputFile
+    outname = 'Bd2JpsiKst_CAND' + args.outputFile
 else:
     outname = args.outputFile
 
@@ -95,7 +98,7 @@ process.trgF = cms.EDFilter("TriggerMuonsFilter",
         verbose = cms.int32(0)
 )
 
-process.B2JpsiKstDT = cms.EDProducer("B2JpsiKstDecayTreeProducer",
+process.B2JpsiKstDT = cms.EDProducer("Bd2JpsiKstDecayTreeProducer",
         trgMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
         verbose = cms.int32(0)
 )

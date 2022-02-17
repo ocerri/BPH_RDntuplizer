@@ -110,7 +110,7 @@ TagAndProbeTriggerMuonFilter::TagAndProbeTriggerMuonFilter(const edm::ParameterS
 {
   hAllNvts = fs->make<TH1I>("hAllNvts", "Number of vertexes from all the MINIAOD events", 101, -0.5, 100.5);
   hAllVtxX = fs->make<TH1I>("hAllVtxX", "X coordinate of vertexes from all the MINIAOD events", 500, -0.05, 0.125);
-  hAllVtxY = fs->make<TH1I>("hAllVtxY", "Y coordinate of vertexes from all the MINIAOD events", 500, -0.1, 0.055);
+  hAllVtxY = fs->make<TH1I>("hAllVtxY", "Y coordinate of vertexes from all the MINIAOD events", 500, -0.1, 0.07);
   hAllVtxZ = fs->make<TH1I>("hAllVtxZ", "Z coordinate of vertexes from all the MINIAOD events", 100, -25, 25);
   tree = fs->make<TTree>( "T", "Events Tree from TAG AND PROBE");
 

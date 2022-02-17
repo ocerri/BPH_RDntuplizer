@@ -12,21 +12,25 @@
 # first.
 
 outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsRD
-
+maxRunTime=24h
+nice=1
 ######## Trigger tag and probe ntuples #############
 ntuplesName=TagAndProbeTrigger_220217
 config=config/cmssw_cmsRD2018_TagAndProbeTrigger.py
-nFilesPerJob=30
+nFilesPerJob=40
+# Check how much time it really took for these jobs!
 
 ######## Bd -> Jpsi K* ntuples #############
 # ntuplesName=Bd2JpsiKst_220217
 # config=config/cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py
 # nFilesPerJob=20
+# Check how much time it really took for these jobs!
 
 ######## Main R(D*) analysis ntuples #############
 # ntuplesName=B2DstMu_220209
 # config=config/cmssw_cmsRD2018_Tag_Bd_MuDst-PiPiK.py
 # nFilesPerJob=10
+# Check how much time it really took for these jobs!
 
 
 for iPart in {1..5}; do
@@ -34,7 +38,7 @@ for iPart in {1..5}; do
     output_dir=$outLoc/ParkingBPH${iPart}/Run2018D-05May2019promptD-v1_RDntuplizer_$ntuplesName
     echo $output_dir
     mkdir -p $output_dir
-    python jobSubmission/create-condor-jobs -i production/inputFiles_ParkingBPH${iPart}_Run2018D-05May2019promptD-v1_MINIAOD.txt -o $output_dir/out_CAND.root -c $config -t $ntuplesName -N $nFilesPerJob --maxtime 120m
+    python jobSubmission/create-condor-jobs -i production/inputFiles_ParkingBPH${iPart}_Run2018D-05May2019promptD-v1_MINIAOD.txt -o $output_dir/out_CAND.root -c $config -t $ntuplesName -N $nFilesPerJob --maxtime $maxRunTime --nice $nice
     sleep 1
 done
 

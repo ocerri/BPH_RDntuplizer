@@ -54,7 +54,7 @@ else:
     fdefault += 'inputFiles_CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:10]
+    flist = flist[:3]
 
 for i in range(len(flist)):
     if os.path.isfile(flist[i]):
@@ -104,7 +104,7 @@ process.TnP = cms.EDFilter("TagAndProbeTriggerMuonFilter",
         muonIDScaleFactors = cms.int32(1),
         requireTag = cms.int32(1),
         isMC = cms.int32(1),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 

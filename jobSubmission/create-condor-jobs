@@ -45,6 +45,7 @@ if __name__ == "__main__":
     parser.add_argument ('--memory', help='min virtual memory in MB', default='2000')
     parser.add_argument ('--disk', type=int, help='min disk space in KB', default=500000)
     parser.add_argument ('--cpu', type=int, help='cpu threads', default=1)
+    parser.add_argument ('--nice', type=int, default=0, help='Run jobs as nice user')
     parser.add_argument ('-f', '--force', action='store_true', default=False, help='Force reprocessing')
     parser.add_argument("--db", type=str, help="database file", default=None)
 
@@ -209,6 +210,8 @@ if __name__ == "__main__":
             fsub.write('RequestDisk = %i\n' % args.disk)
             fsub.write('request_memory = ifthenelse(MemoryUsage =!= undefined, MAX({{MemoryUsage + 1024, {0}}}), {0})\n'.format(args.memory)) # Dynamic allocation
             fsub.write('RequestCpus = %i\n' % args.cpu)
+            if args.nice:
+                fsub.write('nice_user = True\n')
             fsub.write('+JobBatchName  = %s\n' % args.ntuples_tag)
             fsub.write('+UUID  = "%s"\n' % ID.hex)
             fsub.write('x509userproxy  = $ENV(X509_USER_PROXY)\n')

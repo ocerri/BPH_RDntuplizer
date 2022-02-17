@@ -101,7 +101,14 @@ def get_job_status(row, data=None):
 
     try:
         f = ROOT.TFile(row['output_file'])
-        tree = f.Get("outA/Tevts")
+        tDir = [n.GetName() for n in f.GetListOfKeys()]
+        if 'outA' in tDir:
+            tree = f.Get("outA/Tevts")
+        elif 'TnP' in tDir:
+            tree = f.Get("TnP/T")
+        else:
+            log.warn("Error opening ROOT file '%s': No declared Tree structure found" % (row['output_file']))
+            return 7
         for event in tree:
             pass
         return 8
