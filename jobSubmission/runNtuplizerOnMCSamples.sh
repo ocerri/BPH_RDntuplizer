@@ -70,3 +70,4 @@ done
 #   sqlite3 -column -header ~/state.db
 #   select batch_name, state, count(*) from ntuplizer_jobs group by state, batch_name;
 #   select nretry, count(nretry) from ntuplizer_jobs group by nretry;
+# To manage jobs you can use: -constraint 'JobBatchName == ""'
