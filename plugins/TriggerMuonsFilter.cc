@@ -55,6 +55,8 @@ class TriggerMuonsFilter : public edm::stream::EDFilter<> {
       edm::Service<TFileService> fs;
       TH1I* hAllNvts;
       TH1I* hAllNTrueIntMC;
+      TH1I* hAllVtxX;
+      TH1I* hAllVtxY;
       TH1I* hAllVtxZ;
 
       int N_analyzed_events = 0;
@@ -78,6 +80,8 @@ TriggerMuonsFilter::TriggerMuonsFilter(const edm::ParameterSet& iConfig):
   produces<map<string, float>>("outputNtuplizer");
   produces<map<string, vector<float>>>("outputVecNtuplizer");
   hAllNvts = fs->make<TH1I>("hAllNvts", "Number of vertexes from all the MINIAOD events", 101, -0.5, 100.5);
+  hAllVtxX = fs->make<TH1I>("hAllVtxX", "X coordinate of vertexes from all the MINIAOD events", 500, -0.05, 0.125);
+  hAllVtxY = fs->make<TH1I>("hAllVtxY", "Y coordinate of vertexes from all the MINIAOD events", 500, -0.1, 0.055);
   hAllVtxZ = fs->make<TH1I>("hAllVtxZ", "Z coordinate of vertexes from all the MINIAOD events", 100, -25, 25);
   if(isMC_) {
     pileupMCSrc_ = consumes<vector<PileupSummaryInfo>> ( edm::InputTag("slimmedAddPileupInfo") );
@@ -99,7 +103,12 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
   iEvent.getByToken(vtxSrc_, vtxHandle);
   auto primaryVtx = (*vtxHandle)[0];
   hAllNvts->Fill((int)vtxHandle->size());
-  for(auto vtx : (*vtxHandle)) hAllVtxZ->Fill(vtx.position().z());
+  for(auto vtx : (*vtxHandle)) {
+    if (vtx.ndof() <= 4) continue;
+    hAllVtxX->Fill(vtx.position().x());
+    hAllVtxY->Fill(vtx.position().y());
+    hAllVtxZ->Fill(vtx.position().z());
+  }
 
   edm::Handle<reco::BeamSpot> beamSpotHandle;
   iEvent.getByToken(beamSpotSrc_, beamSpotHandle);

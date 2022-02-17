@@ -29,16 +29,16 @@
 
 using namespace std;
 
-class B2JpsiKstDecayTreeProducer : public edm::EDProducer {
+class Bd2JpsiKstDecayTreeProducer : public edm::EDProducer {
 
 public:
 
-    explicit B2JpsiKstDecayTreeProducer(const edm::ParameterSet &iConfig);
+    explicit Bd2JpsiKstDecayTreeProducer(const edm::ParameterSet &iConfig);
     void AddTLVToOut(TLorentzVector, string, map<string, vector<float>>*);
     bool isMuonFromJpsiID(pat::Muon, reco::Vertex, pat::Muon);
     int trgMuIdx(pat::Muon, vector<pat::Muon>);
 
-    ~B2JpsiKstDecayTreeProducer() override {};
+    ~Bd2JpsiKstDecayTreeProducer() override {};
 
 private:
     virtual void produce(edm::Event&, const edm::EventSetup&);
@@ -61,7 +61,7 @@ private:
 
 
 
-B2JpsiKstDecayTreeProducer::B2JpsiKstDecayTreeProducer(const edm::ParameterSet &iConfig)
+Bd2JpsiKstDecayTreeProducer::Bd2JpsiKstDecayTreeProducer(const edm::ParameterSet &iConfig)
 {
     verbose = iConfig.getParameter<int>( "verbose" );
     PFCandSrc_ = consumes<vector<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"));
@@ -74,7 +74,7 @@ B2JpsiKstDecayTreeProducer::B2JpsiKstDecayTreeProducer(const edm::ParameterSet &
 }
 
 
-void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
 
     // Output collection
@@ -291,6 +291,14 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
               auto B = kinTree->currentParticle();
               auto vtxB = kinTree->currentDecayVertex();
 
+              (*outv)["vtx_PV_x"].push_back(primaryVtx.position().x());
+              (*outv)["vtx_PV_y"].push_back(primaryVtx.position().y());
+              (*outv)["vtx_PV_z"].push_back(primaryVtx.position().z());
+
+              (*outv)["vtx_B_decay_x"].push_back(vtxB->position().x());
+              (*outv)["vtx_B_decay_y"].push_back(vtxB->position().y());
+              (*outv)["vtx_B_decay_z"].push_back(vtxB->position().z());
+
               double cos_B_PV = vtxu::computePointingCos(primaryVtx, vtxB, B);
               (*outv)["cos_B_PV_"+tag].push_back(cos_B_PV);
               auto cosT_B_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxB, B);
@@ -303,7 +311,7 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
               (*outv)["dxy_vtxB_PV"].push_back(dxy_vtxB_PV.first);
               (*outv)["sigdxy_vtxB_PV"].push_back(dxy_vtxB_PV.first/dxy_vtxB_PV.second);
 
-              // B2JpsiKstDecayTreeProducer::AddTLVToOut(vtxu::getTLVfromKinPart(B), string("B_"+tag), outv);
+              // Bd2JpsiKstDecayTreeProducer::AddTLVToOut(vtxu::getTLVfromKinPart(B), string("B_"+tag), outv);
               auto pvec = B->currentState().globalMomentum();
               TLorentzVector out;
               out.SetXYZM(pvec.x(), pvec.y(), pvec.z(), m);
@@ -312,6 +320,12 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
               (*outv)["B_"+tag+"_phi"].push_back(out.Phi());
             }
             else{
+              (*outv)["vtx_PV_x"].push_back(-999);
+              (*outv)["vtx_PV_y"].push_back(-999);
+              (*outv)["vtx_PV_z"].push_back(-999);
+              (*outv)["vtx_B_decay_x"].push_back(-999);
+              (*outv)["vtx_B_decay_y"].push_back(-999);
+              (*outv)["vtx_B_decay_z"].push_back(-999);
               (*outv)["cos_B_PV_"+tag].push_back(0);
               (*outv)["cosT_B_PV_"+tag].push_back(0);
               (*outv)["d_vtxB_PV_"+tag].push_back(0);
@@ -339,6 +353,7 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
           uint i_best = 0;
           auto maxCos = vtxu::computePointingCos(primaryVtx, vtxB, B);
           for(uint i_vtx = 1; i_vtx < vtxHandle->size(); i_vtx++) {
+            if ((*vtxHandle)[i_vtx].ndof() < 4) continue;
             auto auxCos = vtxu::computePointingCos((*vtxHandle)[i_vtx], vtxB, B);
             if(auxCos > maxCos) {
               maxCos = auxCos;
@@ -446,7 +461,7 @@ void B2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSet
 }
 
 
-void B2JpsiKstDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<string, vector<float>>* outv) {
+void Bd2JpsiKstDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<string, vector<float>>* outv) {
   (*outv)[n+"_pt"].push_back(v.Pt());
   // (*outv)[n+"_pz"].push_back(v.Pz());
   (*outv)[n+"_eta"].push_back(v.Eta());
@@ -456,7 +471,7 @@ void B2JpsiKstDecayTreeProducer::AddTLVToOut(TLorentzVector v, string n, map<str
   return;
 }
 
-int B2JpsiKstDecayTreeProducer::trgMuIdx(pat::Muon m, vector<pat::Muon> trgMuons) {
+int Bd2JpsiKstDecayTreeProducer::trgMuIdx(pat::Muon m, vector<pat::Muon> trgMuons) {
   int idx = -1;
   int Nmu = trgMuons.size();
   for(int i = 0; i < Nmu; i++) {
@@ -472,7 +487,7 @@ int B2JpsiKstDecayTreeProducer::trgMuIdx(pat::Muon m, vector<pat::Muon> trgMuons
   return idx;
 }
 
-bool B2JpsiKstDecayTreeProducer::isMuonFromJpsiID(pat::Muon m, reco::Vertex pVtx, pat::Muon trgMu) {
+bool Bd2JpsiKstDecayTreeProducer::isMuonFromJpsiID(pat::Muon m, reco::Vertex pVtx, pat::Muon trgMu) {
   if(m.innerTrack().isNull()) return false;
   if (fabs(m.innerTrack()->dz(pVtx.position()) - trgMu.innerTrack()->dz(pVtx.position())) > __dzMax__) return false;
 
@@ -488,4 +503,4 @@ bool B2JpsiKstDecayTreeProducer::isMuonFromJpsiID(pat::Muon m, reco::Vertex pVtx
   return true;
 }
 
-DEFINE_FWK_MODULE(B2JpsiKstDecayTreeProducer);
+DEFINE_FWK_MODULE(Bd2JpsiKstDecayTreeProducer);

@@ -18,6 +18,11 @@ ntuplesName=TagAndProbeTrigger_220217
 config=config/cmssw_cmsRD2018_TagAndProbeTrigger.py
 nFilesPerJob=30
 
+######## Bd -> Jpsi K* ntuples #############
+# ntuplesName=Bd2JpsiKst_220217
+# config=config/cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py
+# nFilesPerJob=20
+
 ######## Main R(D*) analysis ntuples #############
 # ntuplesName=B2DstMu_220209
 # config=config/cmssw_cmsRD2018_Tag_Bd_MuDst-PiPiK.py

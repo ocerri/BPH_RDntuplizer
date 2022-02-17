@@ -48,17 +48,19 @@ else:
     fdefault += 'inputFiles_ParkingBPH1_Run2018D-05May2019promptD-v1_MINIAOD.txt'
     with open(fdefault) as f:
         flist = [l[:-1] for l in f.readlines()]
-    flist = flist[:5]
+    nTot = len(flist)
+    i0 = min(5, nTot)
+    i1 = int(nTot/3.0)
+    i2 = int(nTot*2.0/3.0)
+    flist = [flist[i0], flist[i1], flist[i2], flist[-5]]
 
-print 'Trying to get a local copy'
+# print 'Trying to get a local copy'
 for i in range(len(flist)):
-    if flist[i].startswith('file:'):
-        print 'Already set to local'
-        continue
-    print 'Looking for: /mnt/hadoop' + flist[i]
-    if os.path.isfile('/mnt/hadoop' + flist[i]):
-        print 'Found'
-        flist[i] = 'file:/mnt/hadoop' + flist[i]
+    if os.path.isfile(flist[i]):
+        flist[i] = 'file:' + flist[i]
+    elif flist[i].startswith('/store/data/'):
+        if os.path.isfile('/storage/cms' + flist[i]):
+            flist[i] = 'file:' + '/storage/cms' + flist[i]
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(tuple(flist))
@@ -75,9 +77,9 @@ if args.useLocalLumiList:
 #####################   Output   ###################
 '''
 if args.outputFile == '.root':
-    outname = 'B2JpsiKst_CAND.root'
+    outname = 'Bd2JpsiKst_CAND.root'
 elif args.outputFile.startswith('_numEvent'):
-    outname = 'B2JpsiKst_CAND' + args.outputFile
+    outname = 'Bd2JpsiKst_CAND' + args.outputFile
 else:
     outname = args.outputFile
 
@@ -98,7 +100,7 @@ process.trgF = cms.EDFilter("TriggerMuonsFilter",
         verbose = cms.int32(0)
 )
 
-process.B2JpsiKstDT = cms.EDProducer("B2JpsiKstDecayTreeProducer",
+process.B2JpsiKstDT = cms.EDProducer("Bd2JpsiKstDecayTreeProducer",
         trgMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
         verbose = cms.int32(0)
 )
