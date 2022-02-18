@@ -40,7 +40,7 @@ if args.inputFile:
 elif args.inputFiles:
     if len(args.inputFiles) == 1:
         with open(args.inputFiles[0]) as f:
-            flist = [l for l in f.readlines()]
+            flist = [l[:-1] for l in f.readlines()]
     else:
         flist = args.inputFiles
 else:
@@ -144,3 +144,14 @@ process.p = cms.Path(
 '''
 
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+
+process.Timing = cms.Service("Timing",
+  summaryOnly = cms.untracked.bool(False),
+  useJobReport = cms.untracked.bool(True)
+)
+
+process.options = cms.untracked.PSet(
+ wantSummary = cms.untracked.bool(True),
+ numberOfThreads = cms.untracked.uint32(1),
+  numberOfStreams = cms.untracked.uint32(1),
+)
