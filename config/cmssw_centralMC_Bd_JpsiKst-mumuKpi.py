@@ -150,3 +150,14 @@ process.p = cms.Path(
 '''
 
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+
+process.Timing = cms.Service("Timing",
+  summaryOnly = cms.untracked.bool(True),
+  useJobReport = cms.untracked.bool(True)
+)
+
+process.options = cms.untracked.PSet(
+ wantSummary = cms.untracked.bool(True),
+ numberOfThreads = cms.untracked.uint32(1),
+  numberOfStreams = cms.untracked.uint32(1),
+)
