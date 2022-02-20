@@ -14,12 +14,12 @@
 outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsMC
 
 # Trigger tag and probe ntuples
-config=config/cmssw_centralMC_TagAndProbeTrigger.py
-ntuplesName=ntuples_TagAndProbeTrigger_220217
+# config=config/cmssw_centralMC_TagAndProbeTrigger.py
+# ntuplesName=ntuples_TagAndProbeTrigger_220217
 
 # Bd -> Jpsi K* ntuples
-# config=config/cmssw_centralMC_Bd_JpsiKst-mumuKpi.py
-# ntuplesName=ntuples_Bd2JpsiKst_220217
+config=config/cmssw_centralMC_Bd_JpsiKst-mumuKpi.py
+ntuplesName=ntuples_Bd2JpsiKst_220217
 
 # Main R(D*) analysis ntuples
 # config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
