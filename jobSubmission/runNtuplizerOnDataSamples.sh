@@ -12,18 +12,18 @@
 # first.
 
 outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsRD
-maxRunTime=24h
+maxRunTime=48h
 nice=1
 ######## Trigger tag and probe ntuples #############
-ntuplesName=TagAndProbeTrigger_220217
-config=config/cmssw_cmsRD2018_TagAndProbeTrigger.py
-nFilesPerJob=40
+# ntuplesName=TagAndProbeTrigger_220217
+# config=config/cmssw_cmsRD2018_TagAndProbeTrigger.py
+# nFilesPerJob=40 # About 3h per job
 # Check how much time it really took for these jobs!
 
 ######## Bd -> Jpsi K* ntuples #############
-# ntuplesName=Bd2JpsiKst_220217
-# config=config/cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py
-# nFilesPerJob=20
+ntuplesName=Bd2JpsiKst_220217
+config=config/cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py
+nFilesPerJob=30
 # Check how much time it really took for these jobs!
 
 ######## Main R(D*) analysis ntuples #############
