@@ -70,4 +70,5 @@ done
 #   sqlite3 -column -header ~/state.db
 #   select batch_name, state, count(*) from ntuplizer_jobs group by state, batch_name;
 #   select nretry, count(nretry) from ntuplizer_jobs group by nretry;
+#   select log_file from ntuplizer_jobs WHERE state=="RUNNING" AND batch_name LIKE "TagAndProbeTrigger_220217_ParkingBPH4_Run2018D-05May2019promptD-v1_MINIAOD";
 # To manage jobs you can use: -constraint 'JobBatchName == ""'

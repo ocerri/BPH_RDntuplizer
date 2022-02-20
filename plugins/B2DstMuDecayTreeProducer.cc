@@ -30,7 +30,7 @@
 #define __dmD0_max__ 0.05 // loose cut
 #define __sigdxy_vtx_PV_min__ 2.0 // loose cut
 #define __dmDst_max__ 0.15 // loose cut
-#define __dm_DstMiunsD0_max__ 0.004
+#define __dm_DstMiunsD0_max__ 0.003
 #define __mass_D0pismu_max__ 8. // Some reasonable cut on the mass
 #define __pTaddTracks_min__ 0.3 // loose cut
 #define __mass_D0pismupi_max__ 10. // Some reasonable cut on the mass
@@ -469,6 +469,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             vector<double> tksAdd_massMuTk = {};
             vector<double> tksAdd_pval = {};
             vector<double> tksAdd_charge = {};
+            vector<double> tksAdd_pdgId = {};
             vector<double> tksAdd_pt = {};
             vector<double> tksAdd_ptError = {};
             vector<double> tksAdd_eta = {};
@@ -479,71 +480,113 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             vector<double> tksAdd_lostInnerHits = {};
             vector<double> tksAdd_sigdca_vtxB = {};
             vector<double> tksAdd_cos_PV = {};
-            if(verbose) {cout << "Looking for additional tracks" << endl;}
+            if(verbose) {cout << "Looking for additional tracks compatible with D0pismu vertex" << endl;}
+
+            double dR_max = hypot(K.eta() - trgMu.eta(), K.phi() - trgMu.phi());
+            dR_max = max(dR_max, hypot(pi.eta() - trgMu.eta(), pi.phi() - trgMu.phi()));
+            dR_max = max(dR_max, hypot(pis.eta() - trgMu.eta(), pis.phi() - trgMu.phi()));
+            dR_max = min(1., dR_max*1.5);
+            if(verbose) {cout << Form("Looking for additional neutrals within dR=%.3f from muon", dR_max) << endl;}
+            uint N_compatible_neu = 0;
+            vector<double> neu_pdgId = {};
+            vector<double> neu_pt = {};
+            vector<double> neu_eta = {};
+            vector<double> neu_phi = {};
+            vector<double> neu_energy = {};
+            vector<double> neu_et2 = {};
+            vector<double> neu_dR_fromMu = {};
+
+            int i_muon_PFcand = -1;
+
             for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
-              // Pion different from the pion from D0
+              // PF candidate different from K, pi and pis
               if( i_tk==i_K || i_tk==i_pi || i_tk==i_pis) continue;
 
               const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
-              if (!ptk.hasTrackDetails()) continue;
-              //Require a charged hadron
-              if (abs(ptk.pdgId()) != 211 ) continue;
-              if (ptk.pt() < __pTaddTracks_min__) continue;
-              // Require to be close to the trigger muon;
-              auto tk = ptk.bestTrack();
-              if (fabs(tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
-              if (vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta()) > __dRMax__) continue;
 
-              GlobalPoint auxp(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
-              auto dca = vtxu::computeDCA(iSetup, ptk, auxp);
+              double dR_fromMu = hypot(ptk.eta() - trgMu.eta(), ptk.phi() - trgMu.phi());
+              // PF candidate not matching with the muon
+              if ( fabs(ptk.pt() - trgMu.pt())/trgMu.pt() < 0.01  && dR_fromMu < 0.01 ) {
+                if (ptk.pdgId() == trgMu.pdgId()) i_muon_PFcand = i_tk;
+                continue;
+              }
 
-              // Check if it makes a consistent vertex
-              auto kinTree = vtxu::Fit_D0pismupi(iSetup, D0, pis, trgMu, ptk);
-              auto res = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
-              if(!res.isGood) continue;
-              if (verbose) {cout << Form("Trk pars: pt=%.2f eta=%.2f phi=%.2f\n", ptk.pt(), ptk.eta(), ptk.phi());}
+              if (ptk.charge() != 0 ) {
+                if (!ptk.hasTrackDetails()) continue;
+                if (ptk.pt() < __pTaddTracks_min__) continue;
+                // Require to be close to the trigger muon;
+                auto tk = ptk.bestTrack();
+                if (fabs(tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+                if (vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta()) > __dRMax__) continue;
 
-              kinTree->movePointerToTheTop();
-              auto p_vis = kinTree->currentParticle();
-              auto m_vis = p_vis->currentState().mass();
-              if (m_vis > __mass_D0pismupi_max__) continue;
+                GlobalPoint auxp(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
+                auto dca = vtxu::computeDCA(iSetup, ptk, auxp);
 
-              kinTree->movePointerToTheFirstChild();
-              auto refit_D0 = vtxu::getTLVfromKinPart(kinTree->currentParticle());
-              kinTree->movePointerToTheNextChild();
-              auto refit_pis = vtxu::getTLVfromKinPart(kinTree->currentParticle());
-              kinTree->movePointerToTheNextChild();
-              auto refit_mu = vtxu::getTLVfromKinPart(kinTree->currentParticle());
-              kinTree->movePointerToTheNextChild();
-              auto refit_pi = kinTree->currentParticle();
-              auto refit_pi_p4 = vtxu::getTLVfromKinPart(refit_pi);
+                // Check if it makes a consistent vertex
+                auto kinTree = vtxu::Fit_D0pismupi(iSetup, D0, pis, trgMu, ptk);
+                auto res = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
+                if(!res.isGood) continue;
+                if (verbose) {cout << Form("Trk pars: pt=%.2f eta=%.2f phi=%.2f\n", ptk.pt(), ptk.eta(), ptk.phi());}
 
-              auto m_D0pispi = (refit_pis + refit_D0 + refit_pi_p4).M();
-              auto m_MuTk = (refit_pi_p4 + refit_mu).M();
+                kinTree->movePointerToTheTop();
+                auto p_vis = kinTree->currentParticle();
+                auto m_vis = p_vis->currentState().mass();
+                if (m_vis > __mass_D0pismupi_max__) continue;
 
-              tksAdd_massVis.push_back(m_vis);
-              tksAdd_massHad.push_back(m_D0pispi);
-              tksAdd_massMuTk.push_back(m_MuTk);
-              tksAdd_pval.push_back(res.pval);
-              tksAdd_charge.push_back(ptk.pdgId()/211);
-              tksAdd_pt.push_back(refit_pi_p4.Pt());
-              tksAdd_ptError.push_back(tk->ptError());
-              tksAdd_eta.push_back(refit_pi_p4.Eta());
-              tksAdd_etaError.push_back(tk->etaError());
-              tksAdd_phi.push_back(refit_pi_p4.Phi());
-              tksAdd_phiError.push_back(tk->phiError());
-              tksAdd_dz.push_back(tk->dz(bestVtx.position()));
-              tksAdd_lostInnerHits.push_back(ptk.lostInnerHits());
-              tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
-              tksAdd_cos_PV.push_back(vtxu::computePointingCos(bestVtx, vtxB, refit_pi));
-              N_compatible_tk++;
+                kinTree->movePointerToTheFirstChild();
+                auto refit_D0 = vtxu::getTLVfromKinPart(kinTree->currentParticle());
+                kinTree->movePointerToTheNextChild();
+                auto refit_pis = vtxu::getTLVfromKinPart(kinTree->currentParticle());
+                kinTree->movePointerToTheNextChild();
+                auto refit_mu = vtxu::getTLVfromKinPart(kinTree->currentParticle());
+                kinTree->movePointerToTheNextChild();
+                auto refit_pi = kinTree->currentParticle();
+                auto refit_pi_p4 = vtxu::getTLVfromKinPart(refit_pi);
+
+                auto m_D0pispi = (refit_pis + refit_D0 + refit_pi_p4).M();
+                auto m_MuTk = (refit_pi_p4 + refit_mu).M();
+
+                tksAdd_massVis.push_back(m_vis);
+                tksAdd_massHad.push_back(m_D0pispi);
+                tksAdd_massMuTk.push_back(m_MuTk);
+                tksAdd_pval.push_back(res.pval);
+                tksAdd_charge.push_back(ptk.charge());
+                tksAdd_pdgId.push_back(ptk.pdgId());
+                tksAdd_pt.push_back(refit_pi_p4.Pt());
+                tksAdd_ptError.push_back(tk->ptError());
+                tksAdd_eta.push_back(refit_pi_p4.Eta());
+                tksAdd_etaError.push_back(tk->etaError());
+                tksAdd_phi.push_back(refit_pi_p4.Phi());
+                tksAdd_phiError.push_back(tk->phiError());
+                tksAdd_dz.push_back(tk->dz(bestVtx.position()));
+                tksAdd_lostInnerHits.push_back(ptk.lostInnerHits());
+                tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
+                tksAdd_cos_PV.push_back(vtxu::computePointingCos(bestVtx, vtxB, refit_pi));
+                N_compatible_tk++;
+              }
+              else {
+                if (dR_fromMu > dR_max) continue;
+                if (ptk.energy() < 0.5) continue;
+
+                neu_pdgId.push_back(ptk.pdgId());
+                neu_pt.push_back(ptk.pt());
+                neu_eta.push_back(ptk.eta());
+                neu_phi.push_back(ptk.phi());
+                neu_energy.push_back(ptk.energy());
+                neu_et2.push_back(ptk.et2());
+                neu_dR_fromMu.push_back(dR_fromMu);
+
+                N_compatible_neu++;
+              }
             }
+
             if ( (*outputVecNtuplizer)["nTksAdd"].size() == 0 ) {
               (*outputVecNtuplizer)["tksAdd_massVis"] = {};
               (*outputVecNtuplizer)["tksAdd_massHad"] = {};
               (*outputVecNtuplizer)["tksAdd_massMuTk"] = {};
               (*outputVecNtuplizer)["tksAdd_pval"] = {};
               (*outputVecNtuplizer)["tksAdd_charge"] = {};
+              (*outputVecNtuplizer)["tksAdd_pdgId"] = {};
               (*outputVecNtuplizer)["tksAdd_pt"] = {};
               (*outputVecNtuplizer)["tksAdd_ptError"] = {};
               (*outputVecNtuplizer)["tksAdd_eta"] = {};
@@ -563,6 +606,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_massMuTk"].push_back(tksAdd_massMuTk[i]);
               (*outputVecNtuplizer)["tksAdd_pval"].push_back(tksAdd_pval[i]);
               (*outputVecNtuplizer)["tksAdd_charge"].push_back(tksAdd_charge[i]);
+              (*outputVecNtuplizer)["tksAdd_pdgId"].push_back(tksAdd_pdgId[i]);
               (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
               (*outputVecNtuplizer)["tksAdd_ptError"].push_back(tksAdd_ptError[i]);
               (*outputVecNtuplizer)["tksAdd_eta"].push_back(tksAdd_eta[i]);
@@ -579,6 +623,35 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             for(auto auxN : (*outputVecNtuplizer)["nTksAdd"]) auxC += auxN;
             if( auxC != int ((*outputVecNtuplizer)["tksAdd_massVis"].size()) ){
               cout << "Number of tracks and tracks details lenght not matching" << endl;
+              assert(false);
+            }
+
+
+            if ( (*outputVecNtuplizer)["nNeuAdd"].size() == 0 ) {
+              (*outputVecNtuplizer)["neuAdd_pdgId"] = {};
+              (*outputVecNtuplizer)["neuAdd_pt"] = {};
+              (*outputVecNtuplizer)["neuAdd_eta"] = {};
+              (*outputVecNtuplizer)["neuAdd_phi"] = {};
+              (*outputVecNtuplizer)["neuAdd_energy"] = {};
+              (*outputVecNtuplizer)["neuAdd_et2"] = {};
+              (*outputVecNtuplizer)["neuAdd_dR_fromMu"] = {};
+            }
+            (*outputVecNtuplizer)["nNeuAdd"].push_back(N_compatible_neu);
+            if(verbose) {cout << "Compatible neutrals: " << N_compatible_neu << endl;}
+            for(uint i = 0; i < N_compatible_neu; i++){
+              (*outputVecNtuplizer)["neuAdd_pdgId"].push_back(neu_pdgId[i]);
+              (*outputVecNtuplizer)["neuAdd_pt"].push_back(neu_pt[i]);
+              (*outputVecNtuplizer)["neuAdd_eta"].push_back(neu_eta[i]);
+              (*outputVecNtuplizer)["neuAdd_phi"].push_back(neu_phi[i]);
+              (*outputVecNtuplizer)["neuAdd_energy"].push_back(neu_energy[i]);
+              (*outputVecNtuplizer)["neuAdd_et2"].push_back(neu_et2[i]);
+              (*outputVecNtuplizer)["neuAdd_dR_fromMu"].push_back(neu_dR_fromMu[i]);
+            }
+
+            auxC = 0;
+            for(auto auxN : (*outputVecNtuplizer)["nNeuAdd"]) auxC += auxN;
+            if( auxC != int ((*outputVecNtuplizer)["neuAdd_pdgId"].size()) ){
+              cout << "Number of neutrals and neutrals details lenght not matching" << endl;
               assert(false);
             }
 
@@ -609,7 +682,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             }
             (*outputVecNtuplizer)["mu_kickFinder"].push_back(trgMu.combinedQuality().trkKink);
             (*outputVecNtuplizer)["mu_segmentCompatibility"].push_back(	trgMu.segmentCompatibility() );
-
+            if (i_muon_PFcand == -1) (*outputVecNtuplizer)["mu_lostInnerHits"].push_back( -10 );
+            else (*outputVecNtuplizer)["mu_lostInnerHits"].push_back( (*pfCandHandle)[i_muon_PFcand].lostInnerHits() );
             (*outputVecNtuplizer)["mu_looseId"].push_back(trgMu.isLooseMuon());
             (*outputVecNtuplizer)["mu_mediumId"].push_back(trgMu.isMediumMuon());
             (*outputVecNtuplizer)["mu_tightId"].push_back(trgMu.isTightMuon(bestVtx));
