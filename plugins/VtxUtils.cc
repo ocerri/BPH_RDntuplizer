@@ -60,30 +60,54 @@ using namespace std;
 #define _B0Mass_ 5.27963
 #define _B0MassErr_ 0.00026
 
+/* Check for a not positive definite covariance matrix. If the covariance
+ * matrix is not positive definite, we force it to be positive definite by
+ * adding the minimum eigenvalue to the diagonal of the covariance matrix plus
+ * `delta`.
+ *
+ * See https://nhigham.com/2020/12/22/what-is-a-modified-cholesky-factorization/.
+ *
+ * Note: There may be better ways of doing this, but since most of these tracks
+ * don't end up in the final sample, this is probably good enough. */
 reco::Track fix_track(const reco::Track *tk, double delta=1e-8)
 {
     unsigned int i, j;
     double min_eig = 1;
 
+    /* Create a new Track object since the original one is read only. */
     reco::Track t = reco::Track(*tk);
+
+    /* Get the original covariance matrix. */
     reco::TrackBase::CovarianceMatrix cov = t.covariance();
+
+    /* Convert it from an SMatrix to a TMatrixD so we can get the eigenvalues. */
     TMatrixDSym new_cov(cov.kRows);
     for (i = 0; i < cov.kRows; i++)
         for (j = 0; j < cov.kRows; j++)
             new_cov(i,j) = cov(i,j);
+
+    /* Get the eigenvalues. */
     TVectorD eig(cov.kRows);
     new_cov.EigenVectors(eig);
     for (i = 0; i < cov.kRows; i++)
         if (eig(i) < min_eig)
             min_eig = eig(i);
+
+    /* If the minimum eigenvalue is less than zero, then subtract it from the
+     * diagonal and add `delta`. */
     if (min_eig < 0) {
         for (i = 0; i < cov.kRows; i++)
             new_cov(i,i) -= min_eig - delta;
+
+        /* Fill back the SMatrix. */
         for (i = 0; i < cov.kRows; i++)
             for (j = 0; j < cov.kRows; j++)
                 cov(i,j) = new_cov(i,j);
+
+        /* Set the new covariance matrix. */
         t.fill(cov);
     }
+
     return t;
 }
 
