@@ -11,6 +11,7 @@
 
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
+#include "DataFormats/TrackReco/interface/Track.h"
 
 // #include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
 
@@ -56,13 +57,40 @@ using namespace std;
 #define _B0Mass_ 5.27963
 #define _B0MassErr_ 0.00026
 
+reco::Track fix_track(const reco::Track *tk, double delta=1e-8)
+{
+    unsigned int i, j;
+    double min_eig = 1;
+
+    reco::Track t = reco::Track(*tk);
+    CovarianceMatrix cov = t.covariance();
+    TMatrixDSym new_cov(cov.kRows);
+    for (i = 0; i < cov.kRows; i++)
+        for (j = 0; j < cov.kRows; j++)
+            new_cov(i,j) = cov(i,j);
+    TVectorD eig;
+    new_cov.Eigenvectors(eig);
+    for (i = 0; i < cov.kRows; i++)
+        if (eig(i) < min_eig)
+            min_eig = eig(i);
+    if (min_eig < 0) {
+        for (i = 0; i < cov.kRows; i++)
+            new_cov(i,i) -= min_eig - delta;
+        for (i = 0; i < cov.kRows; i++)
+            for (j = 0; j < cov.kRows; j++)
+                cov(i,j) = new_cov(i,j);
+        t.fill(cov);
+    }
+    return t;
+}
+
 RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constraint) {
   // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack pi_tk = TTBuilder->build(pi.bestTrack());
-  reco::TransientTrack K_tk = TTBuilder->build(K.bestTrack());
+  reco::TransientTrack pi_tk = TTBuilder->build(fix_track(pi.bestTrack()));
+  reco::TransientTrack K_tk = TTBuilder->build(fix_track(K.bestTrack()));
 
   KinematicParticleFactoryFromTransientTrack pFactory;
 
