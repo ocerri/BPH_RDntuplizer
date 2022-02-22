@@ -82,11 +82,8 @@ reco::Track fix_track(const reco::Track *tk, double delta)
     unsigned int i, j;
     double min_eig = 1;
 
-    /* Create a new Track object since the original one is read only. */
-    reco::Track t = reco::Track(*tk);
-
     /* Get the original covariance matrix. */
-    reco::TrackBase::CovarianceMatrix cov = t.covariance();
+    reco::TrackBase::CovarianceMatrix cov = tk->covariance();
 
     /* Convert it from an SMatrix to a TMatrixD so we can get the eigenvalues. */
     TMatrixDSym new_cov(cov.kRows);
@@ -106,12 +103,9 @@ reco::Track fix_track(const reco::Track *tk, double delta)
     if (min_eig < 0) {
         for (i = 0; i < cov.kRows; i++)
             cov(i,i) -= min_eig - delta;
-
-        /* Set the new covariance matrix. */
-        t.fill(cov);
     }
 
-    return reco::Track(t.chi2(), t.ndof(), t.referencePoint(), t.momentum(), t.charge(), cov, t.algo(), (reco::TrackBase::TrackQuality) t.qualityMask());
+    return reco::Track(tk->chi2(), tk->ndof(), tk->referencePoint(), tk->momentum(), tk->charge(), cov, tk->algo(), (reco::TrackBase::TrackQuality) tk->qualityMask());
 }
 
 RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constraint) {
