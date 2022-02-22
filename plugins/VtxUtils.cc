@@ -12,6 +12,7 @@
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackReco/interface/TrackBase.h"
 
 // #include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
 
@@ -36,6 +37,8 @@
 #include <iostream>
 
 #include "VtxUtils.hh"
+#include "TMatrixDSym.h"
+#include "TVectorD.h"
 
 using namespace std;
 
@@ -63,13 +66,13 @@ reco::Track fix_track(const reco::Track *tk, double delta=1e-8)
     double min_eig = 1;
 
     reco::Track t = reco::Track(*tk);
-    CovarianceMatrix cov = t.covariance();
+    reco::TrackBase::CovarianceMatrix cov = t.covariance();
     TMatrixDSym new_cov(cov.kRows);
     for (i = 0; i < cov.kRows; i++)
         for (j = 0; j < cov.kRows; j++)
             new_cov(i,j) = cov(i,j);
-    TVectorD eig;
-    new_cov.Eigenvectors(eig);
+    TVectorD eig(cov.kRows);
+    new_cov.EigenVectors(eig);
     for (i = 0; i < cov.kRows; i++)
         if (eig(i) < min_eig)
             min_eig = eig(i);
