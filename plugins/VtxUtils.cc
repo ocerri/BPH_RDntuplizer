@@ -77,7 +77,7 @@ reco::Track fix_track(const reco::TrackRef& tk)
  *
  * Note: There may be better ways of doing this, but since most of these tracks
  * don't end up in the final sample, this is probably good enough. */
-reco::Track fix_track(const reco::Track *tk)
+reco::Track fix_track(const reco::Track *tk, double delta)
 {
     unsigned int i, j;
     double min_eig = 1;
@@ -111,7 +111,7 @@ reco::Track fix_track(const reco::Track *tk)
         t.fill(cov);
     }
 
-    return t;
+    return reco::Track(t.chi2(), t.ndof(), t.referencePoint(), t.momentum(), t.charge(), cov, t.algo(), (reco::TrackBase::TrackQuality) t.qualityMask());
 }
 
 RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constraint) {
