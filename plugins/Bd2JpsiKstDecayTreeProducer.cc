@@ -441,6 +441,192 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           AddTLVToOut(p4_refit_K, string("KRefit"), &(*outputVecNtuplizer));
           AddTLVToOut(p4_refit_pi+p4_refit_K, string("KstRefit"), &(*outputVecNtuplizer));
 
+          /*
+          ############################################################################
+                  Study the presence of additional tracks in the D* mu vertex
+          ############################################################################
+          */
+          uint N_compatible_tk = 0;
+          vector<double> tksAdd_massHad = {};
+          vector<double> tksAdd_massVis = {};
+          vector<double> tksAdd_pval = {};
+          vector<double> tksAdd_charge = {};
+          vector<double> tksAdd_pdgId = {};
+          vector<double> tksAdd_pt = {};
+          vector<double> tksAdd_eta = {};
+          vector<double> tksAdd_phi = {};
+          vector<double> tksAdd_dz = {};
+          vector<double> tksAdd_lostInnerHits = {};
+          vector<double> tksAdd_sigdca_vtxB = {};
+          vector<double> tksAdd_cos_PV = {};
+          if(verbose) {cout << "Looking for additional tracks compatible with D0pismu vertex" << endl;}
+
+          double dR_max = 1.;
+          if(verbose) {cout << Form("Looking for additional neutrals within dR=%.3f from muon", dR_max) << endl;}
+          uint N_compatible_neu = 0;
+          vector<double> neu_pdgId = {};
+          vector<double> neu_pt = {};
+          vector<double> neu_eta = {};
+          vector<double> neu_phi = {};
+          vector<double> neu_energy = {};
+          vector<double> neu_et2 = {};
+          vector<double> neu_dR_fromMu = {};
+
+          int i_mup_PFcand = -1;
+          int i_mum_PFcand = -1;
+
+          for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
+            // PF candidate different from K, pi and pis
+            if( i_tk==i_k || i_tk==i_pi) continue;
+
+            const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
+
+            // PF candidate not matching with the muon
+            double dR_fromMup = hypot(ptk.eta() - mup.eta(), ptk.phi() - mup.phi());
+            if ( fabs(ptk.pt() - mup.pt())/mup.pt() < 0.01  && dR_fromMup < 0.01 ) {
+              if (ptk.pdgId() == mup.pdgId()) i_mup_PFcand = i_tk;
+              continue;
+            }
+            double dR_fromMum = hypot(ptk.eta() - mum.eta(), ptk.phi() - mum.phi());
+            if ( fabs(ptk.pt() - mum.pt())/mum.pt() < 0.01  && dR_fromMum < 0.01 ) {
+              if (ptk.pdgId() == mum.pdgId()) i_mum_PFcand = i_tk;
+              continue;
+            }
+
+            if (ptk.charge() != 0 ) {
+              if (!ptk.hasTrackDetails()) continue;
+              if (ptk.pt() < 0.3) continue;
+              // Require to be close to the trigger muon;
+              auto tk = ptk.bestTrack();
+              if (fabs(tk->dz(primaryVtx.position()) - mum.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+              if (fabs(tk->dz(primaryVtx.position()) - mup.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+              if (vtxu::dR(ptk.phi(), mum.phi(), ptk.eta(), mum.eta()) > 3) continue;
+              if (vtxu::dR(ptk.phi(), mup.phi(), ptk.eta(), mup.eta()) > 3) continue;
+
+              GlobalPoint auxp(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
+              auto dca = vtxu::computeDCA(iSetup, ptk, auxp);
+
+              // Check if it makes a consistent vertex
+              auto kinTree = vtxu::FitB_mumupiK_tk(iSetup, mup, mum, pi, K, ptk, false, false, false);
+              auto res = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
+              if(!res.isGood) continue;
+              if (verbose) {cout << Form("Trk pars: pt=%.2f eta=%.2f phi=%.2f\n", ptk.pt(), ptk.eta(), ptk.phi());}
+
+              kinTree->movePointerToTheTop();
+              auto p_vis = kinTree->currentParticle();
+              auto m_vis = p_vis->currentState().mass();
+
+              kinTree->movePointerToTheFirstChild(); // mu+
+              kinTree->movePointerToTheNextChild();  // mu-
+              kinTree->movePointerToTheNextChild();  // pi
+              auto refit_pi = kinTree->currentParticle();
+              auto refit_pi_p4 = vtxu::getTLVfromKinPart(refit_pi);
+              kinTree->movePointerToTheNextChild();  // K
+              auto refit_K = kinTree->currentParticle();
+              auto refit_K_p4 = vtxu::getTLVfromKinPart(refit_K);
+              kinTree->movePointerToTheNextChild();  // addTk
+              auto refit_tk = kinTree->currentParticle();
+              auto refit_tk_p4 = vtxu::getTLVfromKinPart(refit_tk);
+
+              auto m_had = (refit_pi_p4 + refit_K_p4 + refit_tk_p4).M();
+
+              tksAdd_massVis.push_back(m_vis);
+              tksAdd_massHad.push_back(m_had);
+              tksAdd_pval.push_back(res.pval);
+              tksAdd_charge.push_back(ptk.charge());
+              tksAdd_pdgId.push_back(ptk.pdgId());
+              tksAdd_pt.push_back(refit_tk_p4.Pt());
+              tksAdd_eta.push_back(refit_tk_p4.Eta());
+              tksAdd_phi.push_back(refit_tk_p4.Phi());
+              tksAdd_dz.push_back(tk->dz(bestVtx.position()));
+              tksAdd_lostInnerHits.push_back(ptk.lostInnerHits());
+              tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
+              tksAdd_cos_PV.push_back(vtxu::computePointingCos(bestVtx, vtxB, refit_tk));
+              N_compatible_tk++;
+            }
+            else {
+              if (min(dR_fromMum, dR_fromMup) > dR_max) continue;
+              if (ptk.energy() < 0.5) continue;
+
+              neu_pdgId.push_back(ptk.pdgId());
+              neu_pt.push_back(ptk.pt());
+              neu_eta.push_back(ptk.eta());
+              neu_phi.push_back(ptk.phi());
+              neu_energy.push_back(ptk.energy());
+              neu_et2.push_back(ptk.et2());
+              neu_dR_fromMu.push_back(min(dR_fromMup, dR_fromMum));
+
+              N_compatible_neu++;
+            }
+          }
+
+          if ( (*outputVecNtuplizer)["nTksAdd"].size() == 0 ) {
+            (*outputVecNtuplizer)["tksAdd_massVis"] = {};
+            (*outputVecNtuplizer)["tksAdd_massHad"] = {};
+            (*outputVecNtuplizer)["tksAdd_pval"] = {};
+            (*outputVecNtuplizer)["tksAdd_charge"] = {};
+            (*outputVecNtuplizer)["tksAdd_pdgId"] = {};
+            (*outputVecNtuplizer)["tksAdd_pt"] = {};
+            (*outputVecNtuplizer)["tksAdd_eta"] = {};
+            (*outputVecNtuplizer)["tksAdd_phi"] = {};
+            (*outputVecNtuplizer)["tksAdd_dz"] = {};
+            (*outputVecNtuplizer)["tksAdd_lostInnerHits"] = {};
+            (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
+            (*outputVecNtuplizer)["tksAdd_cos_PV"] = {};
+          }
+          (*outputVecNtuplizer)["nTksAdd"].push_back(N_compatible_tk);
+          if(verbose) {cout << "Compatible tracks: " << N_compatible_tk << endl;}
+          for(uint i = 0; i < N_compatible_tk; i++){
+            (*outputVecNtuplizer)["tksAdd_massVis"].push_back(tksAdd_massVis[i]);
+            (*outputVecNtuplizer)["tksAdd_massHad"].push_back(tksAdd_massHad[i]);
+            (*outputVecNtuplizer)["tksAdd_pval"].push_back(tksAdd_pval[i]);
+            (*outputVecNtuplizer)["tksAdd_charge"].push_back(tksAdd_charge[i]);
+            (*outputVecNtuplizer)["tksAdd_pdgId"].push_back(tksAdd_pdgId[i]);
+            (*outputVecNtuplizer)["tksAdd_pt"].push_back(tksAdd_pt[i]);
+            (*outputVecNtuplizer)["tksAdd_eta"].push_back(tksAdd_eta[i]);
+            (*outputVecNtuplizer)["tksAdd_phi"].push_back(tksAdd_phi[i]);
+            (*outputVecNtuplizer)["tksAdd_dz"].push_back(tksAdd_dz[i]);
+            (*outputVecNtuplizer)["tksAdd_lostInnerHits"].push_back(tksAdd_lostInnerHits[i]);
+            (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
+            (*outputVecNtuplizer)["tksAdd_cos_PV"].push_back(tksAdd_cos_PV[i]);
+          }
+
+          int auxC = 0;
+          for(auto auxN : (*outputVecNtuplizer)["nTksAdd"]) auxC += auxN;
+          if( auxC != int ((*outputVecNtuplizer)["tksAdd_massVis"].size()) ){
+            cout << "Number of tracks and tracks details lenght not matching" << endl;
+            assert(false);
+          }
+
+
+          if ( (*outputVecNtuplizer)["nNeuAdd"].size() == 0 ) {
+            (*outputVecNtuplizer)["neuAdd_pdgId"] = {};
+            (*outputVecNtuplizer)["neuAdd_pt"] = {};
+            (*outputVecNtuplizer)["neuAdd_eta"] = {};
+            (*outputVecNtuplizer)["neuAdd_phi"] = {};
+            (*outputVecNtuplizer)["neuAdd_energy"] = {};
+            (*outputVecNtuplizer)["neuAdd_et2"] = {};
+            (*outputVecNtuplizer)["neuAdd_dR_fromMu"] = {};
+          }
+          (*outputVecNtuplizer)["nNeuAdd"].push_back(N_compatible_neu);
+          if(verbose) {cout << "Compatible neutrals: " << N_compatible_neu << endl;}
+          for(uint i = 0; i < N_compatible_neu; i++){
+            (*outputVecNtuplizer)["neuAdd_pdgId"].push_back(neu_pdgId[i]);
+            (*outputVecNtuplizer)["neuAdd_pt"].push_back(neu_pt[i]);
+            (*outputVecNtuplizer)["neuAdd_eta"].push_back(neu_eta[i]);
+            (*outputVecNtuplizer)["neuAdd_phi"].push_back(neu_phi[i]);
+            (*outputVecNtuplizer)["neuAdd_energy"].push_back(neu_energy[i]);
+            (*outputVecNtuplizer)["neuAdd_et2"].push_back(neu_et2[i]);
+            (*outputVecNtuplizer)["neuAdd_dR_fromMu"].push_back(neu_dR_fromMu[i]);
+          }
+
+          auxC = 0;
+          for(auto auxN : (*outputVecNtuplizer)["nNeuAdd"]) auxC += auxN;
+          if( auxC != int ((*outputVecNtuplizer)["neuAdd_pdgId"].size()) ){
+            cout << "Number of neutrals and neutrals details lenght not matching" << endl;
+            assert(false);
+          }
+
           if(n_B >= 100) break;
         }
         if(n_B >= 100) break;

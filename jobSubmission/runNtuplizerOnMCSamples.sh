@@ -18,17 +18,21 @@ outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsMC
 # ntuplesName=ntuples_TagAndProbeTrigger_220217
 
 # Bd -> Jpsi K* ntuples
-config=config/cmssw_centralMC_Bd_JpsiKst-mumuKpi.py
-ntuplesName=ntuples_Bd2JpsiKst_220217
+# config=config/cmssw_centralMC_Bd_JpsiKst-mumuKpi.py
+# ntuplesName=ntuples_Bd2JpsiKst_220217
 
 # Main R(D*) analysis ntuples
-# config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
-# ntuplesName=ntuples_B2DstMu_220209
+config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
+ntuplesName=ntuples_B2DstMu_220220
 
-nFilesPerJob=3
+nFilesPerJob=100
+maxTime=120m
+
+# nFilesPerJob=5
+# maxTime=48h
 declare -a processes=(
     # Ancillary measurments samples --> Should be run N = 3
-    "CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    # "CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_General_BuToJpsiK_BMuonFilter_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8"
     #
@@ -49,17 +53,17 @@ declare -a processes=(
     # "CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     #
     # Private production --> Should be run N = 100
-    # "CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
-    # "CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
-    # "CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
+    "CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
+    "CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
 )
 
 for process in "${processes[@]}"; do
     echo $process
     output_dir=$outLoc/$process/$ntuplesName
     mkdir -p $output_dir
-    python jobSubmission/create-condor-jobs -i production/inputFiles_$process.txt -o $output_dir/out_CAND.root -c $config -t $ntuplesName -N $nFilesPerJob --maxtime 120m
+    python jobSubmission/create-condor-jobs -i production/inputFiles_$process.txt -o $output_dir/out_CAND.root -c $config -t $ntuplesName -N $nFilesPerJob --maxtime $maxTime
     sleep 1
 done
 
@@ -72,3 +76,4 @@ done
 #   select nretry, count(nretry) from ntuplizer_jobs group by nretry;
 #   select log_file from ntuplizer_jobs WHERE state=="RUNNING" AND batch_name LIKE "TagAndProbeTrigger_220217_ParkingBPH4_Run2018D-05May2019promptD-v1_MINIAOD";
 # To manage jobs you can use: -constraint 'JobBatchName == ""'
+# condor_q -allusers -constraint 'regexp(".*B2DstMu.*",JobBatchName)'

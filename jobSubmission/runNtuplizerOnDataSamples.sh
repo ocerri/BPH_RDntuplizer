@@ -21,15 +21,15 @@ nice=1
 # Check how much time it really took for these jobs!
 
 ######## Bd -> Jpsi K* ntuples #############
-ntuplesName=Bd2JpsiKst_220217
-config=config/cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py
-nFilesPerJob=30
+# ntuplesName=Bd2JpsiKst_220217
+# config=config/cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py
+# nFilesPerJob=30
 # Check how much time it really took for these jobs!
 
 ######## Main R(D*) analysis ntuples #############
-# ntuplesName=B2DstMu_220209
-# config=config/cmssw_cmsRD2018_Tag_Bd_MuDst-PiPiK.py
-# nFilesPerJob=10
+ntuplesName=B2DstMu_220220
+config=config/cmssw_cmsRD2018_Tag_Bd_MuDst-PiPiK.py
+nFilesPerJob=20 # About 4h per job
 # Check how much time it really took for these jobs!
 
 

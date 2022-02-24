@@ -362,6 +362,71 @@ RefCountedKinematicTree vtxu::FitB_mumupiK(const RefCountedKinematicParticle m1,
   }
 }
 
+RefCountedKinematicTree vtxu::FitB_mumupiK_tk(const edm::EventSetup& iSetup, pat::Muon m1, pat::Muon m2, pat::PackedCandidate pi, pat::PackedCandidate K, pat::PackedCandidate addTk, bool JpsiKstmass_constraint, bool Bmass_constraint, bool pointing_constraint, reco::Vertex* ptrPV) {
+  // Get transient track builder
+  edm::ESHandle<TransientTrackBuilder> TTBuilder;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+
+  reco::TransientTrack m1_tk = TTBuilder->build(m1.muonBestTrack());
+  reco::TransientTrack m2_tk = TTBuilder->build(m2.muonBestTrack());
+  reco::TransientTrack pi_tk = TTBuilder->build(pi.bestTrack());
+  reco::TransientTrack K_tk = TTBuilder->build(K.bestTrack());
+  reco::TransientTrack tk_tk = TTBuilder->build(addTk.bestTrack());
+
+  std::vector<RefCountedKinematicParticle> parts;
+  KinematicParticleFactoryFromTransientTrack pFactory;
+  double chi = 0, ndf = 0;
+  float mMu = _MuMass_, dmMu = _MuMassErr_;
+  float mK = _KMass_, dmK = _KMassErr_;
+  float mPi = _PiMass_, dmPi = _PiMassErr_;
+  parts.push_back(pFactory.particle(m1_tk, mMu, chi, ndf, dmMu));
+  parts.push_back(pFactory.particle(m2_tk, mMu, chi, ndf, dmMu));
+  parts.push_back(pFactory.particle(pi_tk, mPi, chi, ndf, dmPi));
+  parts.push_back(pFactory.particle(K_tk, mK, chi, ndf, dmK));
+  parts.push_back(pFactory.particle(tk_tk, mPi, chi, ndf, dmPi));
+
+  if (!Bmass_constraint && !JpsiKstmass_constraint && !pointing_constraint) {
+    KinematicParticleVertexFitter VtxFitter;
+    RefCountedKinematicTree KinTree = VtxFitter.fit(parts);
+    return KinTree;
+  }
+  else {
+    vector<MultiTrackKinematicConstraint* > kinConstraints;
+
+    if(JpsiKstmass_constraint) {
+      ParticleMass mass_Jpsi = _JpsiMass_;
+      MultiTrackKinematicConstraint * c_mass_Jpsi = new MultiTrackMassKinematicConstraint(mass_Jpsi, 2);
+      kinConstraints.push_back(c_mass_Jpsi);
+
+      ParticleMass mass_Kst = _KstMass_;
+      MultiTrackKinematicConstraint * c_mass_Kst = new MultiTrackMassKinematicConstraint(mass_Kst, 2);
+      kinConstraints.push_back(c_mass_Kst);
+    }
+
+    if(Bmass_constraint){
+      ParticleMass mass_B = _B0Mass_;
+      MultiTrackKinematicConstraint * c_mass_B = new MultiTrackMassKinematicConstraint(mass_B, 4);
+      kinConstraints.push_back(c_mass_B);
+    }
+
+    if(pointing_constraint) {
+      if (ptrPV == nullptr) {
+        cerr << "[ERROR]: Pointing constraint add but no vertex provided" << endl;
+      }
+      else {
+        GlobalPoint vtxPosition(ptrPV->x(), ptrPV->y(), ptrPV->z());
+        MultiTrackKinematicConstraint * c_pointing_PV = new MultiTrackPointingKinematicConstraint (vtxPosition);
+        kinConstraints.push_back(c_pointing_PV);
+      }
+    }
+
+    MultiTrackKinematicConstraint * combConstraints = new CombinedKinematicConstraint(kinConstraints);
+
+    KinematicConstrainedVertexFitter kcVtxFitter;
+    RefCountedKinematicTree KinTree = kcVtxFitter.fit(parts, combConstraints);
+    return KinTree;
+  }
+}
 
 RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedCandidate pisoft, const RefCountedKinematicParticle D0, bool mass_constraint) {
 // Get transient track builder
