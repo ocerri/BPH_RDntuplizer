@@ -23,9 +23,9 @@ outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsMC
 
 # Main R(D*) analysis ntuples
 config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
-ntuplesName=ntuples_B2DstMu_220220
+ntuplesName=ntuples_B2DstMu_220225
 
-nFilesPerJob=100
+nFilesPerJob=3
 maxTime=120m
 
 # nFilesPerJob=5
@@ -37,26 +37,26 @@ declare -a processes=(
     # "CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8"
     #
     # Central production --> Should be run N = 3
-    # "CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BuToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BdToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BuToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BdToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BsToMuNuDstK_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BsToTauNuDstK_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BdToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BdToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BuToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BuToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BuToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BuToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BsToMuNuDstK_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BsToTauNuDstK_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BuToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BuToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     #
     # Private production --> Should be run N = 100
-    "CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
-    "CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
-    "CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    "CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    # "CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
+    # "CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
+    # "CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    # "CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
 )
 
 for process in "${processes[@]}"; do
