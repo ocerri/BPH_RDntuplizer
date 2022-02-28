@@ -90,13 +90,12 @@ reco::Track fix_track(const reco::Track *tk, double delta)
     for (i = 0; i < cov.kRows; i++) {
         for (j = 0; j < cov.kRows; j++) {
             /* Need to check for nan or inf, because for some reason these
-             * cause a segfault when calling Eigenvectors(). */
-            if (std::isnan(cov(i,j)) || std::isinf(cov(i,j))) {
-                /* No idea what to do here or why this happens. */
-                new_cov(i,j) = 1;
-            } else {
-                new_cov(i,j) = cov(i,j);
-            }
+             * cause a segfault when calling Eigenvectors().
+             *
+             * No idea what to do here or why this happens. */
+            if (std::isnan(cov(i,j)) || std::isinf(cov(i,j)))
+                cov(i,j) = 1;
+            new_cov(i,j) = cov(i,j);
         }
     }
 
