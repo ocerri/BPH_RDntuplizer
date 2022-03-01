@@ -27,6 +27,7 @@ public:
 
     explicit MCTruthB2JpsiKstProducer(const edm::ParameterSet &iConfig);
     void AddTLVToOut(TLorentzVector, string, map<string, float>*);
+    bool auxIsAncestor(const reco::Candidate*, const reco::Candidate *);
 
     ~MCTruthB2JpsiKstProducer() override {};
 
@@ -80,10 +81,15 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
     edm::Handle<map<string, vector<float>>> outMapHandle;
     iEvent.getByToken(decayTreeOutSrc_, outMapHandle);
     vector<float> reco_B_pt, reco_B_eta, reco_B_phi;
+    vector<float> AddTkCharge, AddTkPt, AddTkEta, AddTkPhi;
     for( auto const& kv : (*outMapHandle) ) {
       if (kv.first == "B_mumupiK_pt") reco_B_pt = kv.second;
-      if (kv.first == "B_mumupiK_eta") reco_B_eta = kv.second;
-      if (kv.first == "B_mumupiK_phi") reco_B_phi = kv.second;
+      else if (kv.first == "B_mumupiK_eta") reco_B_eta = kv.second;
+      else if (kv.first == "B_mumupiK_phi") reco_B_phi = kv.second;
+      else if (kv.first == "tksAdd_charge") AddTkCharge = kv.second;
+      else if (kv.first == "tksAdd_pt") AddTkPt = kv.second;
+      else if (kv.first == "tksAdd_eta") AddTkEta = kv.second;
+      else if (kv.first == "tksAdd_phi") AddTkPhi = kv.second;
     }
     if(verbose) {
       cout << "Reco B candidates" << endl;
@@ -294,6 +300,79 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
       }
     }
 
+    // Match additional tracks
+    (*outputVecNtuplizer)["MC_addTkFlag"] = {};
+    (*outputVecNtuplizer)["MC_addTk_fromMainB"] = {};
+    (*outputVecNtuplizer)["MC_addTk_dEta"] = {};
+    (*outputVecNtuplizer)["MC_addTk_dPhi"] = {};
+    (*outputVecNtuplizer)["MC_addTk_dR"] = {};
+    (*outputVecNtuplizer)["MC_addTk_pt"] = {};
+    (*outputVecNtuplizer)["MC_addTk_dPt"] = {};
+    (*outputVecNtuplizer)["MC_addTk_pdgId"] = {};
+    (*outputVecNtuplizer)["MC_addTk_pdgIdMother"] = {};
+    (*outputVecNtuplizer)["MC_addTk_pdgIdMotherMother"] = {};
+
+    vector<float> best_dR_tk = {};
+    vector<float> best_dpt_tk = {};
+    for (uint i = 0; i < AddTkCharge.size(); i++) {
+        (*outputVecNtuplizer)["MC_addTkFlag"].push_back(-1);
+        (*outputVecNtuplizer)["MC_addTk_fromMainB"].push_back(0);
+        (*outputVecNtuplizer)["MC_addTk_dEta"].push_back(0);
+        (*outputVecNtuplizer)["MC_addTk_dPhi"].push_back(0);
+        (*outputVecNtuplizer)["MC_addTk_dR"].push_back(-1);
+        (*outputVecNtuplizer)["MC_addTk_pt"].push_back(-1);
+        (*outputVecNtuplizer)["MC_addTk_dPt"].push_back(-1);
+        (*outputVecNtuplizer)["MC_addTk_pdgId"].push_back(0);
+        (*outputVecNtuplizer)["MC_addTk_pdgIdMother"].push_back(0);
+        (*outputVecNtuplizer)["MC_addTk_pdgIdMotherMother"].push_back(0);
+        best_dR_tk.push_back(99999);
+        best_dpt_tk.push_back(99999);
+    }
+    if (AddTkCharge.size() > 0) {
+      if (verbose) {cout << "Matching additional tracks: " << AddTkCharge.size() << endl;}
+      for(int j = 0; ((uint)j) < PackedGenParticlesHandle->size(); j++) {
+        auto packGenP = (*PackedGenParticlesHandle)[j];
+        if (packGenP.charge() == 0) continue;
+        if (packGenP.pt() < 0.2) continue;
+        for (uint i = 0; i < AddTkCharge.size(); i++) {
+          if ((*outputVecNtuplizer)["MC_addTkFlag"][i] != -1) continue;
+          if (packGenP.charge() != AddTkCharge[i]) continue;
+
+          float dEta = fabs(packGenP.eta() - AddTkEta[i]);
+          float dPhi = fabs(vtxu::dPhi(packGenP.phi(), AddTkPhi[i]));
+          float dR = hypot(dEta, dPhi);
+          float dPt = fabs(packGenP.pt() - AddTkPt[i])/packGenP.pt();
+          if (dR/0.005 + dPt/0.03 < best_dR_tk[i]/0.005 + best_dpt_tk[i]/0.03) {
+            best_dR_tk[i] = dR;
+            best_dpt_tk[i] = dPt;
+
+            if (dR < 0.025 && dPt < 0.025) {
+              (*outputVecNtuplizer)["MC_addTkFlag"][i] = 1;
+              if ( i_B >= 0 && auxIsAncestor(&((*PrunedGenParticlesHandle)[i_B]), &packGenP) ) {
+                (*outputVecNtuplizer)["MC_addTk_fromMainB"][i] = 1;
+              }
+            }
+            if (verbose) {
+              cout << j << " match " << i << ": " << packGenP.pdgId();
+              if ((*outputVecNtuplizer)["MC_addTk_fromMainB"][i]) {cout << " from main B";}
+              cout << endl;
+            }
+            (*outputVecNtuplizer)["MC_addTk_dEta"][i] = dEta;
+            (*outputVecNtuplizer)["MC_addTk_dPhi"][i] = dPhi;
+            (*outputVecNtuplizer)["MC_addTk_dR"][i] = dR;
+            (*outputVecNtuplizer)["MC_addTk_pt"][i] = packGenP.pt();
+            (*outputVecNtuplizer)["MC_addTk_dPt"][i] = dPt;
+            (*outputVecNtuplizer)["MC_addTk_pdgId"][i] = packGenP.pdgId();
+            (*outputVecNtuplizer)["MC_addTk_pdgIdMother"][i] = packGenP.mother(0)->pdgId();
+            if (packGenP.mother(0)->mother(0)) {
+              (*outputVecNtuplizer)["MC_addTk_pdgIdMotherMother"][i] = packGenP.mother(0)->mother(0)->pdgId();
+            }
+          }
+        }
+      }
+      if (verbose) {cout << "<--\n"<< endl;}
+    }
+
     iEvent.put(move(indexBmc), "indexBmc");
     iEvent.put(move(outputNtuplizer), "outputNtuplizer");
     iEvent.put(move(outputVecNtuplizer), "outputVecNtuplizer");
@@ -306,6 +385,17 @@ void MCTruthB2JpsiKstProducer::AddTLVToOut(TLorentzVector v, string n, map<strin
   (*outv)[n+"_eta"] = v.Eta();
   (*outv)[n+"_phi"] = v.Phi();
   return;
+}
+
+bool MCTruthB2JpsiKstProducer::auxIsAncestor(const reco::Candidate* ancestor, const reco::Candidate * particle){
+  if(ancestor->pt() == particle->pt() && ancestor->eta() == particle->eta() && ancestor->phi() == particle->phi() && ancestor->pdgId() == particle->pdgId()){
+    return true;
+  }
+  for(size_t i=0;i< particle->numberOfMothers();i++)
+  {
+    if(auxIsAncestor(ancestor,particle->mother(i))) return true;
+  }
+  return false;
 }
 
 

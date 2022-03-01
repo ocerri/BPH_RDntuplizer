@@ -35,7 +35,7 @@ db = os.path.join(home,'state.db')
 conn = sqlite3.connect(db)
 
 c = conn.cursor()
-results = c.execute('SELECT id, log_file, output_file FROM ntuplizer_jobs WHERE state="FAILED"')
+results = c.execute('SELECT id, log_file, output_file FROM ntuplizer_jobs WHERE state="FAILED" OR state="RETRY"')
 
 nRemoved_root = 0
 nRemoved_log = 0
@@ -43,13 +43,13 @@ for row in results.fetchall():
     id, log_file, output_file = row
     if os.path.isfile(output_file):
         print 'Removing output of failed job', id
-        os.remove(output_file)
+        os.system('rm -f ' + output_file)
         nRemoved_root += 1
     if os.path.isfile(log_file):
         print 'Removing log of failed job', id
-        os.remove(log_file.replace('.log', '.err'))
-        os.remove(log_file.replace('.log', '.out'))
-        os.remove(log_file)
+        os.system('rm -f ' + log_file.replace('.log', '.err'))
+        os.system('rm -f ' + log_file.replace('.log', '.out'))
+        os.system('rm -f ' + log_file)
         nRemoved_log += 1
 
 print 'Total removed root files:', nRemoved_root
