@@ -18,21 +18,21 @@ outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsMC
 # ntuplesName=ntuples_TagAndProbeTrigger_220217
 
 # Bd -> Jpsi K* ntuples
-# config=config/cmssw_centralMC_Bd_JpsiKst-mumuKpi.py
-# ntuplesName=ntuples_Bd2JpsiKst_220217
+config=config/cmssw_centralMC_Bd_JpsiKst-mumuKpi.py
+ntuplesName=ntuples_Bd2JpsiKst_220228
 
 # Main R(D*) analysis ntuples
-config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
-ntuplesName=ntuples_B2DstMu_220225
+# config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
+# ntuplesName=ntuples_B2DstMu_220225
 
-nFilesPerJob=100
+nFilesPerJob=3
 maxTime=120m
 
 # nFilesPerJob=5
 # maxTime=48h
 declare -a processes=(
     # Ancillary measurments samples --> Should be run N = 3
-    # "CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_General_BuToJpsiK_BMuonFilter_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8"
     #
@@ -77,3 +77,5 @@ done
 #   select log_file from ntuplizer_jobs WHERE state=="RUNNING" AND batch_name LIKE "TagAndProbeTrigger_220217_ParkingBPH4_Run2018D-05May2019promptD-v1_MINIAOD";
 # To manage jobs you can use: -constraint 'JobBatchName == ""'
 # condor_q -allusers -constraint 'regexp(".*B2DstMu.*",JobBatchName)'
+# condor_hold -constraint 'regexp(".*SSDstMu_220301_ParkingBPH1.*",JobBatchName) && JobStatus == 2'
+# Job status: 1=idle, 2=run, 5=hold
