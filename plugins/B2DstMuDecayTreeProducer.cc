@@ -482,9 +482,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             vector<double> tksAdd_cos_PV = {};
             if(verbose) {cout << "Looking for additional tracks compatible with D0pismu vertex" << endl;}
 
-            double dR_max = hypot(K.eta() - trgMu.eta(), K.phi() - trgMu.phi());
-            dR_max = max(dR_max, hypot(pi.eta() - trgMu.eta(), pi.phi() - trgMu.phi()));
-            dR_max = max(dR_max, hypot(pis.eta() - trgMu.eta(), pis.phi() - trgMu.phi()));
+            double dR_max = vtxu::dR(K.phi(), trgMu.phi(), K.eta(), trgMu.eta());
+            dR_max = max(dR_max, vtxu::dR(pi.phi(), trgMu.phi(), pi.eta(), trgMu.eta()));
+            dR_max = max(dR_max, vtxu::dR(pis.phi(), trgMu.phi(), pis.eta(), trgMu.eta()));
             dR_max = min(1., dR_max*1.5);
             if(verbose) {cout << Form("Looking for additional neutrals within dR=%.3f from muon", dR_max) << endl;}
             uint N_compatible_neu = 0;
@@ -504,7 +504,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
               const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
 
-              double dR_fromMu = hypot(ptk.eta() - trgMu.eta(), ptk.phi() - trgMu.phi());
+              double dR_fromMu = vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta())
               // PF candidate not matching with the muon
               if ( fabs(ptk.pt() - trgMu.pt())/trgMu.pt() < 0.01  && dR_fromMu < 0.01 ) {
                 if (ptk.pdgId() == trgMu.pdgId()) i_muon_PFcand = i_tk;
@@ -517,7 +517,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
                 // Require to be close to the trigger muon;
                 auto tk = ptk.bestTrack();
                 if (fabs(tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
-                if (vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta()) > __dRMax__) continue;
+                if (dR_fromMu > __dRMax__) continue;
 
                 GlobalPoint auxp(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
                 auto dca = vtxu::computeDCA(iSetup, ptk, auxp);
