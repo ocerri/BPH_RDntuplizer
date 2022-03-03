@@ -504,11 +504,13 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
               const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
 
-              double dR_fromMu = vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta())
+              double dR_fromMu = vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta());
               // PF candidate not matching with the muon
               if ( fabs(ptk.pt() - trgMu.pt())/trgMu.pt() < 0.01  && dR_fromMu < 0.01 ) {
-                if (ptk.pdgId() == trgMu.pdgId()) i_muon_PFcand = i_tk;
-                continue;
+                if (ptk.pdgId() == trgMu.pdgId()) {
+                    i_muon_PFcand = i_tk;
+                    continue;
+                }
               }
 
               if (ptk.charge() != 0 ) {
