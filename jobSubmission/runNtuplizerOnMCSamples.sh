@@ -18,21 +18,21 @@ outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsMC
 # ntuplesName=ntuples_TagAndProbeTrigger_220217
 
 # Bd -> Jpsi K* ntuples
-config=config/cmssw_centralMC_Bd_JpsiKst-mumuKpi.py
-ntuplesName=ntuples_Bd2JpsiKst_220228
+# config=config/cmssw_centralMC_Bd_JpsiKst-mumuKpi.py
+# ntuplesName=ntuples_Bd2JpsiKst_220228
 
 # Main R(D*) analysis ntuples
-# config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
-# ntuplesName=ntuples_B2DstMu_220225
+config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
+ntuplesName=ntuples_B2DstMu_220225
 
-nFilesPerJob=3
+nFilesPerJob=100
 maxTime=120m
 
 # nFilesPerJob=5
 # maxTime=48h
 declare -a processes=(
     # Ancillary measurments samples --> Should be run N = 3
-    "CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    # "CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_General_BuToJpsiK_BMuonFilter_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8"
     #
@@ -57,6 +57,9 @@ declare -a processes=(
     # "CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
     # "CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "BParking_Tag_Bd_DDs1_SoftQCDnonD_TuneCP5_13TeV-pythia8"
+    "BParking_Tag_Bu_DDs1_SoftQCDnonD_TuneCP5_13TeV-pythia8"
+    "BParking_Tag_B_DstDXX_SoftQCDnonD_TuneCP5_13TeV-pythia8"
 )
 
 for process in "${processes[@]}"; do

@@ -219,6 +219,12 @@ samples:
       - /storage/af/group/rdst_analysis/BPhysics/data/cmsMC/BParking_Tag_Bu_DDs1_SoftQCDnonD_scale5_TuneCP5_PUc2_10-2-3/jobs_MINIAOD/out_*.root
 
 
+  B_DstDXX:
+    dataset: BParking_Tag_B_DstDXX_SoftQCDnonD_TuneCP5_13TeV-pythia8
+    parts:
+      - /storage/af/group/rdst_analysis/BPhysics/data/cmsMC/BParking_Tag_B_DstDXX_SoftQCDnonD_scale5_TuneCP5_PUc2_10-2-3/jobs_MINIAOD/out_*.root
+
+
 
   ######## Other background
 
