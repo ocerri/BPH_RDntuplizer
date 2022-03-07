@@ -472,8 +472,8 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           vector<double> neu_et2 = {};
           vector<double> neu_dR_fromMu = {};
 
-          int i_mup_PFcand = -1;
-          int i_mum_PFcand = -1;
+          //int i_mup_PFcand = -1;
+          //int i_mum_PFcand = -1;
 
           for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
             // PF candidate different from K, pi and pis
@@ -482,15 +482,19 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
             const pat::PackedCandidate & ptk = (*pfCandHandle)[i_tk];
 
             // PF candidate not matching with the muon
-            double dR_fromMup = hypot(ptk.eta() - mup.eta(), ptk.phi() - mup.phi());
+            double dR_fromMup = vtxu::dR(ptk.phi(), mup.phi(), ptk.eta(), mup.eta());
             if ( fabs(ptk.pt() - mup.pt())/mup.pt() < 0.01  && dR_fromMup < 0.01 ) {
-              if (ptk.pdgId() == mup.pdgId()) i_mup_PFcand = i_tk;
-              continue;
+              if (ptk.pdgId() == mup.pdgId()) {
+                //i_mup_PFcand = i_tk;
+                continue;
+              }
             }
-            double dR_fromMum = hypot(ptk.eta() - mum.eta(), ptk.phi() - mum.phi());
+            double dR_fromMum = vtxu::dR(ptk.phi(), mum.phi(), ptk.eta(), mum.eta());
             if ( fabs(ptk.pt() - mum.pt())/mum.pt() < 0.01  && dR_fromMum < 0.01 ) {
-              if (ptk.pdgId() == mum.pdgId()) i_mum_PFcand = i_tk;
-              continue;
+              if (ptk.pdgId() == mum.pdgId()) {
+                //i_mum_PFcand = i_tk;
+                continue;
+              }
             }
 
             if (ptk.charge() != 0 ) {
@@ -500,8 +504,8 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
               auto tk = ptk.bestTrack();
               if (fabs(tk->dz(primaryVtx.position()) - mum.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
               if (fabs(tk->dz(primaryVtx.position()) - mup.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
-              if (vtxu::dR(ptk.phi(), mum.phi(), ptk.eta(), mum.eta()) > 3) continue;
-              if (vtxu::dR(ptk.phi(), mup.phi(), ptk.eta(), mup.eta()) > 3) continue;
+              if (dR_fromMum > 3) continue;
+              if (dR_fromMup > 3) continue;
 
               GlobalPoint auxp(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
               auto dca = vtxu::computeDCA(iSetup, ptk, auxp);
