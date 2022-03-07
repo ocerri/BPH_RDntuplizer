@@ -562,15 +562,12 @@ void MCTruthB2DstMuProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
         best_dpt.push_back(99999);
     }
     if (AddTkCharge.size() > 0) {
-      // unsigned int N_PackedGenParticles = PackedGenParticlesHandle->size();
-      // for(auto packGenP : (*PackedGenParticlesHandle)) {
       if (verbose) {cout << "Matching additional tracks: " << AddTkCharge.size() << endl;}
       for(int j = 0; ((uint)j) < N_PackedGenParticles; j++) {
         auto packGenP = (*PackedGenParticlesHandle)[j];
         if (packGenP.charge() == 0) continue;
         if (packGenP.pt() < 0.2) continue;
         for (uint i = 0; i < AddTkCharge.size(); i++) {
-          if ((*outputVecNtuplizer)["MC_addTkFlag"][i] != -1) continue;
           if (packGenP.charge() != AddTkCharge[i]) continue;
 
           float dEta = fabs(packGenP.eta() - AddTkEta[i]);
