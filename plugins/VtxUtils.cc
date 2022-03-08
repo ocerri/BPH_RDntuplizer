@@ -11,6 +11,8 @@
 
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackReco/interface/TrackBase.h"
 
 // #include "RecoVertex/VertexTools/interface/VertexDistance3D.h"
 
@@ -35,6 +37,8 @@
 #include <iostream>
 
 #include "VtxUtils.hh"
+#include "TMatrixDSym.h"
+#include "TVectorD.h"
 
 using namespace std;
 
@@ -56,13 +60,69 @@ using namespace std;
 #define _B0Mass_ 5.27963
 #define _B0MassErr_ 0.00026
 
+reco::Track fix_track(const reco::Track *tk, double delta=1e-8);
+
+reco::Track fix_track(const reco::TrackRef& tk)
+{
+    reco::Track t = reco::Track(*tk);
+    return fix_track(&t);
+}
+
+/* Check for a not positive definite covariance matrix. If the covariance
+ * matrix is not positive definite, we force it to be positive definite by
+ * adding the minimum eigenvalue to the diagonal of the covariance matrix plus
+ * `delta`.
+ *
+ * See https://nhigham.com/2020/12/22/what-is-a-modified-cholesky-factorization/.
+ *
+ * Note: There may be better ways of doing this, but since most of these tracks
+ * don't end up in the final sample, this is probably good enough. */
+reco::Track fix_track(const reco::Track *tk, double delta)
+{
+    unsigned int i, j;
+    double min_eig = 1;
+
+    /* Get the original covariance matrix. */
+    reco::TrackBase::CovarianceMatrix cov = tk->covariance();
+
+    /* Convert it from an SMatrix to a TMatrixD so we can get the eigenvalues. */
+    TMatrixDSym new_cov(cov.kRows);
+    for (i = 0; i < cov.kRows; i++) {
+        for (j = 0; j < cov.kRows; j++) {
+            /* Need to check for nan or inf, because for some reason these
+             * cause a segfault when calling Eigenvectors().
+             *
+             * No idea what to do here or why this happens. */
+            if (std::isnan(cov(i,j)) || std::isinf(cov(i,j)))
+                cov(i,j) = 1;
+            new_cov(i,j) = cov(i,j);
+        }
+    }
+
+    /* Get the eigenvalues. */
+    TVectorD eig(cov.kRows);
+    new_cov.EigenVectors(eig);
+    for (i = 0; i < cov.kRows; i++)
+        if (eig(i) < min_eig)
+            min_eig = eig(i);
+
+    /* If the minimum eigenvalue is less than zero, then subtract it from the
+     * diagonal and add `delta`. */
+    if (min_eig < 0) {
+        for (i = 0; i < cov.kRows; i++)
+            cov(i,i) -= min_eig - delta;
+    }
+
+    return reco::Track(tk->chi2(), tk->ndof(), tk->referencePoint(), tk->momentum(), tk->charge(), cov, tk->algo(), (reco::TrackBase::TrackQuality) tk->qualityMask());
+}
+
 RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constraint) {
   // Get transient track builder
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack pi_tk = TTBuilder->build(pi.bestTrack());
-  reco::TransientTrack K_tk = TTBuilder->build(K.bestTrack());
+  reco::TransientTrack pi_tk = TTBuilder->build(fix_track(pi.bestTrack()));
+  reco::TransientTrack K_tk = TTBuilder->build(fix_track(K.bestTrack()));
 
   KinematicParticleFactoryFromTransientTrack pFactory;
 
@@ -93,8 +153,8 @@ RefCountedKinematicTree vtxu::FitKst_piK(const edm::EventSetup& iSetup, pat::Pac
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack pi_tk = TTBuilder->build(pi.bestTrack());
-  reco::TransientTrack K_tk = TTBuilder->build(K.bestTrack());
+  reco::TransientTrack pi_tk = TTBuilder->build(fix_track(pi.bestTrack()));
+  reco::TransientTrack K_tk = TTBuilder->build(fix_track(K.bestTrack()));
 
   KinematicParticleFactoryFromTransientTrack pFactory;
 
@@ -124,8 +184,8 @@ RefCountedKinematicTree vtxu::FitPhi_KK(const edm::EventSetup& iSetup, pat::Pack
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack K1_tk = TTBuilder->build(K1.bestTrack());
-  reco::TransientTrack K2_tk = TTBuilder->build(K2.bestTrack());
+  reco::TransientTrack K1_tk = TTBuilder->build(fix_track(K1.bestTrack()));
+  reco::TransientTrack K2_tk = TTBuilder->build(fix_track(K2.bestTrack()));
 
   KinematicParticleFactoryFromTransientTrack pFactory;
 
@@ -161,7 +221,7 @@ RefCountedKinematicTree vtxu::FitDst_fitD0wMassConstraint(const edm::EventSetup&
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack pisoft_tk = TTBuilder->build(pisoft.bestTrack());
+  reco::TransientTrack pisoft_tk = TTBuilder->build(fix_track(pisoft.bestTrack()));
 
   KinematicParticleFactoryFromTransientTrack pFactory;
 
@@ -190,8 +250,8 @@ RefCountedKinematicTree vtxu::FitJpsi_mumu(const edm::EventSetup& iSetup, pat::M
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack m1_tk = TTBuilder->build(m1.muonBestTrack());
-  reco::TransientTrack m2_tk = TTBuilder->build(m2.muonBestTrack());
+  reco::TransientTrack m1_tk = TTBuilder->build(fix_track(m1.muonBestTrack()));
+  reco::TransientTrack m2_tk = TTBuilder->build(fix_track(m2.muonBestTrack()));
 
   std::vector<RefCountedKinematicParticle> parts;
   KinematicParticleFactoryFromTransientTrack pFactory;
@@ -219,9 +279,9 @@ RefCountedKinematicTree vtxu::FitB_mumuK(const edm::EventSetup& iSetup, pat::Muo
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack m1_tk = TTBuilder->build(m1.muonBestTrack());
-  reco::TransientTrack m2_tk = TTBuilder->build(m2.muonBestTrack());
-  reco::TransientTrack K_tk = TTBuilder->build(K.bestTrack());
+  reco::TransientTrack m1_tk = TTBuilder->build(fix_track(m1.muonBestTrack()));
+  reco::TransientTrack m2_tk = TTBuilder->build(fix_track(m2.muonBestTrack()));
+  reco::TransientTrack K_tk = TTBuilder->build(fix_track(K.bestTrack()));
 
   std::vector<RefCountedKinematicParticle> parts;
   KinematicParticleFactoryFromTransientTrack pFactory;
@@ -242,10 +302,10 @@ RefCountedKinematicTree vtxu::FitB_mumupiK(const edm::EventSetup& iSetup, pat::M
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack m1_tk = TTBuilder->build(m1.muonBestTrack());
-  reco::TransientTrack m2_tk = TTBuilder->build(m2.muonBestTrack());
-  reco::TransientTrack pi_tk = TTBuilder->build(pi.bestTrack());
-  reco::TransientTrack K_tk = TTBuilder->build(K.bestTrack());
+  reco::TransientTrack m1_tk = TTBuilder->build(fix_track(m1.muonBestTrack()));
+  reco::TransientTrack m2_tk = TTBuilder->build(fix_track(m2.muonBestTrack()));
+  reco::TransientTrack pi_tk = TTBuilder->build(fix_track(pi.bestTrack()));
+  reco::TransientTrack K_tk = TTBuilder->build(fix_track(K.bestTrack()));
 
   std::vector<RefCountedKinematicParticle> parts;
   KinematicParticleFactoryFromTransientTrack pFactory;
@@ -433,7 +493,7 @@ RefCountedKinematicTree vtxu::FitDst(const edm::EventSetup& iSetup, pat::PackedC
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack pisoft_tk = TTBuilder->build(pisoft.bestTrack());
+  reco::TransientTrack pisoft_tk = TTBuilder->build(fix_track(pisoft.bestTrack()));
   reco::TransientTrack D0_tk = D0->refittedTransientTrack();
 
   KinematicParticleFactoryFromTransientTrack pFactory;
@@ -465,8 +525,8 @@ RefCountedKinematicTree vtxu::FitD0pipi(const edm::EventSetup& iSetup, const Ref
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
   reco::TransientTrack D0_tk = D0->refittedTransientTrack();
-  reco::TransientTrack pi1_tk = TTBuilder->build(pi1.bestTrack());
-  reco::TransientTrack pi2_tk = TTBuilder->build(pi2.bestTrack());
+  reco::TransientTrack pi1_tk = TTBuilder->build(fix_track(pi1.bestTrack()));
+  reco::TransientTrack pi2_tk = TTBuilder->build(fix_track(pi2.bestTrack()));
 
   KinematicParticleFactoryFromTransientTrack pFactory;
 
@@ -490,9 +550,9 @@ RefCountedKinematicTree vtxu::FitD0pipipis(const edm::EventSetup& iSetup, const 
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
   reco::TransientTrack D0_tk = D0->refittedTransientTrack();
-  reco::TransientTrack pi1_tk = TTBuilder->build(pi1.bestTrack());
-  reco::TransientTrack pi2_tk = TTBuilder->build(pi2.bestTrack());
-  reco::TransientTrack pis_tk = TTBuilder->build(pis.bestTrack());
+  reco::TransientTrack pi1_tk = TTBuilder->build(fix_track(pi1.bestTrack()));
+  reco::TransientTrack pi2_tk = TTBuilder->build(fix_track(pi2.bestTrack()));
+  reco::TransientTrack pis_tk = TTBuilder->build(fix_track(pis.bestTrack()));
 
   KinematicParticleFactoryFromTransientTrack pFactory;
 
@@ -527,7 +587,7 @@ RefCountedKinematicTree vtxu::FitD0_pions(const edm::EventSetup& iSetup, const R
   float mPi = _PiMass_, dmPi = _PiMassErr_;
 
   for(auto pi : pions) {
-    reco::TransientTrack pi_tk = TTBuilder->build(pi.bestTrack());
+    reco::TransientTrack pi_tk = TTBuilder->build(fix_track(pi.bestTrack()));
     parts.push_back(pFactory.particle(pi_tk, mPi, chi, ndf, dmPi));
   }
 
@@ -541,8 +601,8 @@ RefCountedKinematicTree vtxu::FitB_D0pismu(const edm::EventSetup& iSetup, const 
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
   reco::TransientTrack D0_tk = D0->refittedTransientTrack();
-  reco::TransientTrack pis_tk = TTBuilder->build(pis.bestTrack());
-  reco::TransientTrack mu_tk = TTBuilder->build(mu.muonBestTrack());
+  reco::TransientTrack pis_tk = TTBuilder->build(fix_track(pis.bestTrack()));
+  reco::TransientTrack mu_tk = TTBuilder->build(fix_track(mu.muonBestTrack()));
 
   KinematicParticleFactoryFromTransientTrack pFactory;
   std::vector<RefCountedKinematicParticle> parts;
@@ -566,9 +626,9 @@ RefCountedKinematicTree vtxu::Fit_D0pismupi(const edm::EventSetup& iSetup, const
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
   reco::TransientTrack D0_tk = D0->refittedTransientTrack();
-  reco::TransientTrack pis_tk = TTBuilder->build(pis.bestTrack());
-  reco::TransientTrack mu_tk = TTBuilder->build(mu.muonBestTrack());
-  reco::TransientTrack pi_tk = TTBuilder->build(pi.bestTrack());
+  reco::TransientTrack pis_tk = TTBuilder->build(fix_track(pis.bestTrack()));
+  reco::TransientTrack mu_tk = TTBuilder->build(fix_track(mu.muonBestTrack()));
+  reco::TransientTrack pi_tk = TTBuilder->build(fix_track(pi.bestTrack()));
 
   KinematicParticleFactoryFromTransientTrack pFactory;
   std::vector<RefCountedKinematicParticle> parts;
@@ -593,8 +653,8 @@ RefCountedKinematicTree vtxu::Fit_D0pihpis(const edm::EventSetup& iSetup, const 
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
   reco::TransientTrack D0_tk = D0->refittedTransientTrack();
-  reco::TransientTrack pih_tk = TTBuilder->build(pih.bestTrack());
-  reco::TransientTrack pis_tk = TTBuilder->build(pis.bestTrack());
+  reco::TransientTrack pih_tk = TTBuilder->build(fix_track(pih.bestTrack()));
+  reco::TransientTrack pis_tk = TTBuilder->build(fix_track(pis.bestTrack()));
 
   KinematicParticleFactoryFromTransientTrack pFactory;
   std::vector<RefCountedKinematicParticle> parts;
@@ -618,7 +678,7 @@ RefCountedKinematicTree vtxu::FitVtxMuDst(const edm::EventSetup& iSetup, const R
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack Mu_tk = TTBuilder->build(mu.muonBestTrack());
+  reco::TransientTrack Mu_tk = TTBuilder->build(fix_track(mu.muonBestTrack()));
   reco::TransientTrack Dst_tk = Dst->refittedTransientTrack();
 
   KinematicParticleFactoryFromTransientTrack pFactory;
@@ -668,7 +728,7 @@ RefCountedKinematicTree vtxu::FitVtxDstK(const edm::EventSetup& iSetup, const Re
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack K_tk = TTBuilder->build(K.bestTrack());
+  reco::TransientTrack K_tk = TTBuilder->build(fix_track(K.bestTrack()));
   reco::TransientTrack Dst_tk = Dst->refittedTransientTrack();
 
   KinematicParticleFactoryFromTransientTrack pFactory;
@@ -690,7 +750,7 @@ RefCountedKinematicTree vtxu::FitVtxDstPi(const edm::EventSetup& iSetup, const R
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack Pi_tk = TTBuilder->build(pi.bestTrack());
+  reco::TransientTrack Pi_tk = TTBuilder->build(fix_track(pi.bestTrack()));
   reco::TransientTrack Dst_tk = Dst->refittedTransientTrack();
 
   KinematicParticleFactoryFromTransientTrack pFactory;
@@ -713,8 +773,8 @@ RefCountedKinematicTree vtxu::FitVtxMuDstPi(const edm::EventSetup& iSetup, const
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
   reco::TransientTrack Dst_tk = Dst->refittedTransientTrack();
-  reco::TransientTrack Mu_tk = TTBuilder->build(mu.bestTrack());
-  reco::TransientTrack Pi_tk = TTBuilder->build(pi.bestTrack());
+  reco::TransientTrack Mu_tk = TTBuilder->build(fix_track(mu.bestTrack()));
+  reco::TransientTrack Pi_tk = TTBuilder->build(fix_track(pi.bestTrack()));
 
   KinematicParticleFactoryFromTransientTrack pFactory;
   std::vector<RefCountedKinematicParticle> parts;
@@ -774,7 +834,7 @@ pair<double,double> vtxu::computeDCA(const edm::EventSetup& iSetup, pat::PackedC
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack tk = TTBuilder->build(cand.bestTrack());
+  reco::TransientTrack tk = TTBuilder->build(fix_track(cand.bestTrack()));
   return vtxu::computeDCA(tk, p, kind);
 }
 
@@ -783,7 +843,7 @@ pair<double,double> vtxu::computeDCA(const edm::EventSetup& iSetup, pat::Muon mu
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack tk = TTBuilder->build(mu.muonBestTrack());
+  reco::TransientTrack tk = TTBuilder->build(fix_track(mu.muonBestTrack()));
   return vtxu::computeDCA(tk, p, kind);
 }
 
