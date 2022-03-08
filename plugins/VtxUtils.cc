@@ -94,7 +94,7 @@ reco::Track fix_track(const reco::Track *tk, double delta)
              *
              * No idea what to do here or why this happens. */
             if (std::isnan(cov(i,j)) || std::isinf(cov(i,j)))
-                cov(i,j) = 1;
+                cov(i,j) = 1e-6;
             new_cov(i,j) = cov(i,j);
         }
     }
