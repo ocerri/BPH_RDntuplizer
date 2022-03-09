@@ -34,6 +34,11 @@
 #include "RecoVertex/KinematicFit/interface/MultiTrackPointingKinematicConstraint.h"
 #include "RecoVertex/KinematicFit/interface/CombinedKinematicConstraint.h"
 
+// Needed for IP3D
+#include "RecoTauTag/ImpactParameter/interface/ImpactParameterAlgorithm.h"
+#include "DataFormats/GeometryCommonDetAlgo/interface/Measurement1D.h"
+#include <RecoBTag/BTagTools/interface/SignedImpactParameter3D.h>
+
 #include <iostream>
 
 #include "VtxUtils.hh"
@@ -812,6 +817,50 @@ vtxu::kinFitResuts vtxu::fitQuality(RefCountedKinematicTree t, double pval_thr){
     }
   }
   return out;
+}
+
+std::pair<double,double> vtxu::computeIP3D(const reco::TransientTrack tk, const GlobalVector direction, const reco::Vertex vtx) {
+  SignedImpactParameter3D signed_ip3D;
+  Measurement1D ip3D = signed_ip3D.apply(tk, direction, vtx).second;
+  return make_pair(ip3D.value(), ip3D.error());
+}
+
+std::pair<double,double> vtxu::computeIP3D(const edm::EventSetup& iSetup, pat::Muon mu, TLorentzVector p4_direction , RefCountedKinematicVertex vtx) {
+  edm::ESHandle<TransientTrackBuilder> TTBuilder;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+  reco::TransientTrack tk = TTBuilder->build(fix_track(mu.muonBestTrack()));
+
+  GlobalVector direction(p4_direction.X(), p4_direction.Y(), p4_direction.Z());
+
+  reco::Vertex::Point vtxPosition(vtx->position().x(),vtx->position().y(),vtx->position().z());
+  reco::Vertex::Error vtxError;
+  for (uint i=0; i<3; i++) {
+    for (uint j=0; j<3; j++) {vtxError(i,j) = vtx->error().matrix()(i,j);}
+  }
+  float chi2 = vtx->chiSquared();
+  float dof = vtx->degreesOfFreedom();
+  const reco::Vertex recoVtx(vtxPosition, vtxError, chi2, dof, 2);
+
+  return vtxu::computeIP3D(tk, direction, recoVtx);
+}
+
+std::pair<double,double> vtxu::computeIP3D(const edm::EventSetup& iSetup, pat::PackedCandidate cand, TLorentzVector p4_direction , RefCountedKinematicVertex vtx) {
+  edm::ESHandle<TransientTrackBuilder> TTBuilder;
+  iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+  reco::TransientTrack tk = TTBuilder->build(fix_track(cand.bestTrack()));
+
+  GlobalVector direction(p4_direction.X(), p4_direction.Y(), p4_direction.Z());
+
+  reco::Vertex::Point vtxPosition(vtx->position().x(),vtx->position().y(),vtx->position().z());
+  reco::Vertex::Error vtxError;
+  for (uint i=0; i<3; i++) {
+    for (uint j=0; j<3; j++) {vtxError(i,j) = vtx->error().matrix()(i,j);}
+  }
+  float chi2 = vtx->chiSquared();
+  float dof = vtx->degreesOfFreedom();
+  const reco::Vertex recoVtx(vtxPosition, vtxError, chi2, dof, 2);
+
+  return vtxu::computeIP3D(tk, direction, recoVtx);
 }
 
 pair<double,double> vtxu::computeDCA(reco::TransientTrack tk, GlobalPoint p, int kind) {

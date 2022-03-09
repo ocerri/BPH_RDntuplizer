@@ -7,6 +7,7 @@
 #include <DataFormats/TrackReco/interface/Track.h>
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/GeometryVector/interface/GlobalVector.h"
 
 // Pure ROOT import
 #include <TLorentzVector.h>
@@ -42,6 +43,9 @@ namespace vtxu {
   RefCountedKinematicTree FitVtxDstK(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, int);
   RefCountedKinematicTree FitVtxDstPi(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, int);
   RefCountedKinematicTree FitVtxMuDstPi(const edm::EventSetup&, const RefCountedKinematicParticle, pat::PackedCandidate, pat::PackedCandidate, int);
+  std::pair<double,double> computeIP3D(reco::TransientTrack, GlobalVector, reco::Vertex);
+  std::pair<double,double> computeIP3D(const edm::EventSetup&, pat::Muon, TLorentzVector, RefCountedKinematicVertex);
+  std::pair<double,double> computeIP3D(const edm::EventSetup&, pat::PackedCandidate, TLorentzVector, RefCountedKinematicVertex);
   std::pair<double,double> computeDCA(reco::TransientTrack tk, GlobalPoint p, int kind=0);
   std::pair<double,double> computeDCA(const edm::EventSetup& iSetup, pat::PackedCandidate cand, GlobalPoint p, int kind=0);
   std::pair<double,double> computeDCA(const edm::EventSetup& iSetup, pat::Muon mu, GlobalPoint p, int kind=0);

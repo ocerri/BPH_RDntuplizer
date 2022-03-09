@@ -521,8 +521,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
                 if (fabs(tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
                 if (dR_fromMu > __dRMax__) continue;
 
-                GlobalPoint auxp(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
-                auto dca = vtxu::computeDCA(iSetup, ptk, auxp);
+                // GlobalPoint auxp(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
+                // auto dca = vtxu::computeDCA(iSetup, ptk, auxp);
+                auto dca = vtxu::computeIP3D(iSetup, ptk, p4_vis , vtxB);
 
                 // Check if it makes a consistent vertex
                 auto kinTree = vtxu::Fit_D0pismupi(iSetup, D0, pis, trgMu, ptk);
@@ -562,7 +563,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
                 tksAdd_phiError.push_back(tk->phiError());
                 tksAdd_dz.push_back(tk->dz(bestVtx.position()));
                 tksAdd_lostInnerHits.push_back(ptk.lostInnerHits());
-                tksAdd_sigdca_vtxB.push_back(fabs(dca.first)/dca.second);
+                tksAdd_sigdca_vtxB.push_back(dca.first/dca.second);
                 tksAdd_cos_PV.push_back(vtxu::computePointingCos(bestVtx, vtxB, refit_pi));
                 N_compatible_tk++;
               }
@@ -617,7 +618,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_phiError"].push_back(tksAdd_phiError[i]);
               (*outputVecNtuplizer)["tksAdd_dz"].push_back(tksAdd_dz[i]);
               (*outputVecNtuplizer)["tksAdd_lostInnerHits"].push_back(tksAdd_lostInnerHits[i]);
-              (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
+              (*outputVecNtuplizer)["tksAdd_sigIP3D_vtxB"].push_back(tksAdd_sigdca_vtxB[i]);
               (*outputVecNtuplizer)["tksAdd_cos_PV"].push_back(tksAdd_cos_PV[i]);
             }
 
@@ -666,10 +667,17 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             auto dcaPV = vtxu::computeDCA(iSetup, trgMu, auxp_PV);
             (*outputVecNtuplizer)["mu_dca_PV"].push_back(dcaPV.first);
             (*outputVecNtuplizer)["mu_sigdca_PV"].push_back(dcaPV.first/dcaPV.second);
+
+
             GlobalPoint auxp(vtxDst->position().x(), vtxDst->position().y(), vtxDst->position().z());
             auto dca = vtxu::computeDCA(iSetup, trgMu, auxp);
             (*outputVecNtuplizer)["mu_dca_vtxDst"].push_back(dca.first);
             (*outputVecNtuplizer)["mu_sigdca_vtxDst"].push_back(dca.first/dca.second);
+
+            auto ip3D = vtxu::computeIP3D(iSetup, trgMu, vtxu::getTLVfromKinPart(Dst) , vtxDst);
+            (*outputVecNtuplizer)["mu_ip3D_vtxDst"].push_back(ip3D.first);
+            (*outputVecNtuplizer)["mu_sigip3D_vtxDst"].push_back(ip3D.first/ip3D.second);
+
             auto dcaT = vtxu::computeDCA(iSetup, trgMu, auxp, 1);
             (*outputVecNtuplizer)["mu_dcaT_vtxDst"].push_back(dcaT.first);
             (*outputVecNtuplizer)["mu_sigdcaT_vtxDst"].push_back(fabs(dcaT.first)/dcaT.second);
@@ -694,6 +702,16 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["mu_mediumId"].push_back(trgMu.isMediumMuon());
             (*outputVecNtuplizer)["mu_tightId"].push_back(trgMu.isTightMuon(bestVtx));
             (*outputVecNtuplizer)["mu_softIdBestVtx"].push_back(trgMu.isSoftMuon(bestVtx));
+
+            auto pfIsoR04 = trgMu.pfIsolationR04();
+            auto iso04 = pfIsoR04.sumChargedHadronPt + max(pfIsoR04.sumNeutralHadronEt + pfIsoR04.sumPhotonEt - pfIsoR04.sumPUPt/2.,0.0);
+            (*outputVecNtuplizer)["mu_db_iso04"].push_back(iso04);
+            auto iso04_corrdDst = iso04 - K.pt() - pi.pt() - pis.pt();
+            (*outputVecNtuplizer)["mu_db_corr_iso04"].push_back(iso04_corrdDst);
+
+            auto pfIsoR03 = trgMu.pfIsolationR03();
+            auto iso03 = pfIsoR03.sumChargedHadronPt + max(pfIsoR03.sumNeutralHadronEt + pfIsoR03.sumPhotonEt - pfIsoR03.sumPUPt/2.,0.0);
+            (*outputVecNtuplizer)["mu_db_iso03"].push_back(iso03);
 
             GlobalPoint auxp2(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
             dca = vtxu::computeDCA(iSetup, trgMu, auxp2);
