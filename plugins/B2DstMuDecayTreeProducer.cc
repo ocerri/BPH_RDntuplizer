@@ -598,7 +598,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
               (*outputVecNtuplizer)["tksAdd_phiError"] = {};
               (*outputVecNtuplizer)["tksAdd_dz"] = {};
               (*outputVecNtuplizer)["tksAdd_lostInnerHits"] = {};
-              (*outputVecNtuplizer)["tksAdd_sigdca_vtxB"] = {};
+              (*outputVecNtuplizer)["tksAdd_sigIP3D_vtxB"] = {};
               (*outputVecNtuplizer)["tksAdd_cos_PV"] = {};
             }
             (*outputVecNtuplizer)["nTksAdd"].push_back(N_compatible_tk);
@@ -675,8 +675,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["mu_sigdca_vtxDst"].push_back(dca.first/dca.second);
 
             auto ip3D = vtxu::computeIP3D(iSetup, trgMu, vtxu::getTLVfromKinPart(Dst) , vtxDst);
-            (*outputVecNtuplizer)["mu_ip3D_vtxDst"].push_back(ip3D.first);
-            (*outputVecNtuplizer)["mu_sigip3D_vtxDst"].push_back(ip3D.first/ip3D.second);
+            (*outputVecNtuplizer)["mu_IP3D_vtxDst"].push_back(ip3D.first);
+            (*outputVecNtuplizer)["mu_sigIP3D_vtxDst"].push_back(ip3D.first/ip3D.second);
 
             auto dcaT = vtxu::computeDCA(iSetup, trgMu, auxp, 1);
             (*outputVecNtuplizer)["mu_dcaT_vtxDst"].push_back(dcaT.first);
