@@ -405,7 +405,7 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
     hammer.initRun();
 
     // ################# CLN for D* ##############################
-    string centralValuesOpt = "BtoD*CLN: {";
+    string centralValuesOpt = "BtoD*CLNVar: {";
     for(auto i=0; i<4; i++) {
       centralValuesOpt += Form("%s: %f, ", parNameCLN[i].c_str(), centralValCLN[i]);
     }
@@ -414,7 +414,7 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
     hammer.setOptions(centralValuesOpt);
 
     // ################# BLPR for D* ##############################
-    centralValuesOpt = "BtoD*BLPR: {";
+    centralValuesOpt = "BtoD*BLPRVar: {";
     for(auto i=0; i<7; i++) {
       centralValuesOpt += Form("%s: %f, ", parNameBLPR[i].c_str(), centralValBLPR[i]);
     }
@@ -423,7 +423,7 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
     hammer.setOptions(centralValuesOpt);
 
     // ################# BLR for D** ##############################
-    centralValuesOpt = "BtoD**nBLR: {";
+    centralValuesOpt = "BtoD**nBLRVar: {";
     for(auto i=0; i<7; i++) {
       centralValuesOpt += Form("%s: %f, ", parNameDststN_BLR[i].c_str(), centralValDststN_BLR[i]);
     }
@@ -431,7 +431,7 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
     if (verbose) {cout << "[Hammer]: BLR for D** central values\n\t" << centralValuesOpt << endl;}
     hammer.setOptions(centralValuesOpt);
 
-    centralValuesOpt = "BtoD**wBLR: {";
+    centralValuesOpt = "BtoD**wBLRVar: {";
     for(auto i=0; i<5; i++) {
       centralValuesOpt += Form("%s: %f, ", parNameDststW_BLR[i].c_str(), centralValDststW_BLR[i]);
     }
@@ -441,7 +441,7 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
 
 
     // ################# BLOP for D(2S) ##############################
-    centralValuesOpt = "BtoD2sallBLOP: {";
+    centralValuesOpt = "BtoD2sallBLOPVar: {";
     for(auto i=0; i<9; i++) {
       centralValuesOpt += Form("%s: %f, ", parNameD2S_BLOP[i].c_str(), centralValD2S_BLOP[i]);
     }
