@@ -432,11 +432,11 @@ RefCountedKinematicTree vtxu::FitB_mumupiK_tk(const edm::EventSetup& iSetup, pat
   edm::ESHandle<TransientTrackBuilder> TTBuilder;
   iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
 
-  reco::TransientTrack m1_tk = TTBuilder->build(m1.muonBestTrack());
-  reco::TransientTrack m2_tk = TTBuilder->build(m2.muonBestTrack());
-  reco::TransientTrack pi_tk = TTBuilder->build(pi.bestTrack());
-  reco::TransientTrack K_tk = TTBuilder->build(K.bestTrack());
-  reco::TransientTrack tk_tk = TTBuilder->build(addTk.bestTrack());
+  reco::TransientTrack m1_tk = TTBuilder->build(fix_track(m1.muonBestTrack()));
+  reco::TransientTrack m2_tk = TTBuilder->build(fix_track(m2.muonBestTrack()));
+  reco::TransientTrack pi_tk = TTBuilder->build(fix_track(pi.bestTrack()));
+  reco::TransientTrack K_tk = TTBuilder->build(fix_track(K.bestTrack()));
+  reco::TransientTrack tk_tk = TTBuilder->build(fix_track(addTk.bestTrack()));
 
   std::vector<RefCountedKinematicParticle> parts;
   KinematicParticleFactoryFromTransientTrack pFactory;

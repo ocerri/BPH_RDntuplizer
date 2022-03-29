@@ -389,11 +389,13 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           (*outputVecNtuplizer)["pi_sigdxy_PV"].push_back(pi_sigdxy_PV);
           (*outputVecNtuplizer)["pi_norm_chi2"].push_back(pi_norm_chi2);
           (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
+          (*outputVecNtuplizer)["pi_lostInnerHits"].push_back(pi.lostInnerHits());
           AddTLVToOut(vtxu::getTLVfromCand(K, mass_K), string("K"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["K_charge"].push_back(K.charge());
           (*outputVecNtuplizer)["K_sigdxy_PV"].push_back(K_sigdxy_PV);
           (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
           (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
+          (*outputVecNtuplizer)["K_lostInnerHits"].push_back(K.lostInnerHits());
 
           (*outputVecNtuplizer)["chi2_piK"].push_back(res_piK.chi2);
           (*outputVecNtuplizer)["dof_piK"].push_back(res_piK.dof);
@@ -413,6 +415,17 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           (*outputVecNtuplizer)["mup_dxy_PV"].push_back(dxy_mup);
           (*outputVecNtuplizer)["mup_sigdxy_PV"].push_back(fabs(dxy_mup)/mup.innerTrack()->dxyError());
           (*outputVecNtuplizer)["mup_isTrg"].push_back(trgMuIdx(mup, (*trgMuonsHandle) ));
+          float lostInnerHits_mup = -10;
+          for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
+            const pat::PackedCandidate & pfCand = (*pfCandHandle)[i_tk];
+            if (pfCand.pdgId() != mup.pdgId()) continue;
+            double dR = vtxu::dR(pfCand.phi(), mup.phi(), pfCand.eta(), mup.eta());
+            // PF candidate not matching with the muon
+            if ( fabs(pfCand.pt() - mup.pt())/mup.pt() < 0.01  && dR < 0.01 ) {
+              lostInnerHits_mup = pfCand.lostInnerHits();
+            }
+          }
+          (*outputVecNtuplizer)["mup_lostInnerHits"].push_back(lostInnerHits_mup);
 
           auto mum = vecJpsiMuons[i_J].second;
           AddTLVToOut(vtxu::getTLVfromTrack(*(mum.bestTrack()), mass_Mu), string("mum"), &(*outputVecNtuplizer));
@@ -420,6 +433,17 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           (*outputVecNtuplizer)["mum_dxy_PV"].push_back(dxy_mum);
           (*outputVecNtuplizer)["mum_sigdxy_PV"].push_back(fabs(dxy_mum)/mum.innerTrack()->dxyError());
           (*outputVecNtuplizer)["mum_isTrg"].push_back(trgMuIdx(mum, (*trgMuonsHandle) ));
+          float lostInnerHits_mum = -10;
+          for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
+            const pat::PackedCandidate & pfCand = (*pfCandHandle)[i_tk];
+            if (pfCand.pdgId() != mum.pdgId()) continue;
+            double dR = vtxu::dR(pfCand.phi(), mum.phi(), pfCand.eta(), mum.eta());
+            // PF candidate not matching with the muon
+            if ( fabs(pfCand.pt() - mum.pt())/mum.pt() < 0.01  && dR < 0.01 ) {
+              lostInnerHits_mum = pfCand.lostInnerHits();
+            }
+          }
+          (*outputVecNtuplizer)["mum_lostInnerHits"].push_back(lostInnerHits_mum);
 
           (*outputVecNtuplizer)["chi2_mumu"].push_back(vecRes_mumu[i_J].chi2);
           (*outputVecNtuplizer)["dof_mumu"].push_back(vecRes_mumu[i_J].dof);
