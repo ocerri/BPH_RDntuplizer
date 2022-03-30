@@ -73,7 +73,6 @@ public:
         }
 
 
-
         map<string, double> settingsBLPR;
         for(auto n: parNameBLPR) settingsBLPR["delta_" + n] = 0;
         hammer.setFFEigenvectors("BtoD*", "BLPRVar", settingsBLPR);
@@ -96,6 +95,31 @@ public:
             if(verbose) {cout << var_name << Form(": %1.3e", rate) << endl;}
           }
         }
+
+
+        map<string, double> settingsBGL;
+        for(auto n: parNameBGL) settingsBGL["delta_" + n] = 0;
+        hammer.setFFEigenvectors("BtoD*", "BGLVar", settingsBGL);
+        outRate["BGLCentral"] = hammer.getRate(proc, "SchmeBGL");
+        if(verbose) { cout << Form("BGL central rate: %1.3e (ratio = %.3f)", outRate["BGLCentral"], outRate["BGLCentral"]/outRate["den"]) << endl;}
+        // hammer.saveOptionCard("Opts.yml", false);
+
+        for(int i=0; i<8; i++) { //Loop over eigenVar
+          for (int j=0; j<2; j++) { //Loop over pos/neg direction
+            map<string, double> settings;
+            for (int k=0; k<10; k++) { //Loop over parameters
+              settings["delta_" + parNameBGL[k]] = eigVarBGL[i][k][j];
+            }
+
+            hammer.setFFEigenvectors("BtoD*", "BGLVar", settings);
+            auto rate = hammer.getRate(proc, "SchmeBGL");
+            string var_name = "BGL" + varNameBGL[i];
+            var_name += j==0? "Up" : "Down";
+            outRate[var_name] = rate;
+            if(verbose) {cout << var_name << Form(": %1.3e", rate) << endl;}
+          }
+        }
+
         break;
       }
 
@@ -305,9 +329,8 @@ private:
     // rho2, R1 and R2 from Ex: https://arxiv.org/pdf/1909.12524.pdf
     // R0 from Th: https://journals.aps.org/prd/pdf/10.1103/PhysRevD.85.094025
     const double centralValCLN[4] = {1.122, 1.270, 0.852, 1.14};
-
     const vector<string> varNameCLN = {"eig1", "eig2", "eig3", "R0"};
-    const double eigVarCLN[4][4][2] = {
+    const double eigVarCLN[4][4][2] = { // 2 sigma
       {{ -0.0420, 0.0420}, { -0.0459, 0.0459}, { 0.0331, -0.0331},  {0, 0}},
       {{ -0.0221, 0.0221}, { 0.0243, -0.0243}, { 0.0056, -0.0056},  {0, 0}},
       {{ 0.0068, -0.0068}, { 0.0032, -0.0032}, { 0.0131, -0.0131},  {0, 0}},
@@ -320,7 +343,7 @@ private:
     const vector<string> parNameBLPR = {"RhoSq","chi21","chi2p","chi3p","eta1","etap","dV20"};
     const double centralValBLPR[7] = {1.19, -0.06, -0.00, 0.04, 0.35, -0.11, 0.};
     const vector<string> varNameBLPR = {"eig1", "eig2", "eig3", "eig4", "eig5", "eig6", "dV20"};
-    const double eigVarBLPR[7][7][2] = {
+    const double eigVarBLPR[7][7][2] = { // 2 sigma
       {{ 0.0464, -0.0464}, { 0.0004, -0.0004}, { 0.0005, -0.0005}, { -0.0016, 0.0016}, { 0.1933, -0.1933}, { -0.3377, 0.3377}, {0, 0}},
       {{ -0.0869, 0.0869}, { 0.0095, -0.0095}, { 0.0047, -0.0047}, { -0.0162, 0.0162}, { -0.1963, 0.1963}, { -0.1242, 0.1242}, {0, 0}},
       {{ 0.1260, -0.1260}, { -0.0011, 0.0011}, { -0.0005, 0.0005}, { 0.0195, -0.0195}, { -0.0502, 0.0502}, { -0.0115, 0.0115}, {0, 0}},
@@ -328,6 +351,22 @@ private:
       {{ -0.0015, 0.0015}, { 0.0129, -0.0129}, { 0.0354, -0.0354}, { 0.0134, -0.0134}, { 0.0008, -0.0008}, { 0.0003, -0.0003}, {0, 0}},
       {{ 0.0012, -0.0012}, { -0.0349, 0.0349}, { 0.0171, -0.0171}, { -0.0116, 0.0116}, { -0.0007, 0.0007}, { -0.0002, 0.0002}, {0, 0}},
       {{ 0.0000, -0.0000}, { 0.0000, -0.0000}, { 0.0000, -0.0000}, { 0.0000, -0.0000}, { 0.0000, -0.0000}, { 0.0000, -0.0000}, { 0.0002, -0.0002}}
+    };
+
+    // ############# BGL parameters #################
+    // From
+    const vector<string> parNameBGL = {"a0", "a1", "a2", "b0", "b1", "b2", "c1", "c2", "d0", "d1"};
+    const double centralValBGL[10] = {0.0320, -0.148, -0.60, 0.01246, 0.0038, 0.02, 0.080, -1.11, 0.0526, -0.194};
+    const vector<string> varNameBGL = {"eig1", "eig2", "eig3", "eig4", "eig5", "eig6", "eig7", "eig8"};
+    const double eigVarBGL[8][10][2] = { // 2 sigma
+      {{ 0.0002, -0.0002}, { -0.0113, 0.0113}, { 0.2153, -0.2153}, { -0.0000, 0.0000}, { 0.0028, -0.0028}, { -0.0738, 0.0738}, { 0.0623, -0.0623}, { -1.1177, 1.1177}, { -0.0004, 0.0004}, { 0.0228, -0.0228} },
+      {{ 0.0014, -0.0014}, { -0.0495, 0.0495}, { -0.3832, 0.3832}, { -0.0001, 0.0001}, { 0.0013, -0.0013}, { 0.0272, -0.0272}, { -0.0035, 0.0035}, { -0.0756, 0.0756}, { 0.0002, -0.0002}, { -0.0141, 0.0141} },
+      {{ -0.0006, 0.0006}, { 0.0296, -0.0296}, { -0.0230, 0.0230}, { 0.0000, -0.0000}, { 0.0055, -0.0055}, { -0.2266, 0.2266}, { -0.0024, 0.0024}, { 0.0107, -0.0107}, { -0.0004, 0.0004}, { 0.0281, -0.0281} },
+      {{ -0.0001, 0.0001}, { 0.0041, -0.0041}, { -0.0025, 0.0025}, { -0.0000, 0.0000}, { 0.0017, -0.0017}, { 0.0104, -0.0104}, { -0.0076, 0.0076}, { -0.0001, 0.0001}, { -0.0010, 0.0010}, { 0.0766, -0.0766} },
+      {{ 0.0003, -0.0003}, { -0.0191, 0.0191}, { 0.0013, -0.0013}, { -0.0000, 0.0000}, { -0.0018, 0.0018}, { -0.0023, 0.0023}, { 0.0350, -0.0350}, { 0.0026, -0.0026}, { -0.0007, 0.0007}, { 0.0049, -0.0049} },
+      {{ 0.0002, -0.0002}, { -0.0023, 0.0023}, { 0.0003, -0.0003}, { 0.0000, -0.0000}, { -0.0062, 0.0062}, { -0.0004, 0.0004}, { -0.0016, 0.0016}, { -0.0000, 0.0000}, { 0.0003, -0.0003}, { 0.0002, -0.0002} },
+      {{ -0.0009, 0.0009}, { -0.0001, 0.0001}, { 0.0000, -0.0000}, { -0.0003, 0.0003}, { -0.0001, 0.0001}, { -0.0000, 0.0000}, { -0.0001, 0.0001}, { -0.0000, 0.0000}, { -0.0024, 0.0024}, { -0.0000, 0.0000} },
+      {{ 0.0008, -0.0008}, { 0.0008, -0.0008}, { -0.0001, 0.0001}, { -0.0001, 0.0001}, { -0.0004, 0.0004}, { 0.0001, -0.0001}, { 0.0004, -0.0004}, { -0.0000, 0.0000}, { -0.0003, 0.0003}, { -0.0000, 0.0000} },
     };
 
 
@@ -398,8 +437,9 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
       if(verbose){cout << "\t" << inputFFScheme_[i] << ": " << inputFFScheme_[i+1] << endl;}
     }
     hammer.setFFInputScheme(inputFFScheme);
-    hammer.addFFScheme("SchmeCLN",       {{"BD*",  "CLNVar"}, {"BD**", "ISGW2"}, {"BD2sall", "ISGW2"}});
+    hammer.addFFScheme("SchmeCLN",       {{"BD*",  "CLNVar"},  {"BD**", "ISGW2"}, {"BD2sall", "ISGW2"}});
     hammer.addFFScheme("SchmeBLPR",      {{"BD*",  "BLPRVar"}, {"BD**", "ISGW2"}, {"BD2sall", "ISGW2"}});
+    hammer.addFFScheme("SchmeBGL",       {{"BD*",  "BGLVar"},  {"BD**", "ISGW2"}, {"BD2sall", "ISGW2"}});
     hammer.addFFScheme("SchmeBLR_Dstst", {{"BD*",  "ISGW2"}, {"BD**1", "BLRVar"}, {"BD**2*", "BLRVar"}, {"BD**0*","BLRVar"}, {"BD**1*", "BLRVar"}, {"BD2sall", "ISGW2"}});
     hammer.addFFScheme("SchmeBLOP_D2s",  {{"BD*",  "ISGW2"}, {"BD**", "ISGW2"}, {"BD2sall", "BLOPVar"}});
     hammer.initRun();
@@ -420,6 +460,16 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
     }
     centralValuesOpt += "}";
     if (verbose) {cout << "[Hammer]: BLPR central values\n\t" << centralValuesOpt << endl;}
+    hammer.setOptions(centralValuesOpt);
+
+    // ################# BGL for D* ##############################
+    centralValuesOpt = "BtoD*BGLVar: {";
+    centralValuesOpt += Form("avec: [%f, %f, %f], ", centralValBGL[0], centralValBGL[1], centralValBGL[2]);
+    centralValuesOpt += Form("bvec: [%f, %f, %f], ", centralValBGL[3], centralValBGL[4], centralValBGL[5]);
+    centralValuesOpt += Form("cvec: [%f, %f], ", centralValBGL[6], centralValBGL[7]);
+    centralValuesOpt += Form("dvec: [%f, %f]", centralValBGL[8], centralValBGL[9]);
+    centralValuesOpt += "}";
+    if (verbose) {cout << "[Hammer]: BGL central values\n\t" << centralValuesOpt << endl;}
     hammer.setOptions(centralValuesOpt);
 
     // ################# BLR for D** ##############################
@@ -706,6 +756,45 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
             hammer.setFFEigenvectors("BtoD*", "BLPRVar", settings);
             auto weights = hammer.getWeights("SchmeBLPR");
             string var_name = "BLPR" + varNameBLPR[i];
+            var_name += j==0? "Up" : "Down";
+
+            if(verbose) {cout << var_name << ": " << flush;}
+            for(auto elem: weights) {
+              (*outputNtuplizer)["wh_" + var_name] = elem.second;
+              if(verbose) {cout << elem.second << endl;}
+            }
+          }
+        }
+        if(verbose) {cout << endl;}
+      }
+
+
+      map<string, double> settingsBGL;
+      for(auto n: parNameBGL) settingsBGL["delta_" + n] = 0;
+      hammer.setFFEigenvectors("BtoD*", "BGLVar", settingsBGL);
+      auto weightsBGL = hammer.getWeights("SchmeBGL");
+      if(!weightsBGL.empty()) {
+        if(verbose) {cout << "BGLCentral: " << flush;}
+        for(auto elem: weightsBGL) {
+          if(isnan(elem.second)) {
+            cout << "[ERROR]: BGLCentral nan weight: " << elem.second << endl;
+            cerr << "[ERROR]: BGLCentral nan weight: " << elem.second << endl;
+            assert(false);
+          }
+          (*outputNtuplizer)["wh_BGLCentral"] = elem.second;
+          if(verbose) {cout << elem.second << endl;}
+        }
+
+        for(int i=0; i<8; i++) { //Loop over eigenVar
+          for (int j=0; j<2; j++) { //Loop over pos/neg direction
+            map<string, double> settings;
+            for (int k=0; k<10; k++) { //Loop over parameters
+              settings["delta_" + parNameBGL[k]] = eigVarBGL[i][k][j];
+            }
+
+            hammer.setFFEigenvectors("BtoD*", "BGLVar", settings);
+            auto weights = hammer.getWeights("SchmeBGL");
+            string var_name = "BGL" + varNameBGL[i];
             var_name += j==0? "Up" : "Down";
 
             if(verbose) {cout << var_name << ": " << flush;}

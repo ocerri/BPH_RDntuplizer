@@ -21,9 +21,9 @@ nice=1
 # Check how much time it really took for these jobs!
 
 ######## Bd -> Jpsi K* ntuples #############
-# ntuplesName=Bd2JpsiKst_220228
-# config=config/cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py
-# nFilesPerJob=30
+ntuplesName=Bd2JpsiKst_220328
+config=config/cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py
+nFilesPerJob=30
 # Check how much time it really took for these jobs!
 
 ######## Main R(D*) analysis ntuples #############
@@ -32,9 +32,9 @@ nice=1
 # nFilesPerJob=20 # About 4h per job
 # Check how much time it really took for these jobs!
 
-ntuplesName=SSDstMu_220311
-config=config/cmssw_cmsRD2018_Tag_SS_MuDst-PiPiK.py
-nFilesPerJob=30 # About 4h per job
+# ntuplesName=SSDstMu_220311
+# config=config/cmssw_cmsRD2018_Tag_SS_MuDst-PiPiK.py
+# nFilesPerJob=30 # About 4h per job
 
 
 for iPart in {1..5}; do

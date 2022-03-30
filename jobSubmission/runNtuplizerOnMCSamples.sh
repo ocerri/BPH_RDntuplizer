@@ -19,17 +19,17 @@ outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsMC
 
 # Bd -> Jpsi K* ntuples
 # config=config/cmssw_centralMC_Bd_JpsiKst-mumuKpi.py
-# ntuplesName=ntuples_Bd2JpsiKst_220228
+# ntuplesName=ntuples_Bd2JpsiKst_220328
 
 # Main R(D*) analysis ntuples
 config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
-ntuplesName=ntuples_B2DstMu_220327
+ntuplesName=ntuples_B2DstMu_220326_wBGL_v0
 
-nFilesPerJob=100
-maxTime=120m
+# nFilesPerJob=100
+# maxTime=120m
 
-# nFilesPerJob=5
-# maxTime=48h
+nFilesPerJob=8
+maxTime=48h
 declare -a processes=(
     # Ancillary measurments samples --> Should be run N = 3
     # "CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
@@ -37,8 +37,8 @@ declare -a processes=(
     # "CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8"
     #
     # Central production --> Should be run N = 3
-    # "CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    # "CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_BuToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_BdToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_BuToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
@@ -53,13 +53,13 @@ declare -a processes=(
     # "CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     #
     # Private production --> Should be run N = 100
-    "CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
-    "CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
-    "CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    "CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    "BParking_Tag_Bd_DDs1_SoftQCDnonD_TuneCP5_13TeV-pythia8"
-    "BParking_Tag_Bu_DDs1_SoftQCDnonD_TuneCP5_13TeV-pythia8"
-    "BParking_Tag_B_DstDXX_SoftQCDnonD_TuneCP5_13TeV-pythia8"
+    # "CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
+    # "CP_BuToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3"
+    # "CP_BdToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    # "CP_BuToTauNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    # "BParking_Tag_Bd_DDs1_SoftQCDnonD_TuneCP5_13TeV-pythia8"
+    # "BParking_Tag_Bu_DDs1_SoftQCDnonD_TuneCP5_13TeV-pythia8"
+    # "BParking_Tag_B_DstDXX_SoftQCDnonD_TuneCP5_13TeV-pythia8"
 )
 
 for process in "${processes[@]}"; do
