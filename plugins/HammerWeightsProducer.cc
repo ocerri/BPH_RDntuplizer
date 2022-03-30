@@ -354,7 +354,7 @@ private:
     };
 
     // ############# BGL parameters #################
-    // From
+    // From https://arxiv.org/pdf/2105.14019.pdf
     const vector<string> parNameBGL = {"a0", "a1", "a2", "b0", "b1", "b2", "c1", "c2", "d0", "d1"};
     const double centralValBGL[10] = {0.0320, -0.148, -0.60, 0.01246, 0.0038, 0.02, 0.080, -1.11, 0.0526, -0.194};
     const vector<string> varNameBGL = {"eig1", "eig2", "eig3", "eig4", "eig5", "eig6", "eig7", "eig8"};
