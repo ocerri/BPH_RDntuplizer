@@ -475,6 +475,25 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
     if (verbose) {cout << "[Hammer]: BGL central values\n\t" << centralValuesOpt << endl;}
     hammer.setOptions(centralValuesOpt);
 
+    // Other options still from https://arxiv.org/pdf/2105.14019.pdf
+    centralValuesOpt = "BtoD*BGLVar: {";
+    //  Tab 9 line 2: f,F1 (1+)
+    centralValuesOpt += Form("BcStatesf: [6.739, 6.750, 7.145, 7.150], ");
+    // Hammer default                     6.730, 6.736, 7.135, 7.142}; //GeV
+    //  Tab 9 line 1: g (1-)
+    centralValuesOpt += Form("BcStatesg: [6.329, 6.920, 7.020, 7.280], ");
+    // Hammer default                     6.337, 6.899, 7.012, 7.280}; //GeV
+    //  Tab 9 line 3: F2 (0-)
+    centralValuesOpt += Form("BcStatesP1: [6.275, 6.842, 7.250], ");
+    // Hammer default                      6.275, 6.842, 7.250}; //GeV
+    // Vcb from abstract rest from Tab 10 (chi+ and - inverted)
+    centralValuesOpt += Form("Vcb: 38.4e-3, Chim: 3.894e-4, Chip: 5.131e-4, ChimL: 19.42e-3");
+    // Hammer defaults        Vcb: 41.5e-3, Chim: 3.068e-4, Chip: 5.280e-4, ChimL:  2.466e-3
+    centralValuesOpt += "}";
+    if (verbose) {cout << "[Hammer]: BGL additional settings\n\t" << centralValuesOpt << endl;}
+    hammer.setOptions(centralValuesOpt);
+
+
     // ################# BLR for D** ##############################
     centralValuesOpt = "BtoD**nBLRVar: {";
     for(auto i=0; i<7; i++) {
@@ -538,6 +557,15 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       for(int i=0; i<7; i++) { //Loop over eigenVar
         for (int j=0; j<2; j++) { //Loop over pos/neg direction
           string var_name = "BLPR" + varNameBLPR[i];
+          var_name += j==0? "Up" : "Down";
+          (*outputNtuplizer)["wh_" + var_name] = 0;
+        }
+      }
+
+      (*outputNtuplizer)["wh_BGLCentral"] = 1e-9;
+      for(int i=0; i<10; i++) { //Loop over eigenVar
+        for (int j=0; j<2; j++) { //Loop over pos/neg direction
+          string var_name = "BGL" + varNameBLPR[i];
           var_name += j==0? "Up" : "Down";
           (*outputNtuplizer)["wh_" + var_name] = 0;
         }
