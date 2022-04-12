@@ -262,9 +262,10 @@ bool TagAndProbeTriggerMuonFilter::filter(edm::Event& iEvent, const edm::EventSe
     auto dxyProbe_PV = fabs(tkProbe->dxy(primaryVtx.position()));
     auto dxyProbe_BS = fabs(tkProbe->dxy((*beamSpotHandle)));
 
-    auto dxyProbeUnc = tkProbe->dxyError();
+    double dxyProbeUnc_BS = vtxu::dxyError(*tkProbe, *beamSpotHandle);
+    double dxyProbeUnc_PV = vtxu::dxyError(*tkProbe, primaryVtx.position(), primaryVtx.covariance());
 
-    if (dxyProbe_BS/dxyProbeUnc < 1) continue;
+    if (dxyProbe_BS/dxyProbeUnc_BS < 1) continue;
     TLorentzVector pProbe;
     pProbe.SetPtEtaPhiM(mProbe.pt(), mProbe.eta(), mProbe.phi(), massMu);
 
@@ -342,9 +343,11 @@ bool TagAndProbeTriggerMuonFilter::filter(edm::Event& iEvent, const edm::EventSe
     outMap["mProbe_phi"] = mProbe.phi();
     outMap["mProbe_dz"] = tkProbe->dz(primaryVtx.position());
     outMap["mProbe_dxy_PV"] = dxyProbe_PV;
-    outMap["mProbe_sigdxy_PV"] = dxyProbe_PV/dxyProbeUnc;
+    outMap["mProbe_sigdxy_PV"] = dxyProbe_PV/dxyProbeUnc_PV;
+    outMap["mProbe_dxyErr_PV"] = dxyProbeUnc_PV;
     outMap["mProbe_dxy_BS"] = dxyProbe_BS;
-    outMap["mProbe_sigdxy_BS"] = dxyProbe_BS/dxyProbeUnc;
+    outMap["mProbe_dxyErr_BS"] = dxyProbeUnc_BS;
+    outMap["mProbe_sigdxy_BS"] = dxyProbe_BS/dxyProbeUnc_BS;
 
     auto out = matchL1Muon(mProbe, *l1MuonHandle, mTag_L1_idx);
     if (mTag_L1_idx != 9999 && mTag_L1_idx == get<0>(out)) {
