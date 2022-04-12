@@ -72,8 +72,8 @@ double vtxu::dxyError(const reco::TrackBase &tk, const reco::TrackBase::Point &v
   // ( sin(phi), -cos(phi))
   // Propagate covariance assuming cross-terms of the covariance between track and vertex parameters are 0
   return std::sqrt((vtx.x() * tk.px() + vtx.y() * tk.py()) * (vtx.x() * tk.px() + vtx.y() * tk.py()) / (tk.pt() * tk.pt()) *
-                    tk.covariance()(tk.phiError(), tk.phiError()) +
-                2 * (vtx.x() * tk.px() + vtx.y() * tk.py()) / tk.pt() * tk.covariance()(tk.phiError(), tk.dxyError()) + tk.covariance()(tk.dxyError(), tk.dxyError()) +
+                    tk.covariance()(reco::TrackBase::i_phi, reco::TrackBase::i_phi) +
+                2 * (vtx.x() * tk.px() + vtx.y() * tk.py()) / tk.pt() * tk.covariance()(reco::TrackBase::i_phi, reco::TrackBase::i_dxy) + tk.covariance()(reco::TrackBase::i_dxy, reco::TrackBase::i_dxy) +
                 tk.py() * tk.py() / (tk.pt() * tk.pt()) * vertexCov(0, 0) - 2 * tk.py() * tk.px() / (tk.pt() * tk.pt()) * vertexCov(0, 1) +
                 tk.px() * tk.px() / (tk.pt() * tk.pt()) * vertexCov(1, 1));
 }

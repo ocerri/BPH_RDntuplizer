@@ -23,7 +23,7 @@ outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsMC
 
 # Main R(D*) analysis ntuples
 config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
-ntuplesName=ntuples_B2DstMu_220326_wBGL_v0
+ntuplesName=ntuples_B2DstMu_220412
 
 # nFilesPerJob=100
 # maxTime=120m
@@ -32,13 +32,13 @@ nFilesPerJob=8
 maxTime=48h
 declare -a processes=(
     # Ancillary measurments samples --> Should be run N = 3
-    # "CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    "CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_General_BuToJpsiK_BMuonFilter_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_General_MuEnriched_HardQCDall_TuneCP5_13TeV-pythia8"
     #
     # Central production --> Should be run N = 3
-    "CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
-    "CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    # "CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
+    # "CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_BuToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_BdToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
     # "CP_BuToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
