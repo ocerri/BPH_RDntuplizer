@@ -25,10 +25,10 @@ namespace vtxu {
   };
 
   /// error on dxy with respect to a user-given reference point + uncertainty (i.e. reco::Vertex position)
-  double dxyError(reco::TrackBase &tk, reco::TrackBase::Point const &vtx, math::Error<3>::type const &vertexCov);
+  double dxyError(reco::TrackBase &tk, reco::TrackBase::Point &vtx, math::Error<3>::type &vertexCov);
 
   // error on dxy with respect to a given beamspot
-  double dxyError(reco::TrackBase &tk, const reco::BeamSpot &theBeamSpot);
+  double dxyError(reco::TrackBase &tk, reco::BeamSpot &theBeamSpot);
 
   RefCountedKinematicTree FitD0(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);
   RefCountedKinematicTree FitKst_piK(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);
