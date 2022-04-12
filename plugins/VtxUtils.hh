@@ -8,6 +8,8 @@
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/GeometryVector/interface/GlobalVector.h"
+#include "DataFormats/TrackReco/interface/TrackBase.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 // Pure ROOT import
 #include <TLorentzVector.h>
@@ -21,6 +23,12 @@ namespace vtxu {
     double pval = -1;
     bool isGood = false;
   };
+
+  /// error on dxy with respect to a user-given reference point + uncertainty (i.e. reco::Vertex position)
+  double dxyError(reco::TrackBase &tk, reco::TrackBase::Point const &vtx, math::Error<3>::type const &vertexCov);
+
+  // error on dxy with respect to a given beamspot
+  double dxyError(reco::TrackBase &tk, const reco::BeamSpot &theBeamSpot);
 
   RefCountedKinematicTree FitD0(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);
   RefCountedKinematicTree FitKst_piK(const edm::EventSetup&, pat::PackedCandidate, pat::PackedCandidate, bool);

@@ -65,6 +65,24 @@ using namespace std;
 #define _B0Mass_ 5.27963
 #define _B0MassErr_ 0.00026
 
+double dxyError(reco::TrackBase &tk, reco::TrackBase::Point const &vtx, math::Error<3>::type const &vertexCov) {
+  // Gradient of TrackBase::dxy(const Point &myBeamSpot) with respect to track parameters. Using unrolled expressions to avoid calling for higher dimension matrices
+  // ( 0, 0, x_vert * cos(phi) + y_vert * sin(phi), 1, 0 )
+  // Gradient with respect to point parameters
+  // ( sin(phi), -cos(phi))
+  // Propagate covariance assuming cross-terms of the covariance between track and vertex parameters are 0
+  return std::sqrt((vtx.x() * tk.px() + vtx.y() * tk.py()) * (vtx.x() * tk.px() + vtx.y() * tk.py()) / (tk.pt() * tk.pt()) *
+                    tk.covariance()(tk.phiError(), tk.phiError()) +
+                2 * (vtx.x() * tk.px() + vtx.y() * tk.py()) / tk.pt() * tk.covariance()(tk.phiError(), tk.dxyError()) + tk.covariance()(tk.dxyError(), tk.dxyError()) +
+                tk.py() * tk.py() / (tk.pt() * tk.pt()) * vertexCov(0, 0) - 2 * tk.py() * tk.px() / (tk.pt() * tk.pt()) * vertexCov(0, 1) +
+                tk.px() * tk.px() / (tk.pt() * tk.pt()) * vertexCov(1, 1));
+}
+
+// error on dxy with respect to a given beamspot
+double dxyError(reco::TrackBase &tk, const reco::BeamSpot &theBeamSpot) {
+    return dxyError(tk, theBeamSpot.position(tk.vz()), theBeamSpot.rotatedCovariance3D());
+}
+
 reco::Track fix_track(const reco::Track *tk, double delta=1e-8);
 
 reco::Track fix_track(const reco::TrackRef& tk)
