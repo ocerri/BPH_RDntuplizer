@@ -65,7 +65,7 @@ using namespace std;
 #define _B0Mass_ 5.27963
 #define _B0MassErr_ 0.00026
 
-double dxyError(const reco::TrackBase &tk, const reco::TrackBase::Point &vtx, const math::Error<3>::type &vertexCov) {
+double vtxu::dxyError(const reco::TrackBase &tk, const reco::TrackBase::Point &vtx, const math::Error<3>::type &vertexCov) {
   // Gradient of TrackBase::dxy(const Point &myBeamSpot) with respect to track parameters. Using unrolled expressions to avoid calling for higher dimension matrices
   // ( 0, 0, x_vert * cos(phi) + y_vert * sin(phi), 1, 0 )
   // Gradient with respect to point parameters
@@ -79,7 +79,7 @@ double dxyError(const reco::TrackBase &tk, const reco::TrackBase::Point &vtx, co
 }
 
 // error on dxy with respect to a given beamspot
-double dxyError(const reco::TrackBase &tk, const reco::BeamSpot &theBeamSpot) {
+double vtxu::dxyError(const reco::TrackBase &tk, const reco::BeamSpot &theBeamSpot) {
     return dxyError(tk, theBeamSpot.position(tk.vz()), theBeamSpot.rotatedCovariance3D());
 }
 
