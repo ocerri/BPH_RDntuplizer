@@ -169,18 +169,23 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
       auto tk = muon.innerTrack();
       (*outputVecNtuplizer)["trgMu_dz"].push_back(tk->dz(primaryVtx.position()));
       auto dxy_PV = fabs(tk->dxy(primaryVtx.position()));
-      auto dxyUnc = tk->dxyError();
+      double dxyUnc_PV = vtxu::dxyError(*tk,primaryVtx.position(),primaryVtx.covariance());
       (*outputVecNtuplizer)["trgMu_dxy_PV"].push_back(dxy_PV);
-      (*outputVecNtuplizer)["trgMu_sigdxy_PV"].push_back( dxy_PV/dxyUnc );
+      (*outputVecNtuplizer)["trgMu_dxyErr_PV"].push_back(dxyUnc_PV);
+      (*outputVecNtuplizer)["trgMu_sigdxy_PV"].push_back(dxy_PV/dxyUnc_PV);
       auto dxy_BS = fabs(tk->dxy((*beamSpotHandle)));
+      double dxyUnc_BS = vtxu::dxyError(*tk,*beamSpotHandle);
       (*outputVecNtuplizer)["trgMu_dxy_BS"].push_back(dxy_BS);
-      (*outputVecNtuplizer)["trgMu_sigdxy_BS"].push_back( dxy_BS/dxyUnc );
+      (*outputVecNtuplizer)["trgMu_dxyErr_BS"].push_back(dxyUnc_BS);
+      (*outputVecNtuplizer)["trgMu_sigdxy_BS"].push_back(dxy_BS/dxyUnc_BS);
     }
     else {
       (*outputVecNtuplizer)["trgMu_dz"].push_back(-999);
       (*outputVecNtuplizer)["trgMu_dxy_PV"].push_back(-999);
+      (*outputVecNtuplizer)["trgMu_dxyErr_PV"].push_back(-999);
       (*outputVecNtuplizer)["trgMu_sigdxy_PV"].push_back(-999);
       (*outputVecNtuplizer)["trgMu_dxy_BS"].push_back(-999);
+      (*outputVecNtuplizer)["trgMu_dxyErr_BS"].push_back(-999);
       (*outputVecNtuplizer)["trgMu_sigdxy_BS"].push_back(-999);
     }
   }
