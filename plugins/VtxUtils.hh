@@ -24,6 +24,8 @@ namespace vtxu {
     bool isGood = false;
   };
 
+  double dxyError(const reco::TrackBase &tk, const reco::Vertex &vtx);
+
   /// error on dxy with respect to a user-given reference point + uncertainty (i.e. reco::Vertex position)
   double dxyError(const reco::TrackBase &tk, const reco::TrackBase::Point &vtx, const math::Error<3>::type &vertexCov);
 

@@ -65,6 +65,15 @@ using namespace std;
 #define _B0Mass_ 5.27963
 #define _B0MassErr_ 0.00026
 
+/* Returns the impact parameter uncertainty with respect to a given vertex. */
+double vtxu::dxyError(const reco::TrackBase &tk, const reco::Vertex &vtx) {
+    return dxyError(tk, vtx.position(), vtx.covariance());
+}
+
+/* Returns the impact parameter uncertainty with respect to a given point and
+ * covariance matrix. Taken from a newer version of cmssw.
+ *
+ * See https://github.com/cms-sw/cmssw/blob/29f5fc15b34591745c5cd3c2c6eb9793aa6f371b/DataFormats/TrackReco/src/TrackBase.cc#L148. */
 double vtxu::dxyError(const reco::TrackBase &tk, const reco::TrackBase::Point &vtx, const math::Error<3>::type &vertexCov) {
   // Gradient of TrackBase::dxy(const Point &myBeamSpot) with respect to track parameters. Using unrolled expressions to avoid calling for higher dimension matrices
   // ( 0, 0, x_vert * cos(phi) + y_vert * sin(phi), 1, 0 )
@@ -78,7 +87,8 @@ double vtxu::dxyError(const reco::TrackBase &tk, const reco::TrackBase::Point &v
                 tk.px() * tk.px() / (tk.pt() * tk.pt()) * vertexCov(1, 1));
 }
 
-// error on dxy with respect to a given beamspot
+/* Returns the impact parameter uncertainty with respect to a given beamspot.
+ * Also taken from a newer version of cmssw. */
 double vtxu::dxyError(const reco::TrackBase &tk, const reco::BeamSpot &theBeamSpot) {
     return dxyError(tk, theBeamSpot.position(tk.vz()), theBeamSpot.rotatedCovariance3D());
 }

@@ -48,6 +48,7 @@ private:
     edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
     edm::EDGetTokenT<vector<pat::Muon>> TrgMuonSrc_;
     edm::EDGetTokenT<vector<pat::Muon>> muonSrc_;
+    edm::EDGetTokenT<reco::BeamSpot> beamSpotSrc_;
 
     double mass_Mu   = 0.10565;
     double mass_Pi   = 0.13957;
@@ -61,7 +62,8 @@ private:
 
 
 
-Bd2JpsiKstDecayTreeProducer::Bd2JpsiKstDecayTreeProducer(const edm::ParameterSet &iConfig)
+Bd2JpsiKstDecayTreeProducer::Bd2JpsiKstDecayTreeProducer(const edm::ParameterSet &iConfig) :
+  beamSpotSrc_( consumes<reco::BeamSpot> ( edm::InputTag("offlineBeamSpot") ) )
 {
     verbose = iConfig.getParameter<int>( "verbose" );
     PFCandSrc_ = consumes<vector<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"));
@@ -106,6 +108,9 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
 
     edm::Handle<vector<pat::Muon>> trgMuonsHandle;
     iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
+
+    edm::Handle<reco::BeamSpot> beamSpotHandle;
+    iEvent.getByToken(beamSpotSrc_, beamSpotHandle);
 
     vector<RefCountedKinematicTree> vecJpsiKinTree;
     vector<double> vecMass_mumu;
@@ -182,7 +187,8 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
       if (fabs( K_tk->dz(primaryVtx.position()) ) > __dzMax__) continue;
       // Require significant impact parameter
       auto dxy = K_tk->dxy(primaryVtx.position());
-      auto K_sigdxy_PV = fabs(dxy)/K_tk->dxyError();
+      double dxyErr = vtxu::dxyError(*K_tk,*beamSpotHandle);
+      auto K_sigdxy_PV = fabs(dxy)/dxyErr;
       auto K_norm_chi2 = K_tk->normalizedChi2();
       auto K_N_valid_hits = K_tk->numberOfValidHits();
       if (K_sigdxy_PV < __sigIPpfCand_min__) continue;
@@ -207,8 +213,9 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
         // if (fabs(pi_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
         if (fabs( pi_tk->dz(primaryVtx.position()) ) > __dzMax__) continue;
         // Require significant impact parameter
-        auto dxy = pi_tk->dxy(primaryVtx.position());
-        auto pi_sigdxy_PV = fabs(dxy)/pi.dxyError();
+        auto dxy = pi_tk->dxy(*beamSpotHandle);
+        double dxyErr = vtxu::dxyError(*pi_tk,*beamSpotHandle);
+        auto pi_sigdxy_PV = fabs(dxy)/dxyErr;
         auto pi_norm_chi2 = pi_tk->normalizedChi2();
         auto pi_N_valid_hits = pi_tk->numberOfValidHits();
         if (pi_sigdxy_PV < __sigIPpfCand_min__) continue;
@@ -413,7 +420,7 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           AddTLVToOut(vtxu::getTLVfromTrack(*(mup.bestTrack()), mass_Mu), string("mup"), &(*outputVecNtuplizer));
           auto dxy_mup = mup.innerTrack()->dxy(primaryVtx.position());
           (*outputVecNtuplizer)["mup_dxy_PV"].push_back(dxy_mup);
-          (*outputVecNtuplizer)["mup_sigdxy_PV"].push_back(fabs(dxy_mup)/mup.innerTrack()->dxyError());
+          (*outputVecNtuplizer)["mup_sigdxy_PV"].push_back(fabs(dxy_mup)/vtxu::dxyError(*mup.innerTrack(),primaryVtx));
           (*outputVecNtuplizer)["mup_isTrg"].push_back(trgMuIdx(mup, (*trgMuonsHandle) ));
           float lostInnerHits_mup = -10;
           for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
@@ -431,7 +438,7 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           AddTLVToOut(vtxu::getTLVfromTrack(*(mum.bestTrack()), mass_Mu), string("mum"), &(*outputVecNtuplizer));
           auto dxy_mum = mum.innerTrack()->dxy(primaryVtx.position());
           (*outputVecNtuplizer)["mum_dxy_PV"].push_back(dxy_mum);
-          (*outputVecNtuplizer)["mum_sigdxy_PV"].push_back(fabs(dxy_mum)/mum.innerTrack()->dxyError());
+          (*outputVecNtuplizer)["mum_sigdxy_PV"].push_back(fabs(dxy_mum)/vtxu::dxyError(*mum.innerTrack(),primaryVtx));
           (*outputVecNtuplizer)["mum_isTrg"].push_back(trgMuIdx(mum, (*trgMuonsHandle) ));
           float lostInnerHits_mum = -10;
           for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
@@ -711,7 +718,7 @@ bool Bd2JpsiKstDecayTreeProducer::isMuonFromJpsiID(pat::Muon m, reco::Vertex pVt
   if(m.innerTrack()->normalizedChi2() > 1.8) return false;
 
   double dxy = m.innerTrack()->dxy(pVtx.position());
-  float sigdxy = fabs(dxy)/m.innerTrack()->dxyError();
+  float sigdxy = fabs(dxy)/vtxu::dxyError(*m.innerTrack(),pVtx);
   if (sigdxy < 2) return false;
 
   return true;

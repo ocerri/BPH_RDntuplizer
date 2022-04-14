@@ -11,6 +11,7 @@
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 #include <iostream>
 #include <string>
@@ -51,6 +52,7 @@ private:
     edm::EDGetTokenT<vector<pat::PackedCandidate>> PFCandSrc_;
     edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
     edm::EDGetTokenT<vector<pat::Muon>> TrgMuonSrc_;
+    edm::EDGetTokenT<reco::BeamSpot> beamSpotSrc_;
 
     double mass_Mu  = 0.10565;
     double mass_Pi  = 0.13957;
@@ -64,7 +66,8 @@ private:
 
 
 
-B2DstKDecayTreeProducer::B2DstKDecayTreeProducer(const edm::ParameterSet &iConfig)
+B2DstKDecayTreeProducer::B2DstKDecayTreeProducer(const edm::ParameterSet &iConfig) :
+    beamSpotSrc_( consumes<reco::BeamSpot> ( edm::InputTag("offlineBeamSpot") ) )
 {
     verbose = iConfig.getParameter<int>( "verbose" );
     PFCandSrc_ = consumes<vector<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"));
@@ -87,6 +90,9 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
 
     edm::Handle<vector<pat::Muon>> trgMuonsHandle;
     iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
+
+    edm::Handle<reco::BeamSpot> beamSpotHandle;
+    iEvent.getByToken(beamSpotSrc_, beamSpotHandle);
 
     // Output collection
     unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
@@ -243,9 +249,9 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
           // Require to be close to the trigger muon;
           if (fabs(pis.dz() - trgMu.dz()) > __dzMax__) continue;
 
-          auto d_pis_PV = pis.dxy();
-          auto sigd_pis_PV = fabs(d_pis_PV/pis.dxyError());
           auto pis_tk = pis.bestTrack();
+          auto d_pis_PV = pis_tk->dxy(*beamSpotHandle);
+          auto sigd_pis_PV = fabs(d_pis_PV/vtxu::dxyError(*pis_tk, *beamSpotHandle));
           auto pis_norm_chi2 = pis_tk->normalizedChi2();
           auto pis_N_valid_hits = pis_tk->numberOfValidHits();
 
@@ -318,9 +324,9 @@ void B2DstKDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup&
 
             if (Ks.pt() < __pT_Ks_min__ ) continue;
 
-            auto d_Ks_PV = Ks.dxy();
-            auto sigd_Ks_PV = fabs(d_Ks_PV/Ks.dxyError());
             auto Ks_tk = Ks.bestTrack();
+            auto d_Ks_PV = Ks_tk->dxy(*beamSpotHandle);
+            auto sigd_Ks_PV = fabs(d_Ks_PV/vtxu::dxyError(*Ks_tk,*beamSpotHandle));
             auto Ks_norm_chi2 = Ks_tk->normalizedChi2();
             auto Ks_N_valid_hits = Ks_tk->numberOfValidHits();
 
