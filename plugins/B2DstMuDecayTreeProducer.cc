@@ -517,7 +517,6 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             int i_muon_PFcand = -1;
 
             for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
-              if (!valid[i_tk]) continue;
               // PF candidate different from K, pi and pis
               if( i_tk==i_K || i_tk==i_pi || i_tk==i_pis) continue;
 
