@@ -138,7 +138,7 @@ process.HammerWeights = cms.EDProducer("HammerWeightsProducer",
                                     'BD(2s)', 'ISGW2',
                                     'BD(2s)*', 'ISGW2',
         ),
-        verbose = cms.int32(1)
+        verbose = cms.int32(0)
 )
 
 cfg_name = os.path.basename(sys.argv[0])

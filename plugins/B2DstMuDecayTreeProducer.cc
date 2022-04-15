@@ -130,54 +130,71 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
     int n_mu = 0, n_K = 0, n_pi = 0, n_D0 = 0, n_pis = 0, n_Dst = 0, n_B = 0;
 
+    vector<reco::Vertex> possibleVtxs = {};
+    for(uint i_vtx = 0; i_vtx<vtxHandle->size(); i_vtx++) {
+      auto vtx = (*vtxHandle)[i_vtx];
+      /* Cut on the number of degrees of freedom. The number of degrees of
+       * freedom is calculated as:
+       *
+       *     ndof = -3 + 2*(w_1 + w_2 + ...)
+       *
+       *  where w_1, w_2, etc. are weights for each track associated with the
+       *  vertex. Quoting from https://arxiv.org/pdf/1405.6569.pdf:
+       *
+       *  > In the adaptive vertex fit, each track in the vertex is assigned
+       *  > a weight between 0 and 1, which reflects the likelihood that it
+       *  > genuinely > belongs to the vertex.
+       *
+       *  Therefore, the number of degrees of freedom is strongly correlated
+       *  with the number of tracks. We cut here requiring more than 4 which
+       *  translates roughly to at least 4 "good" tracks. This is because for
+       *  ndof <= 4 the data and MC do not seem to agree, and there is an
+       *  excess of vertices with low ndof in data. */
+      if (vtx.ndof() <= 4) continue;
+      possibleVtxs.push_back(vtx);
+    }
+
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
     vector<bool> countersFlag(counters.size(), false);
     counters[0]++;
     for(uint i_trgMu = 0; i_trgMu < trgMuonsHandle->size(); i_trgMu++) {
       //######## Require muon quality ##################
+      if (possibleVtxs.size() == 0) continue;
       auto trgMu = (*trgMuonsHandle)[i_trgMu];
       if (charge_muon != 0 && trgMu.charge() != charge_muon) continue;
       if (trgMu.innerTrack().isNull()) continue;
       if (fabs(trgMu.eta()) > 1.5) continue;
       updateCounter(1, countersFlag);
 
-      vector<reco::Vertex> possibleVtxs = {};
-      for(uint i_vtx = 0; i_vtx<vtxHandle->size(); i_vtx++) {
-        auto vtx = (*vtxHandle)[i_vtx];
-        /* Cut on the number of degrees of freedom. The number of degrees of
-         * freedom is calculated as:
-         *
-         *     ndof = -3 + 2*(w_1 + w_2 + ...)
-         *
-         *  where w_1, w_2, etc. are weights for each track associated with the
-         *  vertex. Quoting from https://arxiv.org/pdf/1405.6569.pdf:
-         *
-         *  > In the adaptive vertex fit, each track in the vertex is assigned
-         *  > a weight between 0 and 1, which reflects the likelihood that it
-         *  > genuinely > belongs to the vertex.
-         *
-         *  Therefore, the number of degrees of freedom is strongly correlated
-         *  with the number of tracks. We cut here requiring more than 4 which
-         *  translates roughly to at least 4 "good" tracks. This is because for
-         *  ndof <= 4 the data and MC do not seem to agree, and there is an
-         *  excess of vertices with low ndof in data. */
-        if (vtx.ndof() <= 4) continue;
-        possibleVtxs.push_back(vtx);
-        // bool isSoft = trgMu.isSoftMuon(vtx);
-        // if(isSoft){
-        // }
-      }
-      if (possibleVtxs.size() == 0) continue;
       if (!trgMu.isMediumMuon()) continue;
       updateCounter(2, countersFlag);
 
       n_mu++;
+
+      int *valid = (int *) malloc(sizeof(int)*N_pfCand);
+
+      /* Create an array which tells us whether each track is potentially
+       * valid. Here we check dz and dR. This way we don't have to recompute
+       * this quantity for each for loop. */
+      for (uint i = 0; i < N_pfCand; i++) {
+        /* Set it to not valid by default. */
+        valid[i] = 0;
+        const pat::PackedCandidate &ptk = (*pfCandHandle)[i];
+        if (!ptk.hasTrackDetails()) continue;
+        if (ptk.pt() < __pThad_min__) continue;
+        // Require to be close to the trigger muon;
+        auto tk = ptk.bestTrack();
+        if (fabs(tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+        if (vtxu::dR(ptk.phi(), trgMu.phi(), ptk.eta(), trgMu.eta()) > __dRMax__) continue;
+        valid[i] = 1;
+      }
       /*
       ############################################################################
                                 Look for the K+ (321)
       ############################################################################
       */
       for(uint i_K = 0; i_K < N_pfCand; ++i_K) {
+        if (!valid[i_K]) continue;
         const pat::PackedCandidate & K = (*pfCandHandle)[i_K];
         if (!K.hasTrackDetails()) continue;
         if (K.pdgId() != charge_K*trgMu.charge()*211 ) continue;
@@ -202,6 +219,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         ############################################################################
         */
         for(uint i_pi = 0; i_pi < N_pfCand; ++i_pi) {
+          if (!valid[i_pi]) continue;
           if(i_pi==i_K) continue;
 
           const pat::PackedCandidate & pi = (*pfCandHandle)[i_pi];
@@ -499,6 +517,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             int i_muon_PFcand = -1;
 
             for(uint i_tk = 0; i_tk < N_pfCand; ++i_tk) {
+              if (!valid[i_tk]) continue;
               // PF candidate different from K, pi and pis
               if( i_tk==i_K || i_tk==i_pi || i_tk==i_pis) continue;
 
@@ -794,6 +813,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         }
         if(n_B > 100) break;
       }
+      free(valid);
       if(n_B > 100) break;
     }
 
