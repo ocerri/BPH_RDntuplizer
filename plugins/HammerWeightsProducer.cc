@@ -456,6 +456,19 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
     if (verbose) {cout << "[Hammer]: CLN central values\n\t" << centralValuesOpt << endl;}
     hammer.setOptions(centralValuesOpt);
 
+    /* Set the Wilson coefficients. From Michele:
+     *
+     *  > Btw since you are not fitting new physics wilson coefficients, did you
+     *  > specialize the WC early (as in before you loop over getWeight)? That
+     *  > would save you 2* 3^N /events matrix multiplications and small array
+     *  > allocations...
+     *
+     *  Also see section K in the Hammer guide.
+     *
+     *  This speeds up the total processing time by more than a factor of 2. */
+    hammer.specializeWCInWeights("BtoCTauNu",{{"SM", 1.0}});
+    hammer.specializeWCInWeights("BtoCMuNu",{{"SM", 1.0}});
+
     // ################# BLPR for D* ##############################
     centralValuesOpt = "BtoD*BLPRVar: {";
     for(auto i=0; i<7; i++) {
