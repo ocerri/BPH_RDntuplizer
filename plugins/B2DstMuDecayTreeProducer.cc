@@ -69,6 +69,7 @@ private:
     edm::EDGetTokenT<vector<pat::PackedCandidate>> PFCandSrc_;
     edm::EDGetTokenT<vector<reco::Vertex>> vtxSrc_;
     edm::EDGetTokenT<vector<pat::Muon>> TrgMuonSrc_;
+    edm::EDGetTokenT<reco::BeamSpot> beamSpotSrc_;
 
     int charge_muon = +1;
     int charge_K = +1;
@@ -90,7 +91,8 @@ private:
 
 
 
-B2DstMuDecayTreeProducer::B2DstMuDecayTreeProducer(const edm::ParameterSet &iConfig)
+B2DstMuDecayTreeProducer::B2DstMuDecayTreeProducer(const edm::ParameterSet &iConfig) :
+    beamSpotSrc_( consumes<reco::BeamSpot> ( edm::InputTag("offlineBeamSpot") ) )
 {
     PFCandSrc_ = consumes<vector<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"));
     vtxSrc_ = consumes<vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"));
@@ -123,6 +125,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
 
     edm::Handle<vector<pat::Muon>> trgMuonsHandle;
     iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
+
+    edm::Handle<reco::BeamSpot> beamSpotHandle;
+    iEvent.getByToken(beamSpotSrc_, beamSpotHandle);
 
     // Output collection
     unique_ptr<map<string, float>> outputNtuplizer(new map<string, float>);
@@ -204,8 +209,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         if (fabs(K_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
         if (vtxu::dR(K.phi(), trgMu.phi(), K.eta(), trgMu.eta()) > __dRMax__) continue;
         // Require significant impact parameter
-        auto dxy = K_tk->dxy(primaryVtx.position());
-        auto sigdxy_K_PV = fabs(dxy)/K_tk->dxyError();
+        auto dxy = K_tk->dxy(*beamSpotHandle);
+        double dxyErr = vtxu::dxyError(*K_tk,*beamSpotHandle);
+        auto sigdxy_K_PV = fabs(dxy)/dxyErr;
         auto K_norm_chi2 = K_tk->normalizedChi2();
         auto K_N_valid_hits = K_tk->numberOfValidHits();
         if (sigdxy_K_PV < __sigIPpfCand_min__) continue;
@@ -232,8 +238,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           if (fabs(pi_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
           if (vtxu::dR(pi.phi(), trgMu.phi(), pi.eta(), trgMu.eta()) > __dRMax__) continue;
           // Require significant impact parameter
-          auto dxy = pi_tk->dxy(primaryVtx.position());
-          auto sigdxy_pi_PV = fabs(dxy)/pi.dxyError();
+          auto dxy = pi_tk->dxy(*beamSpotHandle);
+          double dxyErr = vtxu::dxyError(*pi_tk,*beamSpotHandle);
+          auto sigdxy_pi_PV = fabs(dxy)/dxyErr;
           auto pi_norm_chi2 = pi_tk->normalizedChi2();
           auto pi_N_valid_hits = pi_tk->numberOfValidHits();
           if (sigdxy_pi_PV < __sigIPpfCand_min__) continue;
@@ -286,8 +293,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             if (fabs(pis_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
             if (vtxu::dR(pis.phi(), trgMu.phi(), pis.eta(), trgMu.eta()) > __dRMax__) continue;
             // Require significant impact parameter
-            auto dxy = pis_tk->dxy(primaryVtx.position());
-            auto sigdxy_pis_PV = fabs(dxy)/pis.dxyError();
+            auto dxy = pis_tk->dxy(*beamSpotHandle);
+            double dxyErr = vtxu::dxyError(*pis_tk,*beamSpotHandle);
+            auto sigdxy_pis_PV = fabs(dxy)/dxyErr;
             auto pis_norm_chi2 = pis_tk->normalizedChi2();
             auto pis_N_valid_hits = pis_tk->numberOfValidHits();
             if (sigdxy_pis_PV < __sigIPpfCand_min__) continue;

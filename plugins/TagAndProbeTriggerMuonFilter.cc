@@ -298,9 +298,9 @@ bool TagAndProbeTriggerMuonFilter::filter(edm::Event& iEvent, const edm::EventSe
       auto dxyTag_PV = fabs(tkTag->dxy(primaryVtx.position()));
       auto dxyTag_BS = fabs(tkTag->dxy((*beamSpotHandle)));
       outMap["mTag_dxy_PV"] = dxyTag_PV;
-      outMap["mTag_sigdxy_PV"] = dxyTag_PV/tkTag->dxyError();
+      outMap["mTag_sigdxy_PV"] = dxyTag_PV/dxyProbeUnc_PV;
       outMap["mTag_dxy_BS"] = dxyTag_BS;
-      outMap["mTag_sigdxy_BS"] = dxyTag_BS/tkTag->dxyError();
+      outMap["mTag_sigdxy_BS"] = dxyTag_BS/dxyProbeUnc_BS;
 
       outMap["mTag_HLT_Mu_IP"] = mTag.triggered("HLT_Mu*_IP*");
       for(auto tag : triggerTag) {
