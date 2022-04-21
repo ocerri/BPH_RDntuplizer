@@ -578,7 +578,7 @@ void HammerWeightsProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       (*outputNtuplizer)["wh_BGLCentral"] = 1e-9;
       for(int i=0; i<10; i++) { //Loop over eigenVar
         for (int j=0; j<2; j++) { //Loop over pos/neg direction
-          string var_name = "BGL" + varNameBLPR[i];
+          string var_name = "BGL" + varNameBGL[i];
           var_name += j==0? "Up" : "Down";
           (*outputNtuplizer)["wh_" + var_name] = 0;
         }
