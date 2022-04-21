@@ -65,7 +65,7 @@ PROCESSES = [
 
 # All the different ntuplizer configs to run
 DATASETS = {
-    #'Tag_MC': ('ntuples_TagAndProbeTrigger','cmssw_centralMC_TagAndProbeTrigger.py'),
+    'Tag_JpsiKst_MC': ('ntuples_TagAndProbeTrigger','cmssw_centralMC_TagAndProbeTrigger.py'),
     'Tag_RD': ('TagAndProbeTrigger','cmssw_cmsRD2018_TagAndProbeTrigger.py'),
     'Bd2JpsiKst_MC': ('ntuples_Bd2JpsiKst','cmssw_centralMC_Bd_JpsiKst-mumuKpi.py'),
     'Bd2JpsiKst_RD': ('Bd2JpsiKst','cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py'),
