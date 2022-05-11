@@ -71,6 +71,7 @@ DATASETS = {
     'Bd2JpsiKst_RD': ('Bd2JpsiKst','cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py'),
     'B2DstMu_MC': ('ntuples_B2DstMu','cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py'),
     'B2DstMu_RD': ('B2DstMu','cmssw_cmsRD2018_Tag_Bd_MuDst-PiPiK.py'),
+    'SSDstMu_RD': ('SSDstMu','cmssw_cmsRD2018_Tag_SS_MuDst-PiPiK.py'),
 }
 
 if __name__ == '__main__':
