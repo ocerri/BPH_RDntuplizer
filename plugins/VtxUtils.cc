@@ -69,7 +69,7 @@ using namespace vtxu;
 
 static int isMC = 0;
 
-reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, reco::Vertex &vtx, std::vector<pat::PackedCandidate> &pfCandHandle)
+reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, reco::Vertex &vtx, const std::vector<pat::PackedCandidate> &pfCandHandle)
 {
     unsigned int i;
     std::vector<reco::TransientTrack> mytracks;
@@ -99,7 +99,7 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
 
     if (mytracks.size() < 2) {
         fprintf(stderr, "Warning: Less than 2 tracks for vertex fit!\n");
-        return reco::Vertex();
+        return vtx;
     }
 
     AdaptiveVertexFitter theFitter;

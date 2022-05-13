@@ -160,7 +160,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
        *  ndof <= 4 the data and MC do not seem to agree, and there is an
        *  excess of vertices with low ndof in data. */
       if (vtx.ndof() <= 4) continue;
-      possibleVtxs.push_back(vtx);
+      possibleVtxs.push_back(vtxu::refit_vertex(iEvent,iSetup,vtx,*pfCandHandle));
     }
 
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
