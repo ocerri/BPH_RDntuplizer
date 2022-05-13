@@ -102,7 +102,8 @@ process.trgF = cms.EDFilter("TriggerMuonsFilter",
 
 process.B2JpsiKstDT = cms.EDProducer("Bd2JpsiKstDecayTreeProducer",
         trgMuons = cms.InputTag("trgF","trgMuonsMatched", ""),
-        verbose = cms.int32(0)
+        verbose = cms.int32(0),
+        isMC = cms.int32(0)
 )
 
 process.B2JpsiKstDTFilter = cms.EDFilter("B2JpsiKstDecayTreeFilter",

@@ -24,6 +24,12 @@ namespace vtxu {
     bool isGood = false;
   };
 
+  void set_isMC(int _isMC);
+
+  reco::Track fix_track(const reco::Track *tk, double delta=1e-8);
+  reco::Track fix_track(const reco::TrackRef& tk);
+  reco::Track fix_track(const reco::Track *tk, double delta);
+
   double dxyError(const reco::TrackBase &tk, const reco::Vertex &vtx);
 
   /// error on dxy with respect to a user-given reference point + uncertainty (i.e. reco::Vertex position)

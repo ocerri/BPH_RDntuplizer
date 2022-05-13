@@ -46,6 +46,7 @@
 #include "TVectorD.h"
 
 using namespace std;
+using namespace vtxu;
 
 #define _MuMass_ 0.1056583745
 #define _MuMassErr_ 0.0000000024
@@ -64,6 +65,13 @@ using namespace std;
 #define _JpsiMassErr_ 0.00001
 #define _B0Mass_ 5.27963
 #define _B0MassErr_ 0.00026
+
+static int isMC = 0;
+
+void vtxu::set_isMC(int _isMC)
+{
+    isMC = _isMC;
+}
 
 /* Returns the impact parameter uncertainty with respect to a given vertex. */
 double vtxu::dxyError(const reco::TrackBase &tk, const reco::Vertex &vtx) {
@@ -93,9 +101,7 @@ double vtxu::dxyError(const reco::TrackBase &tk, const reco::BeamSpot &theBeamSp
     return dxyError(tk, theBeamSpot.position(tk.vz()), theBeamSpot.rotatedCovariance3D());
 }
 
-reco::Track fix_track(const reco::Track *tk, double delta=1e-8);
-
-reco::Track fix_track(const reco::TrackRef& tk)
+reco::Track vtxu::fix_track(const reco::TrackRef& tk)
 {
     reco::Track t = reco::Track(*tk);
     return fix_track(&t);
@@ -110,7 +116,7 @@ reco::Track fix_track(const reco::TrackRef& tk)
  *
  * Note: There may be better ways of doing this, but since most of these tracks
  * don't end up in the final sample, this is probably good enough. */
-reco::Track fix_track(const reco::Track *tk, double delta)
+reco::Track vtxu::fix_track(const reco::Track *tk, double delta)
 {
     unsigned int i, j;
     double min_eig = 1;
@@ -145,6 +151,32 @@ reco::Track fix_track(const reco::Track *tk, double delta)
         for (i = 0; i < cov.kRows; i++)
             cov(i,i) -= min_eig - delta;
     }
+
+    /* Correct for the fact that the impact parameter error is significantly
+     * different in data and MC. Technically we should be *decreasing* the data
+     * uncertainty since according to Marco Musich:
+     *
+     * > we suspect that the track uncertainty in data is over-estimated, while
+     * > it should be well calibrated in MC.  To corroborate this, here is a
+     * > plot from the recent alignment paper which shows the pull of the pixel
+     * > residuals for various reconstruction passes and MC:
+     * > for an ideally calibrated detector you expect a peak around 1, but for
+     * > the "alignment during data-taking" which is what was used for the
+     * > BParking Prompt reconstruction you can see it's pretty shifted to
+     * > lower values, meaning the error is overestimated.
+     * > So I would recommend to scale down the data uncertainties.
+     *
+     * However, we can't do this because this would cause the impact parameter
+     * significance to increase which means that some events which didn't
+     * trigger should have triggered. Therefore, we *increase* the error on the
+     * MC.
+     *
+     * This number comes from looking at the impact parameter error for the
+     * trigger muon for the B0 -> J/psi K* events. I tested both a scaling and
+     * an offset and the offset seemed to match really well, whereas the
+     * scaling didn't work. */
+    if (isMC)
+        cov(reco::TrackBase::i_dxy, reco::TrackBase::i_dxy) = pow(sqrt(cov(reco::TrackBase::i_dxy, reco::TrackBase::i_dxy)) + 0.0003,2);
 
     return reco::Track(tk->chi2(), tk->ndof(), tk->referencePoint(), tk->momentum(), tk->charge(), cov, tk->algo(), (reco::TrackBase::TrackQuality) tk->qualityMask());
 }
