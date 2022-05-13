@@ -68,6 +68,7 @@ namespace vtxu {
   std::pair<double,double> vtxsDistance(reco::VertexRef, RefCountedKinematicVertex);
   std::pair<double,double> vtxsDistance(reco::Vertex, RefCountedKinematicVertex);
   std::pair<double,double> vtxsTransverseDistance(reco::Vertex, RefCountedKinematicVertex);
+  std::pair<double,double> vtxsTransverseDistanceFromBeamSpot(const reco::BeamSpot &theBeamSpot, RefCountedKinematicVertex v2);
   kinFitResuts fitQuality(RefCountedKinematicTree, double = -1);
   double computePointingCos(reco::Vertex, const RefCountedKinematicVertex, const RefCountedKinematicParticle);
   double computePointingCosTransverse(reco::Vertex, const RefCountedKinematicVertex, const RefCountedKinematicParticle);

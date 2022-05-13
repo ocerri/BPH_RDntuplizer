@@ -272,7 +272,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           auto cosT_D0_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxD0, D0);
           auto d_vtxD0_PV = vtxu::vtxsDistance(primaryVtx, vtxD0);
           auto sigd_vtxD0_PV = d_vtxD0_PV.first/d_vtxD0_PV.second;
-          auto dxy_vtxD0_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxD0);
+          auto dxy_vtxD0_PV = vtxu::vtxsTransverseDistanceFromBeamSpot(*beamSpotHandle, vtxD0);
           auto sigdxy_vtxD0_PV = dxy_vtxD0_PV.first/dxy_vtxD0_PV.second;
 
           if(sigdxy_vtxD0_PV < __sigdxy_vtx_PV_min__) continue;
