@@ -69,7 +69,7 @@ using namespace vtxu;
 
 static int isMC = 0;
 
-reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, reco::Vertex &vtx, const std::vector<pat::PackedCandidate> &pfCandHandle)
+reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, size_t ipv, const std::vector<pat::PackedCandidate> &pfCandHandle)
 {
     unsigned int i;
     std::vector<reco::TransientTrack> mytracks;
@@ -88,9 +88,9 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
         if (ptk.pt() < 0.5) continue;
         auto tk = ptk.bestTrack();
 
-        if (fabs(ptk.vx() - vtx.x()) > 1e-10) continue;
-        if (fabs(ptk.vy() - vtx.y()) > 1e-10) continue;
-        if (fabs(ptk.vz() - vtx.z()) > 1e-10) continue;
+        if (ptk.fromPV(ipv) < 3) continue;
+
+        fprintf(stderr, "match!\n");
 
         reco::TransientTrack transientTrack = TTBuilder->build(fix_track(tk)); 
         transientTrack.setBeamSpot(vertexBeamSpot);
@@ -99,7 +99,7 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
 
     if (mytracks.size() < 2) {
         fprintf(stderr, "Warning: Less than 2 tracks for vertex fit!\n");
-        return vtx;
+        return reco::Vertex();
     }
 
     AdaptiveVertexFitter theFitter;
