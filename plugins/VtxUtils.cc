@@ -85,12 +85,9 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
         const pat::PackedCandidate &ptk = pfCandHandle[i];
 
         if (!ptk.hasTrackDetails()) continue;
-        if (ptk.pt() < 0.5) continue;
         auto tk = ptk.bestTrack();
 
-        if (ptk.fromPV(ipv) < 3) continue;
-
-        fprintf(stderr, "match!\n");
+        if (ptk.fromPV(ipv) < 2) continue;
 
         reco::TransientTrack transientTrack = TTBuilder->build(fix_track(tk)); 
         transientTrack.setBeamSpot(vertexBeamSpot);
@@ -103,7 +100,8 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
     }
 
     AdaptiveVertexFitter theFitter;
-    TransientVertex tmp = theFitter.vertex(mytracks, vertexBeamSpot);
+    //TransientVertex tmp = theFitter.vertex(mytracks, vertexBeamSpot);
+    TransientVertex tmp = theFitter.vertex(mytracks);
     return tmp;
 }
 
