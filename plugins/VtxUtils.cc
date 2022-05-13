@@ -80,7 +80,7 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
     edm::Handle<reco::BeamSpot> recoBeamSpotHandle;
     iEvent.getByLabel("offlineBeamSpot", recoBeamSpotHandle);
     reco::BeamSpot vertexBeamSpot = *recoBeamSpotHandle;
- 
+
     for (i = 0; i < pfCandHandle.size(); i++) {
         const pat::PackedCandidate &ptk = pfCandHandle[i];
 
@@ -89,7 +89,7 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
 
         if (ptk.fromPV(ipv) < 2) continue;
 
-        reco::TransientTrack transientTrack = TTBuilder->build(fix_track(tk)); 
+        reco::TransientTrack transientTrack = TTBuilder->build(fix_track(tk));
         transientTrack.setBeamSpot(vertexBeamSpot);
         mytracks.push_back(transientTrack);
     }
