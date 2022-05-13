@@ -69,6 +69,10 @@ using namespace vtxu;
 
 static int isMC = 0;
 
+/* Returns a new vertex fit using the adaptive vertex fitter with tracks after
+ * we fix the covariance matrix.
+ *
+ * See https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideOfflinePrimaryVertexProduction#Refitting_vertices_with_selected. */
 reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, size_t ipv, const std::vector<pat::PackedCandidate> &pfCandHandle)
 {
     unsigned int i;
