@@ -84,6 +84,7 @@ private:
     double mass_B0  = 5.27963;
 
     int verbose = 0;
+    int isMC = 0;
 
     vector<uint> counters;
     uint fitCrash = 0;
@@ -107,6 +108,9 @@ B2DstMuDecayTreeProducer::B2DstMuDecayTreeProducer(const edm::ParameterSet &iCon
     charge_pis = iConfig.getParameter<int>( "charge_pis" );
 
     verbose = iConfig.getParameter<int>( "verbose" );
+
+    isMC = iConfig.getParameter<int>("isMC");
+    vtxu::set_isMC(isMC);
 
     produces<map<string, float>>("outputNtuplizer");
     produces<map<string, vector<float>>>("outputVecNtuplizer");
@@ -205,15 +209,15 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         if (K.pdgId() != charge_K*trgMu.charge()*211 ) continue;
         if (K.pt() < __pThad_min__) continue;
         // Require to be close to the trigger muon;
-        auto K_tk = K.bestTrack();
-        if (fabs(K_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+        auto K_tk = vtxu::fix_track(K.bestTrack());
+        if (fabs(K_tk.dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
         if (vtxu::dR(K.phi(), trgMu.phi(), K.eta(), trgMu.eta()) > __dRMax__) continue;
         // Require significant impact parameter
-        auto dxy = K_tk->dxy(*beamSpotHandle);
-        double dxyErr = vtxu::dxyError(*K_tk,*beamSpotHandle);
+        auto dxy = K_tk.dxy(*beamSpotHandle);
+        double dxyErr = vtxu::dxyError(K_tk,*beamSpotHandle);
         auto sigdxy_K_PV = fabs(dxy)/dxyErr;
-        auto K_norm_chi2 = K_tk->normalizedChi2();
-        auto K_N_valid_hits = K_tk->numberOfValidHits();
+        auto K_norm_chi2 = K_tk.normalizedChi2();
+        auto K_N_valid_hits = K_tk.numberOfValidHits();
         if (sigdxy_K_PV < __sigIPpfCand_min__) continue;
         updateCounter(3, countersFlag);
         if (verbose) {cout << Form("K%s found at %u\n", K.pdgId() > 0?"+":"-", i_K);}
@@ -234,15 +238,15 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           //Require a minimum pt
           if(pi.pt() < __pThad_min__) continue;
           // Require to be close to the trigger muon;
-          auto pi_tk = pi.bestTrack();
-          if (fabs(pi_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+          auto pi_tk = vtxu::fix_track(pi.bestTrack());
+          if (fabs(pi_tk.dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
           if (vtxu::dR(pi.phi(), trgMu.phi(), pi.eta(), trgMu.eta()) > __dRMax__) continue;
           // Require significant impact parameter
-          auto dxy = pi_tk->dxy(*beamSpotHandle);
-          double dxyErr = vtxu::dxyError(*pi_tk,*beamSpotHandle);
+          auto dxy = pi_tk.dxy(*beamSpotHandle);
+          double dxyErr = vtxu::dxyError(pi_tk,*beamSpotHandle);
           auto sigdxy_pi_PV = fabs(dxy)/dxyErr;
-          auto pi_norm_chi2 = pi_tk->normalizedChi2();
-          auto pi_N_valid_hits = pi_tk->numberOfValidHits();
+          auto pi_norm_chi2 = pi_tk.normalizedChi2();
+          auto pi_N_valid_hits = pi_tk.numberOfValidHits();
           if (sigdxy_pi_PV < __sigIPpfCand_min__) continue;
           updateCounter(4, countersFlag);
           if (verbose) {cout << Form("pi%s found at %u\n", pi.pdgId()>0?"+":"-", i_pi);}
@@ -289,15 +293,15 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             if (!pis.hasTrackDetails()) continue;
             if (pis.pdgId() != charge_pis*trgMu.charge()*211 ) continue;
             // Require to be close to the trigger muon;
-            auto pis_tk = pis.bestTrack();
-            if (fabs(pis_tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+            auto pis_tk = vtxu::fix_track(pis.bestTrack());
+            if (fabs(pis_tk.dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
             if (vtxu::dR(pis.phi(), trgMu.phi(), pis.eta(), trgMu.eta()) > __dRMax__) continue;
             // Require significant impact parameter
-            auto dxy = pis_tk->dxy(*beamSpotHandle);
-            double dxyErr = vtxu::dxyError(*pis_tk,*beamSpotHandle);
+            auto dxy = pis_tk.dxy(*beamSpotHandle);
+            double dxyErr = vtxu::dxyError(pis_tk,*beamSpotHandle);
             auto sigdxy_pis_PV = fabs(dxy)/dxyErr;
-            auto pis_norm_chi2 = pis_tk->normalizedChi2();
-            auto pis_N_valid_hits = pis_tk->numberOfValidHits();
+            auto pis_norm_chi2 = pis_tk.normalizedChi2();
+            auto pis_N_valid_hits = pis_tk.numberOfValidHits();
             if (sigdxy_pis_PV < __sigIPpfCand_min__) continue;
             updateCounter(8, countersFlag);
             if (verbose) {cout << Form("pis%s found at %u\n", pis.pdgId()>0?"+":"-", i_pis);}
@@ -543,8 +547,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
                 if (!ptk.hasTrackDetails()) continue;
                 if (ptk.pt() < __pTaddTracks_min__) continue;
                 // Require to be close to the trigger muon;
-                auto tk = ptk.bestTrack();
-                if (fabs(tk->dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
+                auto tk = vtxu::fix_track(ptk.bestTrack());
+                if (fabs(tk.dz(primaryVtx.position()) - trgMu.muonBestTrack()->dz(primaryVtx.position())) > __dzMax__) continue;
                 if (dR_fromMu > __dRMax__) continue;
 
                 // GlobalPoint auxp(vtxB->position().x(), vtxB->position().y(), vtxB->position().z());
@@ -582,12 +586,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
                 tksAdd_charge.push_back(ptk.charge());
                 tksAdd_pdgId.push_back(ptk.pdgId());
                 tksAdd_pt.push_back(refit_pi_p4.Pt());
-                tksAdd_ptError.push_back(tk->ptError());
+                tksAdd_ptError.push_back(tk.ptError());
                 tksAdd_eta.push_back(refit_pi_p4.Eta());
-                tksAdd_etaError.push_back(tk->etaError());
+                tksAdd_etaError.push_back(tk.etaError());
                 tksAdd_phi.push_back(refit_pi_p4.Phi());
-                tksAdd_phiError.push_back(tk->phiError());
-                tksAdd_dz.push_back(tk->dz(bestVtx.position()));
+                tksAdd_phiError.push_back(tk.phiError());
+                tksAdd_dz.push_back(tk.dz(bestVtx.position()));
                 tksAdd_lostInnerHits.push_back(ptk.lostInnerHits());
                 tksAdd_sigdca_vtxB.push_back(dca.first/dca.second);
                 tksAdd_cos_PV.push_back(vtxu::computePointingCos(bestVtx, vtxB, refit_pi));

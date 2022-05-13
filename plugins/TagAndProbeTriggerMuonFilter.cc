@@ -105,7 +105,6 @@ TagAndProbeTriggerMuonFilter::TagAndProbeTriggerMuonFilter(const edm::ParameterS
   beamSpotSrc_( consumes<reco::BeamSpot> ( edm::InputTag("offlineBeamSpot") ) ),
   muonIDScaleFactors( iConfig.getParameter<int>( "muonIDScaleFactors" ) ),
   requireTag( iConfig.getParameter<int>( "requireTag" ) ),
-  isMC( iConfig.getParameter<int>( "isMC" ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
   hAllNvts = fs->make<TH1I>("hAllNvts", "Number of vertexes from all the MINIAOD events", 101, -0.5, 100.5);
@@ -113,6 +112,9 @@ TagAndProbeTriggerMuonFilter::TagAndProbeTriggerMuonFilter(const edm::ParameterS
   hAllVtxY = fs->make<TH1I>("hAllVtxY", "Y coordinate of vertexes from all the MINIAOD events", 500, -0.1, 0.07);
   hAllVtxZ = fs->make<TH1I>("hAllVtxZ", "Z coordinate of vertexes from all the MINIAOD events", 100, -25, 25);
   tree = fs->make<TTree>( "T", "Events Tree from TAG AND PROBE");
+
+  isMC = iConfig.getParameter<int>("isMC");
+  vtxu::set_isMC(isMC);
 
   if(isMC) {
     hAllNTrueIntMC = fs->make<TH1I>("hAllNTrueIntMC", "Number of true interactions generated in MC", 101, -0.5, 100.5);
@@ -125,7 +127,6 @@ TagAndProbeTriggerMuonFilter::TagAndProbeTriggerMuonFilter(const edm::ParameterS
     hSoftMuonIdSF = (TH2D*) fAux.Get("NUM_SoftID_DEN_genTracks_pt_abseta");
     hMediumMuonIdSF = (TH2D*) fAux.Get("NUM_MediumID_DEN_genTracks_pt_abseta");
   }
-
 }
 
 bool TagAndProbeTriggerMuonFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -258,12 +259,12 @@ bool TagAndProbeTriggerMuonFilter::filter(edm::Event& iEvent, const edm::EventSe
     if ( fabs(mProbe.eta()) > 1.6 ) continue;
     if ( mProbe.pt() < 5.5 ) continue;
     if (mProbe.innerTrack().isNull()) continue;
-    auto tkProbe = mProbe.innerTrack();
-    auto dxyProbe_PV = fabs(tkProbe->dxy(primaryVtx.position()));
-    auto dxyProbe_BS = fabs(tkProbe->dxy((*beamSpotHandle)));
+    auto tkProbe = vtxu::fix_track(mProbe.innerTrack());
+    auto dxyProbe_PV = fabs(tkProbe.dxy(primaryVtx.position()));
+    auto dxyProbe_BS = fabs(tkProbe.dxy((*beamSpotHandle)));
 
-    double dxyProbeUnc_BS = vtxu::dxyError(*tkProbe, *beamSpotHandle);
-    double dxyProbeUnc_PV = vtxu::dxyError(*tkProbe, primaryVtx.position(), primaryVtx.covariance());
+    double dxyProbeUnc_BS = vtxu::dxyError(tkProbe, *beamSpotHandle);
+    double dxyProbeUnc_PV = vtxu::dxyError(tkProbe, primaryVtx.position(), primaryVtx.covariance());
 
     if (dxyProbe_BS/dxyProbeUnc_BS < 1) continue;
     TLorentzVector pProbe;
@@ -294,9 +295,9 @@ bool TagAndProbeTriggerMuonFilter::filter(edm::Event& iEvent, const edm::EventSe
       outMap["mTag_eta"] = mTag.eta();
       outMap["mTag_phi"] = mTag.phi();
 
-      auto tkTag = mTag.innerTrack();
-      auto dxyTag_PV = fabs(tkTag->dxy(primaryVtx.position()));
-      auto dxyTag_BS = fabs(tkTag->dxy((*beamSpotHandle)));
+      auto tkTag = vtxu::fix_track(mTag.innerTrack());
+      auto dxyTag_PV = fabs(tkTag.dxy(primaryVtx.position()));
+      auto dxyTag_BS = fabs(tkTag.dxy((*beamSpotHandle)));
       outMap["mTag_dxy_PV"] = dxyTag_PV;
       outMap["mTag_sigdxy_PV"] = dxyTag_PV/dxyProbeUnc_PV;
       outMap["mTag_dxy_BS"] = dxyTag_BS;
@@ -341,7 +342,7 @@ bool TagAndProbeTriggerMuonFilter::filter(edm::Event& iEvent, const edm::EventSe
     outMap["mProbe_pt"] = mProbe.pt();
     outMap["mProbe_eta"] = mProbe.eta();
     outMap["mProbe_phi"] = mProbe.phi();
-    outMap["mProbe_dz"] = tkProbe->dz(primaryVtx.position());
+    outMap["mProbe_dz"] = tkProbe.dz(primaryVtx.position());
     outMap["mProbe_dxy_PV"] = dxyProbe_PV;
     outMap["mProbe_sigdxy_PV"] = dxyProbe_PV/dxyProbeUnc_PV;
     outMap["mProbe_dxyErr_PV"] = dxyProbeUnc_PV;

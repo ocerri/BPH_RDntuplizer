@@ -62,7 +62,7 @@ class TriggerMuonsFilter : public edm::stream::EDFilter<> {
       int N_analyzed_events = 0;
       int N_passed_events = 0;
       int muonCharge_ = 0;
-      bool isMC_ = 0;
+      int isMC = 0;
       int verbose = 0;
 };
 
@@ -73,7 +73,6 @@ TriggerMuonsFilter::TriggerMuonsFilter(const edm::ParameterSet& iConfig):
   vtxSrc_( consumes<vector<reco::Vertex>> ( edm::InputTag("offlineSlimmedPrimaryVertices") ) ),
   beamSpotSrc_( consumes<reco::BeamSpot> ( edm::InputTag("offlineBeamSpot") ) ),
   muonCharge_( iConfig.getParameter<int>( "muon_charge" ) ),
-  isMC_( iConfig.getParameter<int>( "isMC" ) ),
   verbose( iConfig.getParameter<int>( "verbose" ) )
 {
   produces<vector<pat::Muon>>("trgMuonsMatched");
@@ -83,7 +82,11 @@ TriggerMuonsFilter::TriggerMuonsFilter(const edm::ParameterSet& iConfig):
   hAllVtxX = fs->make<TH1I>("hAllVtxX", "X coordinate of vertexes from all the MINIAOD events", 500, -0.05, 0.125);
   hAllVtxY = fs->make<TH1I>("hAllVtxY", "Y coordinate of vertexes from all the MINIAOD events", 500, -0.1, 0.07);
   hAllVtxZ = fs->make<TH1I>("hAllVtxZ", "Z coordinate of vertexes from all the MINIAOD events", 100, -25, 25);
-  if(isMC_) {
+
+  isMC = iConfig.getParameter<int>("isMC");
+  vtxu::set_isMC(isMC);
+
+  if(isMC) {
     pileupMCSrc_ = consumes<vector<PileupSummaryInfo>> ( edm::InputTag("slimmedAddPileupInfo") );
     hAllNTrueIntMC = fs->make<TH1I>("hAllNTrueIntMC", "Number of true interactions generated in MC", 101, -0.5, 100.5);
   }
@@ -119,7 +122,7 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
   unique_ptr<map<string, vector<float>>> outputVecNtuplizer(new map<string, vector<float>>);
 
   // Save MC pileup information
-  if (isMC_) {
+  if (isMC) {
     edm::Handle<vector<PileupSummaryInfo>> pileupMCHandle;
     iEvent.getByToken(pileupMCSrc_, pileupMCHandle);
     uint idxBX0 = -1;
@@ -166,15 +169,15 @@ bool TriggerMuonsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
     (*outputVecNtuplizer)["trgMu_softIdPV"].push_back(muon.isSoftMuon(primaryVtx));
 
     if(!muon.innerTrack().isNull()) {
-      auto tk = muon.innerTrack();
-      (*outputVecNtuplizer)["trgMu_dz"].push_back(tk->dz(primaryVtx.position()));
-      auto dxy_PV = fabs(tk->dxy(primaryVtx.position()));
-      double dxyUnc_PV = vtxu::dxyError(*tk,primaryVtx.position(),primaryVtx.covariance());
+      auto tk = vtxu::fix_track(muon.innerTrack());
+      (*outputVecNtuplizer)["trgMu_dz"].push_back(tk.dz(primaryVtx.position()));
+      auto dxy_PV = fabs(tk.dxy(primaryVtx.position()));
+      double dxyUnc_PV = vtxu::dxyError(tk,primaryVtx.position(),primaryVtx.covariance());
       (*outputVecNtuplizer)["trgMu_dxy_PV"].push_back(dxy_PV);
       (*outputVecNtuplizer)["trgMu_dxyErr_PV"].push_back(dxyUnc_PV);
       (*outputVecNtuplizer)["trgMu_sigdxy_PV"].push_back(dxy_PV/dxyUnc_PV);
-      auto dxy_BS = fabs(tk->dxy((*beamSpotHandle)));
-      double dxyUnc_BS = vtxu::dxyError(*tk,*beamSpotHandle);
+      auto dxy_BS = fabs(tk.dxy((*beamSpotHandle)));
+      double dxyUnc_BS = vtxu::dxyError(tk,*beamSpotHandle);
       (*outputVecNtuplizer)["trgMu_dxy_BS"].push_back(dxy_BS);
       (*outputVecNtuplizer)["trgMu_dxyErr_BS"].push_back(dxyUnc_BS);
       (*outputVecNtuplizer)["trgMu_sigdxy_BS"].push_back(dxy_BS/dxyUnc_BS);

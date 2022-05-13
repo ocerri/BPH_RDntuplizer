@@ -103,7 +103,8 @@ process.B2MuDstDT = cms.EDProducer("B2DstMuDecayTreeProducer",
         charge_K = cms.int32(+1), # charges relative to the muon charge
         charge_pi = cms.int32(-1), # charges relative to the muon charge
         charge_pis = cms.int32(-1), # charges relative to the muon charge
-        verbose = cms.int32(0)
+        verbose = cms.int32(0),
+        isMC = cms.int32(0),
 )
 
 process.B2MuDstDTFilter = cms.EDFilter("B2DstMuDecayTreeFilter",
