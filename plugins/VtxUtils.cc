@@ -33,6 +33,7 @@
 #include "RecoVertex/KinematicFit/interface/MultiTrackMassKinematicConstraint.h"
 #include "RecoVertex/KinematicFit/interface/MultiTrackPointingKinematicConstraint.h"
 #include "RecoVertex/KinematicFit/interface/CombinedKinematicConstraint.h"
+#include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
 
 // Needed for IP3D
 #include "RecoTauTag/ImpactParameter/interface/ImpactParameterAlgorithm.h"
@@ -67,6 +68,44 @@ using namespace vtxu;
 #define _B0MassErr_ 0.00026
 
 static int isMC = 0;
+
+reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, reco::Vertex &vtx, std::vector<pat::PackedCandidate> &pfCandHandle)
+{
+    unsigned int i;
+    std::vector<reco::TransientTrack> mytracks;
+
+    edm::ESHandle<TransientTrackBuilder> TTBuilder;
+    iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+
+    edm::Handle<reco::BeamSpot> recoBeamSpotHandle;
+    iEvent.getByLabel("offlineBeamSpot", recoBeamSpotHandle);
+    reco::BeamSpot vertexBeamSpot = *recoBeamSpotHandle;
+ 
+    for (i = 0; i < pfCandHandle.size(); i++) {
+        const pat::PackedCandidate &ptk = pfCandHandle[i];
+
+        if (!ptk.hasTrackDetails()) continue;
+        if (ptk.pt() < 0.5) continue;
+        auto tk = ptk.bestTrack();
+
+        if (fabs(ptk.vx() - vtx.x()) > 1e-10) continue;
+        if (fabs(ptk.vy() - vtx.y()) > 1e-10) continue;
+        if (fabs(ptk.vz() - vtx.z()) > 1e-10) continue;
+
+        reco::TransientTrack transientTrack = TTBuilder->build(fix_track(tk)); 
+        transientTrack.setBeamSpot(vertexBeamSpot);
+        mytracks.push_back(transientTrack);
+    }
+
+    if (mytracks.size() < 2) {
+        fprintf(stderr, "Warning: Less than 2 tracks for vertex fit!\n");
+        return reco::Vertex();
+    }
+
+    AdaptiveVertexFitter theFitter;
+    TransientVertex tmp = theFitter.vertex(mytracks, vertexBeamSpot);
+    return tmp;
+}
 
 void vtxu::set_isMC(int _isMC)
 {

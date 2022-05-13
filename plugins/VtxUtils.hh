@@ -24,6 +24,8 @@ namespace vtxu {
     bool isGood = false;
   };
 
+  reco::Vertex refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, reco::Vertex &vtx, std::vector<pat::PackedCandidate> &pfCandHandle);
+
   void set_isMC(int _isMC);
 
   reco::Track fix_track(const reco::Track *tk, double delta=1e-8);

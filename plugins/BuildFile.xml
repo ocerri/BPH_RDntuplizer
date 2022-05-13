@@ -11,6 +11,7 @@
 <use name="RecoVertex/LinearizationPointFinders"/>
 <use name="RecoVertex/KinematicFitPrimitives"/>
 <use name="RecoVertex/KinematicFit"/>
+<use name="RecoVertex/AdaptiveVertexFit"/>
 <use name="RecoBTag/BTagTools"/>
 <use name="boost"/>
 <flags CXXFLAGS="-Wno-unknown-pragmas -I$(CMSSW_BASE)/src/ntuplizer/Hammer-install/include -l:libHammerCore.so.1.2.1 -l:libHammerBase.so.1.2.1 -l:libHammerTools.so.1.2.1 -l:libAmplitudes.so.1.2.1 -l:libRates.so.1.2.1 -l:libFormFactors.so.1.2.1 -l:libyaml-cpp.so.0.6"/>
