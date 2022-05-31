@@ -494,13 +494,15 @@ HammerWeightsProducer::HammerWeightsProducer(const edm::ParameterSet &iConfig)
     centralValuesOpt += Form("BcStatesf: [6.739, 6.750, 7.145, 7.150], ");
     // Hammer default                     6.730, 6.736, 7.135, 7.142}; //GeV
     //  Tab 9 line 1: g (1-)
-    centralValuesOpt += Form("BcStatesg: [6.329, 6.920, 7.020, 7.280], ");
+    centralValuesOpt += Form("BcStatesg: [6.329, 6.920, 7.020], ");
     // Hammer default                     6.337, 6.899, 7.012, 7.280}; //GeV
     //  Tab 9 line 3: F2 (0-)
     centralValuesOpt += Form("BcStatesP1: [6.275, 6.842, 7.250], ");
     // Hammer default                      6.275, 6.842, 7.250}; //GeV
     // Vcb from abstract rest from Tab 10 (chi+ and - inverted)
-    centralValuesOpt += Form("Vcb: 38.4e-3, Chim: 3.894e-4, Chip: 5.131e-4, ChimL: 19.42e-3");
+    // centralValuesOpt += Form("Vcb: 38.4e-3, Chim: 3.894e-4, Chip: 5.131e-4, ChimL: 19.42e-3");
+    // Setting Vcb at 1/eta_EW = 1/1.0066. = 0.99344
+    centralValuesOpt += Form("Vcb: 0.99344, Chim: 3.894e-4, Chip: 5.131e-4, ChimL: 19.42e-3");
     // Hammer defaults        Vcb: 41.5e-3, Chim: 3.068e-4, Chip: 5.280e-4, ChimL:  2.466e-3
     centralValuesOpt += "}";
     if (verbose) {cout << "[Hammer]: BGL additional settings\n\t" << centralValuesOpt << endl;}
