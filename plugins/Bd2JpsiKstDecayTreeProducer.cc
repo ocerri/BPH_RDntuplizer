@@ -141,7 +141,7 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
         if(verbose){cout << "Fitting the J/Psi from: " << Form("%d %d", i1, i2) << endl;}
         auto kinTree = vtxu::FitJpsi_mumu(iSetup, mup, mum, false);
         auto res = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
-        if(!res.isGood) continue;
+        if(!res.isValid) continue;
 
         kinTree->movePointerToTheTop();
         double massMuPair = kinTree->currentParticle()->currentState().mass();
@@ -227,7 +227,7 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
         //Fit the vertex w/o mass constraint
         auto KstKinTree = vtxu::FitKst_piK(iSetup, pi, K, false);
         auto res_piK = vtxu::fitQuality(KstKinTree, __PvalChi2Vtx_min__);
-        if(!res_piK.isGood) continue;
+        if(!res_piK.isValid) continue;
 
         KstKinTree->movePointerToTheTop();
         auto mass_piK = KstKinTree->currentParticle()->currentState().mass();
@@ -243,7 +243,6 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
         auto sigd_vtxKst_PV = d_vtxKst_PV.first/d_vtxKst_PV.second;
         auto dxy_vtxKst_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxKst);
         auto sigdxy_vtxKst_PV = fabs(dxy_vtxKst_PV.first)/dxy_vtxKst_PV.second;
-        if (sigdxy_vtxKst_PV < 3) continue;
 
         auto PhiKinTree = vtxu::FitPhi_KK(iSetup, pi, K, false);
         float mass_KK = -1;
