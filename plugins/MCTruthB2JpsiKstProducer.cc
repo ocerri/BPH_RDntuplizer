@@ -182,6 +182,11 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
     (*outputNtuplizer)["MC_d_vtxB"] = -1;
     (*outputNtuplizer)["MC_dxy_vtxB"] = -1;
 
+    (*outputNtuplizer)["MC_dxy_genB"] = -1;
+    (*outputNtuplizer)["MC_B_pdgId"] = 0;
+    (*outputNtuplizer)["MC_B_mother_pdgId"] = 0;
+
+
     p4["B"] = TLorentzVector();
     p4["Jpsi"] = TLorentzVector();
     p4["mup"] = TLorentzVector();
@@ -193,6 +198,15 @@ void MCTruthB2JpsiKstProducer::produce(edm::Event& iEvent, const edm::EventSetup
     if(i_B >= 0){
       auto p = (*PrunedGenParticlesHandle)[i_B];
       p4["B"].SetPtEtaPhiM(p.pt(), p.eta(), p.phi(), p.mass());
+
+      (*outputNtuplizer)["MC_B_pdgId"] = p.pdgId();
+      (*outputNtuplizer)["MC_B_mother_pdgId"] = p.mother()->pdgId();
+
+      auto genVtx = p.vertex();
+      auto dxyGen = hypot(genVtx.x() - interactionPoint.x(), genVtx.y() - interactionPoint.y());
+      (*outputNtuplizer)["MC_dxy_genB"] = dxyGen;
+
+
 
       // Charge conjugation sign
       int ccSign = p.pdgId() > 0? 1: -1;
