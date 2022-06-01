@@ -18,18 +18,18 @@ outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsMC
 # ntuplesName=ntuples_TagAndProbeTrigger_220217
 
 # Bd -> Jpsi K* ntuples
-# config=config/cmssw_centralMC_Bd_JpsiKst-mumuKpi.py
-# ntuplesName=ntuples_Bd2JpsiKst_220328
+config=config/cmssw_centralMC_Bd_JpsiKst-mumuKpi.py
+ntuplesName=ntuples_Bd2JpsiKst_220531
 
 # Main R(D*) analysis ntuples
-config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
-ntuplesName=ntuples_B2DstMu_220412
+# config=config/cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py
+# ntuplesName=ntuples_B2DstMu_220412
 
 # nFilesPerJob=100
 # maxTime=120m
 
-nFilesPerJob=8
-maxTime=48h
+nFilesPerJob=3
+maxTime=2h
 declare -a processes=(
     # Ancillary measurments samples --> Should be run N = 3
     "CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen"
