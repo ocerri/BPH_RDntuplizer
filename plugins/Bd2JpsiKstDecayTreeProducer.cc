@@ -243,6 +243,8 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
         auto sigd_vtxKst_PV = d_vtxKst_PV.first/d_vtxKst_PV.second;
         auto dxy_vtxKst_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxKst);
         auto sigdxy_vtxKst_PV = fabs(dxy_vtxKst_PV.first)/dxy_vtxKst_PV.second;
+        auto dxy_vtxKst_BS = vtxu::vtxsTransverseDistanceFromBeamSpot(*beamSpotHandle, vtxKst);
+        auto sigdxy_vtxKst_BS = fabs(dxy_vtxKst_BS.first)/dxy_vtxKst_BS.second;
 
         auto PhiKinTree = vtxu::FitPhi_KK(iSetup, pi, K, false);
         float mass_KK = -1;
@@ -419,6 +421,7 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           (*outputVecNtuplizer)["d_vtxKst_PV"].push_back(d_vtxKst_PV.first);
           (*outputVecNtuplizer)["sigd_vtxKst_PV"].push_back(sigd_vtxKst_PV);
           (*outputVecNtuplizer)["sigdxy_vtxKst_PV"].push_back(sigdxy_vtxKst_PV);
+          (*outputVecNtuplizer)["sigdxy_vtxKst_BS"].push_back(sigdxy_vtxKst_BS);
           (*outputVecNtuplizer)["mass_KK"].push_back(mass_KK);
           (*outputVecNtuplizer)["mass_piK_CPconj"].push_back(mass_piK_CPconj);
 

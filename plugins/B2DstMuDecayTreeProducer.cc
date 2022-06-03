@@ -161,12 +161,11 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
        *  excess of vertices with low ndof in data. */
       if (vtx.ndof() <= 4) continue;
       reco::Vertex tmp = vtxu::refit_vertex(iEvent, iSetup, i_vtx, 1, *pfCandHandle);
-      if (tmp.isValid())
-        possibleVtxs.push_back(tmp);
-      else {
-        cout << "[ERROR] Invalid vertex refit for " << i_vtx << endl;
+      if (tmp.isValid()) possibleVtxs.push_back(tmp);
+      // else {
+        // cout << "[WARNING] Invalid vertex refit for " << i_vtx << endl;
         // possibleVtxs.push_back(vtx);
-      }
+      // }
     }
 
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
@@ -221,10 +220,10 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
         // Require significant impact parameter
         auto dxy = K_tk.dxy(*beamSpotHandle);
         double dxyErr = vtxu::dxyError(K_tk,*beamSpotHandle);
-        auto sigdxy_K_PV = fabs(dxy)/dxyErr;
+        auto sigdxy_K_BS = fabs(dxy)/dxyErr;
         auto K_norm_chi2 = K_tk.normalizedChi2();
         auto K_N_valid_hits = K_tk.numberOfValidHits();
-        if (sigdxy_K_PV < __sigIPpfCand_min__) continue;
+        if (sigdxy_K_BS < __sigIPpfCand_min__) continue;
         updateCounter(3, countersFlag);
         if (verbose) {cout << Form("K%s found at %u\n", K.pdgId() > 0?"+":"-", i_K);}
         n_K++;
@@ -250,10 +249,10 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           // Require significant impact parameter
           auto dxy = pi_tk.dxy(*beamSpotHandle);
           double dxyErr = vtxu::dxyError(pi_tk,*beamSpotHandle);
-          auto sigdxy_pi_PV = fabs(dxy)/dxyErr;
+          auto sigdxy_pi_BS = fabs(dxy)/dxyErr;
           auto pi_norm_chi2 = pi_tk.normalizedChi2();
           auto pi_N_valid_hits = pi_tk.numberOfValidHits();
-          if (sigdxy_pi_PV < __sigIPpfCand_min__) continue;
+          if (sigdxy_pi_BS < __sigIPpfCand_min__) continue;
           updateCounter(4, countersFlag);
           if (verbose) {cout << Form("pi%s found at %u\n", pi.pdgId()>0?"+":"-", i_pi);}
           n_pi++;
@@ -261,7 +260,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           //Fit the vertex
           auto D0KinTree = vtxu::FitD0(iSetup, pi, K, false);
           auto res_piK = vtxu::fitQuality(D0KinTree, __PvalChi2Vtx_min__);
-          if(!res_piK.isGood) continue;
+          if(!res_piK.isValid) continue;
           if (verbose) {cout << "pi-K vertex fit good\n";}
           updateCounter(5, countersFlag);
 
@@ -278,10 +277,9 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           auto cosT_D0_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxD0, D0);
           auto d_vtxD0_PV = vtxu::vtxsDistance(primaryVtx, vtxD0);
           auto sigd_vtxD0_PV = d_vtxD0_PV.first/d_vtxD0_PV.second;
-          auto dxy_vtxD0_PV = vtxu::vtxsTransverseDistanceFromBeamSpot(*beamSpotHandle, vtxD0);
-          auto sigdxy_vtxD0_PV = dxy_vtxD0_PV.first/dxy_vtxD0_PV.second;
+          auto dxy_vtxD0_BS = vtxu::vtxsTransverseDistanceFromBeamSpot(*beamSpotHandle, vtxD0);
+          auto sigdxy_vtxD0_BS = dxy_vtxD0_BS.first/dxy_vtxD0_BS.second;
 
-          if(sigdxy_vtxD0_PV < __sigdxy_vtx_PV_min__) continue;
           if (verbose) {cout << "pi-K vertex displacement passed\n";}
           updateCounter(7, countersFlag);
           if (verbose) {cout << "D0 candidate\n";}
@@ -324,7 +322,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             //   continue;
             // }
             auto res_D0pis = vtxu::fitQuality(DstKinTree, __PvalChi2Vtx_min__);
-            if(!res_D0pis.isGood) continue;
+            if(!res_D0pis.isValid) continue;
             if (verbose) {cout << "D0-pis vertex fit good\n";}
             updateCounter(9, countersFlag);
 
@@ -351,7 +349,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             auto BKinTree = vtxu::FitB_D0pismu(iSetup, D0, pis, trgMu);
             auto res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
             // cout << "[DEBUG]: pval(D0pimu) = " << res.pval << endl;
-            if(!res.isValid || res.chi2 > 50 || res.pval < 0.001) continue;
+            if(!res.isValid) continue;
             updateCounter(11, countersFlag);
 
             BKinTree->movePointerToTheTop();
@@ -564,7 +562,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
                 // Check if it makes a consistent vertex
                 auto kinTree = vtxu::Fit_D0pismupi(iSetup, D0, pis, trgMu, ptk);
                 auto res = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
-                if(!res.isGood) continue;
+                if(!res.isValid) continue;
                 if (verbose) {cout << Form("Trk pars: pt=%.2f eta=%.2f phi=%.2f\n", ptk.pt(), ptk.eta(), ptk.phi());}
 
                 kinTree->movePointerToTheTop();
@@ -761,12 +759,12 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["mu_sigdcaL_vtxDstMu"].push_back(fabs(dcaL.first)/dcaL.second);
 
 
-            (*outputVecNtuplizer)["sigdxy_K_PV"].push_back(sigdxy_K_PV);
+            (*outputVecNtuplizer)["sigdxy_K_BS"].push_back(sigdxy_K_BS);
             (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
             (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
             (*outputVecNtuplizer)["K_lostInnerHits"].push_back(K.lostInnerHits());
             AddTLVToOut(vtxu::getTLVfromCand(K, mass_K), string("K"), &(*outputVecNtuplizer));
-            (*outputVecNtuplizer)["sigdxy_pi_PV"].push_back(sigdxy_pi_PV);
+            (*outputVecNtuplizer)["sigdxy_pi_BS"].push_back(sigdxy_pi_BS);
             (*outputVecNtuplizer)["pi_norm_chi2"].push_back(pi_norm_chi2);
             (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
             (*outputVecNtuplizer)["pi_lostInnerHits"].push_back(pi.lostInnerHits());
@@ -797,8 +795,8 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["cosT_D0_PV"].push_back(cosT_D0_PV);
             (*outputVecNtuplizer)["d_vtxD0_PV"].push_back(d_vtxD0_PV.first);
             (*outputVecNtuplizer)["sigd_vtxD0_PV"].push_back(sigd_vtxD0_PV);
-            (*outputVecNtuplizer)["dxy_vtxD0_PV"].push_back(dxy_vtxD0_PV.first);
-            (*outputVecNtuplizer)["sigdxy_vtxD0_PV"].push_back(sigdxy_vtxD0_PV);
+            (*outputVecNtuplizer)["dxy_vtxD0_BS"].push_back(dxy_vtxD0_BS.first);
+            (*outputVecNtuplizer)["sigdxy_vtxD0_BS"].push_back(sigdxy_vtxD0_BS);
 
             (*outputVecNtuplizer)["sigdxy_pis_PV"].push_back(sigdxy_pis_PV);
             (*outputVecNtuplizer)["pis_norm_chi2"].push_back(pis_norm_chi2);

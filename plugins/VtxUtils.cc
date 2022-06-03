@@ -85,24 +85,32 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
     iEvent.getByLabel("offlineBeamSpot", recoBeamSpotHandle);
     reco::BeamSpot vertexBeamSpot = *recoBeamSpotHandle;
 
+    // edm::Handle<vector<reco::Vertex>> vtxHandle;
+    // iEvent.getByLabel("offlineSlimmedPrimaryVertices", vtxHandle);
+
+    // cout << "========> Vtx: " << ipv << endl;
     for (i = 0; i < pfCandHandle.size(); i++) {
         const pat::PackedCandidate &ptk = pfCandHandle[i];
 
         if (!ptk.hasTrackDetails()) continue;
+
+        if (ptk.fromPV(ipv) < 3) continue;
+
+        // Equivalent to the below
+        // if (ptk.pvAssociationQuality() != pat::PackedCandidate::PVAssociationQuality::UsedInFitTight) continue;
+        // auto vtxTK = ptk.vertexRef();
+        // auto vtxMINI = (*vtxHandle)[ipv];
+        // if (vtxTK->x() != vtxMINI.x() || vtxTK->y() != vtxMINI.y() || vtxTK->z() != vtxMINI.z()) continue;
+
         auto tk = ptk.bestTrack();
-
-        if (ptk.fromPV(ipv) < 2) continue;
-        //  tk->quality not stored in MINIAOD
-        //  ptk.trackHighPurity() always true from fromPV >= 2
-
         reco::TransientTrack transientTrack = TTBuilder->build(fix_track(tk));
         transientTrack.setBeamSpot(vertexBeamSpot);
         mytracks.push_back(transientTrack);
     }
 
     if (mytracks.size() < 2) {
-        fprintf(stderr, "Warning: Less than 2 tracks for vertex fit!\n");
-        return reco::Vertex();
+        // cout << "[WARNING]: Less than 2 tracks for vertex "<<ipv<<" fit" << endl;
+        return reco::Vertex(); // Invalid vertex
     }
 
     AdaptiveVertexFitter theFitter;
