@@ -345,17 +345,35 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           auto B = BKinTree->currentParticle();
           auto vtxB = BKinTree->currentDecayVertex();
           // Looking for the best vertex to associate it with
+
+          vector<reco::Vertex> possibleVtxs = {};
+          // cout << "Filling possible vertexes" << endl;
+          for(uint i_vtx = 0; i_vtx<vtxHandle->size(); i_vtx++) {
+            auto vtx = (*vtxHandle)[i_vtx];
+            if (vtx.ndof() <= 4) continue;
+            reco::Vertex tmp = vtxu::refit_vertex(iEvent, iSetup, i_vtx, 1, *pfCandHandle);
+            if (tmp.isValid())
+              possibleVtxs.push_back(tmp);
+            else {
+              cout << "[ERROR] Invalid vertex refit for " << i_vtx << endl;
+            }
+          }
+          if (possibleVtxs.size() == 0) {
+            cout << "No possible primary vertices" << endl;
+            assert(false);
+          }
+
+
           uint i_best = 0;
-          auto maxCos = vtxu::computePointingCos(primaryVtx, vtxB, B);
-          for(uint i_vtx = 1; i_vtx < vtxHandle->size(); i_vtx++) {
-            if ((*vtxHandle)[i_vtx].ndof() < 4) continue;
-            auto auxCos = vtxu::computePointingCos((*vtxHandle)[i_vtx], vtxB, B);
+          auto maxCos = vtxu::computePointingCos(possibleVtxs[0], vtxB, B);
+          for(uint i_vtx = 1; i_vtx < possibleVtxs.size(); i_vtx++) {
+            auto auxCos = vtxu::computePointingCos(possibleVtxs[i_vtx], vtxB, B);
             if(auxCos > maxCos) {
               maxCos = auxCos;
               i_best = i_vtx;
             }
           }
-          auto bestVtx = (*vtxHandle)[i_best];
+          auto bestVtx = possibleVtxs[i_best];
 
           addToOutBFit("mumupiK", res, mass, BKinTree, bestVtx, &(*outputVecNtuplizer));
 

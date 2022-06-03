@@ -73,7 +73,7 @@ static int isMC = 0;
  * we fix the covariance matrix.
  *
  * See https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideOfflinePrimaryVertexProduction#Refitting_vertices_with_selected. */
-reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, size_t ipv, const std::vector<pat::PackedCandidate> &pfCandHandle)
+reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, size_t ipv, bool beamSpotContrant, const std::vector<pat::PackedCandidate> &pfCandHandle)
 {
     unsigned int i;
     std::vector<reco::TransientTrack> mytracks;
@@ -92,6 +92,8 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
         auto tk = ptk.bestTrack();
 
         if (ptk.fromPV(ipv) < 2) continue;
+        //  tk->quality not stored in MINIAOD
+        //  ptk.trackHighPurity() always true from fromPV >= 2
 
         reco::TransientTrack transientTrack = TTBuilder->build(fix_track(tk));
         transientTrack.setBeamSpot(vertexBeamSpot);
@@ -104,9 +106,15 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
     }
 
     AdaptiveVertexFitter theFitter;
-    //TransientVertex tmp = theFitter.vertex(mytracks, vertexBeamSpot);
-    TransientVertex tmp = theFitter.vertex(mytracks);
-    return tmp;
+    if (beamSpotContrant) {
+      TransientVertex tmp = theFitter.vertex(mytracks, vertexBeamSpot);
+      return tmp;
+    }
+    else {
+      TransientVertex tmp = theFitter.vertex(mytracks);
+      return tmp;
+    }
+
 }
 
 void vtxu::set_isMC(int _isMC)
