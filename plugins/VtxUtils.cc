@@ -33,6 +33,7 @@
 #include "RecoVertex/KinematicFit/interface/MultiTrackMassKinematicConstraint.h"
 #include "RecoVertex/KinematicFit/interface/MultiTrackPointingKinematicConstraint.h"
 #include "RecoVertex/KinematicFit/interface/CombinedKinematicConstraint.h"
+#include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
 
 // Needed for IP3D
 #include "RecoTauTag/ImpactParameter/interface/ImpactParameterAlgorithm.h"
@@ -67,6 +68,46 @@ using namespace vtxu;
 #define _B0MassErr_ 0.00026
 
 static int isMC = 0;
+
+/* Returns a new vertex fit using the adaptive vertex fitter with tracks after
+ * we fix the covariance matrix.
+ *
+ * See https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideOfflinePrimaryVertexProduction#Refitting_vertices_with_selected. */
+reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, size_t ipv, const std::vector<pat::PackedCandidate> &pfCandHandle)
+{
+    unsigned int i;
+    std::vector<reco::TransientTrack> mytracks;
+
+    edm::ESHandle<TransientTrackBuilder> TTBuilder;
+    iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",TTBuilder);
+
+    edm::Handle<reco::BeamSpot> recoBeamSpotHandle;
+    iEvent.getByLabel("offlineBeamSpot", recoBeamSpotHandle);
+    reco::BeamSpot vertexBeamSpot = *recoBeamSpotHandle;
+
+    for (i = 0; i < pfCandHandle.size(); i++) {
+        const pat::PackedCandidate &ptk = pfCandHandle[i];
+
+        if (!ptk.hasTrackDetails()) continue;
+        auto tk = ptk.bestTrack();
+
+        if (ptk.fromPV(ipv) < 2) continue;
+
+        reco::TransientTrack transientTrack = TTBuilder->build(fix_track(tk));
+        transientTrack.setBeamSpot(vertexBeamSpot);
+        mytracks.push_back(transientTrack);
+    }
+
+    if (mytracks.size() < 2) {
+        fprintf(stderr, "Warning: Less than 2 tracks for vertex fit!\n");
+        return reco::Vertex();
+    }
+
+    AdaptiveVertexFitter theFitter;
+    //TransientVertex tmp = theFitter.vertex(mytracks, vertexBeamSpot);
+    TransientVertex tmp = theFitter.vertex(mytracks);
+    return tmp;
+}
 
 void vtxu::set_isMC(int _isMC)
 {
@@ -1056,6 +1097,27 @@ std::pair<double,double> vtxu::vtxsDistance(reco::Vertex v1, RefCountedKinematic
 //
 //   return make_pair(val, err);
 // }
+
+std::pair<double,double> vtxu::vtxsTransverseDistanceFromBeamSpot(const reco::BeamSpot &theBeamSpot, RefCountedKinematicVertex v2)
+{
+  double dx = v2->position().x() - theBeamSpot.x0();
+  double dy = v2->position().y() - theBeamSpot.y0();
+
+  double d = sqrt(dx*dx + dy*dy);
+
+  double dd[2] = {dx/d, dy/d};
+  auto e1 = theBeamSpot.covariance();
+  auto e2 = v2->error().matrix();
+
+  double Ed2 = 0;
+  for(uint i=0; i<2; ++i){
+    for(uint j=0; j<2; ++j){
+      Ed2 += dd[i]* ( e1.At(i,j)+e2.At(i,j) ) *dd[j];
+    }
+  }
+
+  return make_pair(d,sqrt(Ed2));
+}
 
 std::pair<double,double> vtxu::vtxsTransverseDistance(reco::Vertex v1, RefCountedKinematicVertex v2){
   double dx = v2->position().x() - v1.x();

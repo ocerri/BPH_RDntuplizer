@@ -24,6 +24,8 @@ namespace vtxu {
     bool isGood = false;
   };
 
+  reco::Vertex refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, size_t ipv, const std::vector<pat::PackedCandidate> &pfCandHandle);
+
   void set_isMC(int _isMC);
 
   reco::Track fix_track(const reco::Track *tk, double delta=1e-8);
@@ -68,6 +70,7 @@ namespace vtxu {
   std::pair<double,double> vtxsDistance(reco::VertexRef, RefCountedKinematicVertex);
   std::pair<double,double> vtxsDistance(reco::Vertex, RefCountedKinematicVertex);
   std::pair<double,double> vtxsTransverseDistance(reco::Vertex, RefCountedKinematicVertex);
+  std::pair<double,double> vtxsTransverseDistanceFromBeamSpot(const reco::BeamSpot &theBeamSpot, RefCountedKinematicVertex v2);
   kinFitResuts fitQuality(RefCountedKinematicTree, double = -1);
   double computePointingCos(reco::Vertex, const RefCountedKinematicVertex, const RefCountedKinematicParticle);
   double computePointingCosTransverse(reco::Vertex, const RefCountedKinematicVertex, const RefCountedKinematicParticle);

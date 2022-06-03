@@ -160,7 +160,11 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
        *  ndof <= 4 the data and MC do not seem to agree, and there is an
        *  excess of vertices with low ndof in data. */
       if (vtx.ndof() <= 4) continue;
-      possibleVtxs.push_back(vtx);
+      reco::Vertex tmp = vtxu::refit_vertex(iEvent,iSetup,i_vtx,*pfCandHandle);
+      if (tmp.isValid())
+        possibleVtxs.push_back(tmp);
+      else
+        possibleVtxs.push_back(vtx);
     }
 
     if (verbose) {cout <<"-------------------- Evt -----------------------\n";}
@@ -272,7 +276,7 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
           auto cosT_D0_PV = vtxu::computePointingCosTransverse(primaryVtx, vtxD0, D0);
           auto d_vtxD0_PV = vtxu::vtxsDistance(primaryVtx, vtxD0);
           auto sigd_vtxD0_PV = d_vtxD0_PV.first/d_vtxD0_PV.second;
-          auto dxy_vtxD0_PV = vtxu::vtxsTransverseDistance(primaryVtx, vtxD0);
+          auto dxy_vtxD0_PV = vtxu::vtxsTransverseDistanceFromBeamSpot(*beamSpotHandle, vtxD0);
           auto sigdxy_vtxD0_PV = dxy_vtxD0_PV.first/dxy_vtxD0_PV.second;
 
           if(sigdxy_vtxD0_PV < __sigdxy_vtx_PV_min__) continue;
