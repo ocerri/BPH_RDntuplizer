@@ -15,26 +15,26 @@ outLoc=/storage/af/group/rdst_analysis/BPhysics/data/cmsRD
 maxRunTime=48h
 nice=1
 ######## Trigger tag and probe ntuples #############
-ntuplesName=TagAndProbeTrigger_220412
-config=config/cmssw_cmsRD2018_TagAndProbeTrigger.py
-nFilesPerJob=40 # About 3h per job
+# ntuplesName=TagAndProbeTrigger_220412
+# config=config/cmssw_cmsRD2018_TagAndProbeTrigger.py
+# nFilesPerJob=40 # About 3h per job
 # Check how much time it really took for these jobs!
 
 ######## Bd -> Jpsi K* ntuples #############
-# ntuplesName=Bd2JpsiKst_220412
+# ntuplesName=Bd2JpsiKst_220603_fitPV
 # config=config/cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py
 # nFilesPerJob=30
 # Check how much time it really took for these jobs!
 
 ######## Main R(D*) analysis ntuples #############
-# ntuplesName=B2DstMu_220412
+# ntuplesName=B2DstMu_220603_fitPV
 # config=config/cmssw_cmsRD2018_Tag_Bd_MuDst-PiPiK.py
-# nFilesPerJob=20 # About 4h per job
+# nFilesPerJob=30 # About 4h per job
 # Check how much time it really took for these jobs!
 
-# ntuplesName=SSDstMu_220412
-# config=config/cmssw_cmsRD2018_Tag_SS_MuDst-PiPiK.py
-# nFilesPerJob=30 # About 4h per job
+ntuplesName=SSDstMu_220603_fitPV
+config=config/cmssw_cmsRD2018_Tag_SS_MuDst-PiPiK.py
+nFilesPerJob=80 # About 4h per job
 
 
 for iPart in {1..5}; do
