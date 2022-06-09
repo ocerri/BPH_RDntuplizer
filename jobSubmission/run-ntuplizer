@@ -66,15 +66,15 @@ PROCESSES = [
 FILESPERJOB = { 'Tag_RD': 40, 'Bd2JpsiKst_RD': 20, 'B2DstMu_RD': 20, 'SSDstMu_RD': 40}
 
 # All the different ntuplizer configs to run
-DATASETS = {
-    'Tag_JpsiKst_MC': ('ntuples_TagAndProbeTrigger','cmssw_centralMC_TagAndProbeTrigger.py'),
-    'Tag_RD': ('TagAndProbeTrigger','cmssw_cmsRD2018_TagAndProbeTrigger.py'),
-    'Bd2JpsiKst_MC': ('ntuples_Bd2JpsiKst','cmssw_centralMC_Bd_JpsiKst-mumuKpi.py'),
-    'Bd2JpsiKst_RD': ('Bd2JpsiKst','cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py'),
-    'B2DstMu_MC': ('ntuples_B2DstMu','cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py'),
-    'B2DstMu_RD': ('B2DstMu','cmssw_cmsRD2018_Tag_Bd_MuDst-PiPiK.py'),
-    'SSDstMu_RD': ('SSDstMu','cmssw_cmsRD2018_Tag_SS_MuDst-PiPiK.py'),
-}
+DATASETS = [
+    ['B2DstMu_MC', ('ntuples_B2DstMu','cmssw_centralMC_Tag_Bd_MuDst-PiPiK.py')],
+    ['B2DstMu_RD', ('B2DstMu','cmssw_cmsRD2018_Tag_Bd_MuDst-PiPiK.py')],
+    ['Bd2JpsiKst_MC', ('ntuples_Bd2JpsiKst','cmssw_centralMC_Bd_JpsiKst-mumuKpi.py')],
+    ['Bd2JpsiKst_RD', ('Bd2JpsiKst','cmssw_cmsRD2018_Bd_JpsiKst-mumuKpi.py')],
+    ['SSDstMu_RD', ('SSDstMu','cmssw_cmsRD2018_Tag_SS_MuDst-PiPiK.py')],
+    ['Tag_JpsiKst_MC', ('ntuples_TagAndProbeTrigger','cmssw_centralMC_TagAndProbeTrigger.py')],
+    ['Tag_RD', ('TagAndProbeTrigger','cmssw_cmsRD2018_TagAndProbeTrigger.py')],
+]
 
 if __name__ == '__main__':
     import argparse
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     if args.ntuplesName is None:
         args.ntuplesName = raw_input("Enter ntuple tag (Example: 220412): ")
 
-    for dataset, (ntuples_prefix, config) in DATASETS.items():
+    for dataset, (ntuples_prefix, config) in DATASETS:
         answer = None
         while answer not in ('y','n','q'):
             answer = raw_input("Process %s [y/n]: " % dataset)
@@ -128,4 +128,4 @@ if __name__ == '__main__':
                     os.system(cmd)
                 sleep(1)
 
-    print("Remember to run: submit-condor-jobs --max-jobs 10000!")
+    print("Remember to run: ./submit-condor-jobs --max-jobs 10000!")

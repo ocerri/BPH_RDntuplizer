@@ -36,6 +36,12 @@ def get_njobs():
     """
     Returns the total number of jobs in the job queue.
     """
+    output = check_output(["condor_q"])
+    for ln in output.split('\n'):
+        if not ln.startswith('Total for query:'):
+            continue
+        return int(ln.split(' ')[3])
+
     log.debug("condor_q -json")
     output = check_output(["condor_q","-json"])
 
@@ -257,3 +263,9 @@ if __name__ == '__main__':
     except Exception as e:
         log.warn(traceback.format_exc())
         sys.exit(1)
+
+    cmd = 'date;echo " ";'
+    cmd += 'sqlite3 -column -header '+args.db+' -cmd "select batch_name, state, count(*) from ntuplizer_jobs group by batch_name, state;" ".exit";'
+    cmd += 'echo "------------------";'
+    cmd += 'sqlite3 -column -header '+args.db+' -cmd "select state, count(*) from ntuplizer_jobs group by state;" ".exit";'
+    os.system(cmd)
