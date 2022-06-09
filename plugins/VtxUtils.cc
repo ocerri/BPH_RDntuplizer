@@ -181,6 +181,51 @@ reco::Track vtxu::fix_track(const reco::Track *tk, double delta)
     /* Get the original covariance matrix. */
     reco::TrackBase::CovarianceMatrix cov = tk->covariance();
 
+
+    /* Correct for the fact that the impact parameter error is significantly
+     * different in data and MC. Technically we should be *decreasing* the data
+     * uncertainty since according to Marco Musich:
+     *
+     * > we suspect that the track uncertainty in data is over-estimated, while
+     * > it should be well calibrated in MC.  To corroborate this, here is a
+     * > plot from the recent alignment paper which shows the pull of the pixel
+     * > residuals for various reconstruction passes and MC:
+     * > for an ideally calibrated detector you expect a peak around 1, but for
+     * > the "alignment during data-taking" which is what was used for the
+     * > BParking Prompt reconstruction you can see it's pretty shifted to
+     * > lower values, meaning the error is overestimated.
+     * > So I would recommend to scale down the data uncertainties.
+     *
+     * However, we can't do this because this would cause the impact parameter
+     * significance to increase which means that some events which didn't
+     * trigger should have triggered. Therefore, we *increase* the error on the
+     * MC.
+     *
+     * This number comes from looking at the impact parameter error for the
+     * trigger muon for the B0 -> J/psi K* events. I tested both a scaling and
+     * an offset and the offset seemed to match really well, whereas the
+     * scaling didn't work. */
+    if (isMC) {
+        TVectorD std(cov.kRows);
+        TMatrixDSym corr(cov.kRows);
+
+        for (i = 0; i < cov.kRows; i++)
+            std[i] = sqrt(cov(i,i));
+
+        for (i = 0; i < cov.kRows; i++)
+            for (j = 0; j < cov.kRows; j++)
+                corr(i,j) = cov(i,j)/(std[i]*std[j]);
+
+
+        std(reco::TrackBase::i_lambda) += 0.00002;
+        std(reco::TrackBase::i_dxy) += 0.0003;
+        std(reco::TrackBase::i_dsz) += 0.0005;
+
+        for (i = 0; i < cov.kRows; i++)
+            for (j = 0; j < cov.kRows; j++)
+                cov(i,j) = corr(i,j)*(std[i]*std[j]);
+    }
+
     /* Convert it from an SMatrix to a TMatrixD so we can get the eigenvalues. */
     TMatrixDSym new_cov(cov.kRows);
     for (i = 0; i < cov.kRows; i++) {
@@ -208,32 +253,6 @@ reco::Track vtxu::fix_track(const reco::Track *tk, double delta)
         for (i = 0; i < cov.kRows; i++)
             cov(i,i) -= min_eig - delta;
     }
-
-    /* Correct for the fact that the impact parameter error is significantly
-     * different in data and MC. Technically we should be *decreasing* the data
-     * uncertainty since according to Marco Musich:
-     *
-     * > we suspect that the track uncertainty in data is over-estimated, while
-     * > it should be well calibrated in MC.  To corroborate this, here is a
-     * > plot from the recent alignment paper which shows the pull of the pixel
-     * > residuals for various reconstruction passes and MC:
-     * > for an ideally calibrated detector you expect a peak around 1, but for
-     * > the "alignment during data-taking" which is what was used for the
-     * > BParking Prompt reconstruction you can see it's pretty shifted to
-     * > lower values, meaning the error is overestimated.
-     * > So I would recommend to scale down the data uncertainties.
-     *
-     * However, we can't do this because this would cause the impact parameter
-     * significance to increase which means that some events which didn't
-     * trigger should have triggered. Therefore, we *increase* the error on the
-     * MC.
-     *
-     * This number comes from looking at the impact parameter error for the
-     * trigger muon for the B0 -> J/psi K* events. I tested both a scaling and
-     * an offset and the offset seemed to match really well, whereas the
-     * scaling didn't work. */
-    if (isMC)
-        cov(reco::TrackBase::i_dxy, reco::TrackBase::i_dxy) = pow(sqrt(cov(reco::TrackBase::i_dxy, reco::TrackBase::i_dxy)) + 0.0003,2);
 
     return reco::Track(tk->chi2(), tk->ndof(), tk->referencePoint(), tk->momentum(), tk->charge(), cov, tk->algo(), (reco::TrackBase::TrackQuality) tk->qualityMask());
 }
