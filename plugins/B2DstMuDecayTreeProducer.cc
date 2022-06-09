@@ -695,6 +695,16 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["mu_trgMu_idx"].push_back(i_trgMu);
             (*outputVecNtuplizer)["mu_charge"].push_back(trgMu.charge());
             AddTLVToOut(vtxu::getTLVfromMuon(trgMu, mass_Mu), string("mu"), &(*outputVecNtuplizer));
+            reco::TrackBase::CovarianceMatrix cov;
+            cov = trgMu.muonBestTrack()->covariance();
+            for (uint i = 0; i < cov.kRows; i++)
+                for (uint j = 0; j <= i; j++)
+                    (*outputVecNtuplizer)[Form("mu_cov_bare_%d_%d", i, j)].push_back(cov(i,j));
+            cov = vtxu::fix_track(trgMu.muonBestTrack()).covariance();
+            for (uint i = 0; i < cov.kRows; i++)
+                for (uint j = 0; j <= i; j++)
+                    (*outputVecNtuplizer)[Form("mu_cov_postfix_%d_%d", i, j)].push_back(cov(i,j));
+
             GlobalPoint auxp_PV(bestVtx.position().x(), bestVtx.position().y(), bestVtx.position().z());
             auto dcaPV = vtxu::computeDCA(iSetup, trgMu, auxp_PV);
             (*outputVecNtuplizer)["mu_dca_PV"].push_back(dcaPV.first);
@@ -767,6 +777,14 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
             (*outputVecNtuplizer)["K_lostInnerHits"].push_back(K.lostInnerHits());
             AddTLVToOut(vtxu::getTLVfromCand(K, mass_K), string("K"), &(*outputVecNtuplizer));
+            cov = K.bestTrack()->covariance();
+            for (uint i = 0; i < cov.kRows; i++)
+                for (uint j = 0; j <= i; j++)
+                    (*outputVecNtuplizer)[Form("K_cov_bare_%d_%d", i, j)].push_back(cov(i,j));
+            cov = vtxu::fix_track(K.bestTrack()).covariance();
+            for (uint i = 0; i < cov.kRows; i++)
+                for (uint j = 0; j <= i; j++)
+                    (*outputVecNtuplizer)[Form("K_cov_postfix_%d_%d", i, j)].push_back(cov(i,j));
 
             (*outputVecNtuplizer)["pi_dxy_BS"].push_back(pi_dxy_BS);
             (*outputVecNtuplizer)["pi_dxyErr_BS"].push_back(pi_dxyErr_BS);
@@ -778,6 +796,14 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
             (*outputVecNtuplizer)["pi_lostInnerHits"].push_back(pi.lostInnerHits());
             AddTLVToOut(vtxu::getTLVfromCand(pi, mass_pi), string("pi"), &(*outputVecNtuplizer));
+            cov = pi.bestTrack()->covariance();
+            for (uint i = 0; i < cov.kRows; i++)
+                for (uint j = 0; j <= i; j++)
+                    (*outputVecNtuplizer)[Form("pi_cov_bare_%d_%d", i, j)].push_back(cov(i,j));
+            cov = vtxu::fix_track(pi.bestTrack()).covariance();
+            for (uint i = 0; i < cov.kRows; i++)
+                for (uint j = 0; j <= i; j++)
+                    (*outputVecNtuplizer)[Form("pi_cov_postfix_%d_%d", i, j)].push_back(cov(i,j));
 
             double m = (vtxu::getTLVfromCand(pi, mass_pi) + vtxu::getTLVfromCand(K, mass_K)).M();
             (*outputVecNtuplizer)["massb_piK"].push_back(m);
@@ -818,6 +844,14 @@ void B2DstMuDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSetup
             (*outputVecNtuplizer)["pis_N_valid_hits"].push_back(pis_N_valid_hits);
             (*outputVecNtuplizer)["pis_lostInnerHits"].push_back(pis.lostInnerHits());
             AddTLVToOut(vtxu::getTLVfromCand(pis, mass_pi), string("pis"), &(*outputVecNtuplizer));
+            cov = pis.bestTrack()->covariance();
+            for (uint i = 0; i < cov.kRows; i++)
+                for (uint j = 0; j <= i; j++)
+                    (*outputVecNtuplizer)[Form("pis_cov_bare_%d_%d", i, j)].push_back(cov(i,j));
+            cov = vtxu::fix_track(pis.bestTrack()).covariance();
+            for (uint i = 0; i < cov.kRows; i++)
+                for (uint j = 0; j <= i; j++)
+                    (*outputVecNtuplizer)[Form("pis_cov_postfix_%d_%d", i, j)].push_back(cov(i,j));
 
             (*outputVecNtuplizer)["chi2_D0pis"].push_back(res_D0pis.chi2);
             (*outputVecNtuplizer)["dof_D0pis"].push_back(res_D0pis.dof);

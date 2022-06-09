@@ -36,22 +36,22 @@ OUT_LOC_RD = '/storage/af/group/rdst_analysis/BPhysics/data/cmsRD'
 # n_files_per_job, max_run_time)
 PROCESSES = [
     # Ancillary measurments samples --> Should be run N = 3
-    ("CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
+    ("CP_General_BdToJpsiKstar_BMuonFilter_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
     # Central production --> Should be run N = 3
-    ("CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BuToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BdToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BuToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BdToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BsToMuNuDstK_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BsToTauNuDstK_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BdToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BdToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BuToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BuToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
-    ("CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",8,'48h'),
+    ("CP_BdToDstarMuNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BdToDstarTauNu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BuToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BdToMuNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BuToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BdToTauNuDstPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BsToMuNuDstK_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BsToTauNuDstK_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BdToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BdToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BdToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BuToDstDu_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BuToDstDd_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
+    ("CP_BsToDstDs_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen",3,'120m'),
     #
     # Private production --> Should be run N = 100
     ("CP_BdToMuNuDstPiPi_SoftQCDnonD_TuneCP5_13TeV-pythia8-evtgen_v3",100,'120m'),
@@ -62,6 +62,8 @@ PROCESSES = [
     ("BParking_Tag_Bu_DDs1_SoftQCDnonD_TuneCP5_13TeV-pythia8",100,'120m'),
     ("BParking_Tag_B_DstDXX_SoftQCDnonD_TuneCP5_13TeV-pythia8",100,'120m')
 ]
+
+FILESPERJOB = { 'Tag_RD': 40, 'Bd2JpsiKst_RD': 20, 'B2DstMu_RD': 20, 'SSDstMu_RD': 40}
 
 # All the different ntuplizer configs to run
 DATASETS = {
@@ -116,7 +118,7 @@ if __name__ == '__main__':
                 output_dir = "%s/ParkingBPH%i/Run2018D-05May2019promptD-v1_RDntuplizer_%s" % (OUT_LOC_RD,i,ntuplesName)
                 if os.path.exists(output_dir):
                     print(bcolors.FAIL + "Warning: output directory '%s' already exists!" % output_dir + bcolors.ENDC)
-                n_files_per_job = 40
+                n_files_per_job = FILESPERJOB[dataset]
                 max_run_time = '48h'
                 nice = 1
                 cmd = "python %s/create-condor-jobs -i %s/../production/inputFiles_ParkingBPH%i_Run2018D-05May2019promptD-v1_MINIAOD.txt -o %s/out_CAND.root -c %s/../config/%s -t %s -N %i --maxtime %s --nice %i" % (FILE_PATH, FILE_PATH,i,output_dir,FILE_PATH,config,ntuplesName,n_files_per_job,max_run_time,nice)

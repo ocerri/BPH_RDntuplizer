@@ -21,11 +21,11 @@
 
 #define __PvalChi2Vtx_min__ 0.005 // Very loose cut
 #define __dzMax__ 3.0
-#define __dmJpsi_max__ 0.4 // loose cut
-#define __sigIPpfCand_min__ 2. // loose cut
-#define __pThad_min__ 0.5 // loose cut
-#define __dmKst_max__ 0.3 // loose cut
-#define __dmB0_max__ 0.5 // loose cut
+#define __pThad_min__ 0.6 // loose cut
+#define __pTmuon_min__ 3.0 // loose cut
+#define __dmJpsi_max__ 0.1 // loose cut
+#define __dmKst_max__ 0.13 // loose cut
+#define __dmB0_max__ 0.3 // loose cut
 
 using namespace std;
 
@@ -101,15 +101,6 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
     edm::Handle<vector<reco::Vertex>> vtxHandle;
     iEvent.getByToken(vtxSrc_, vtxHandle);
     auto primaryVtx = (*vtxHandle)[0];
-    if (verbose) {
-      cout << "Event with " << nMu << " muons" << endl;
-      int idxMu = 0;
-      for(auto m : *muonHandle ) {
-        cout << Form("i: %d, pt: %.1f, eta: %.1f, phi: %.1f, SoftId: ", idxMu, m.pt(), m.eta(), m.phi()) << m.isSoftMuon(primaryVtx);
-        cout << Form(", dz: %.2f, hasInnerTrack: ", m.muonBestTrack()->dz(primaryVtx.position())) << !m.innerTrack().isNull() << endl;
-        idxMu++;
-      }
-    }
 
     edm::Handle<vector<pat::Muon>> trgMuonsHandle;
     iEvent.getByToken(TrgMuonSrc_, trgMuonsHandle);
@@ -124,14 +115,14 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
     for(uint i1 = 0; i1 < nMu -1; i1++){
       auto m1 = (*muonHandle)[i1];
       if (m1.innerTrack().isNull()) continue;
-      // if (!m1.isSoftMuon(primaryVtx)) continue;
       if (!m1.isMediumMuon()) continue;
+      if (m1.pt() < __pTmuon_min__) continue;
 
       for(uint i2 = i1+1; i2 < nMu; i2++){
         auto m2 = (*muonHandle)[i2];
         if (m2.innerTrack().isNull()) continue;
-        // if (!m2.isSoftMuon(primaryVtx)) continue;
         if (!m2.isMediumMuon()) continue;
+        if (m2.pt() < __pTmuon_min__) continue;
         if(m1.charge() * m2.charge() != -1) continue;
 
         auto mup = m1;
@@ -171,6 +162,19 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
     iEvent.getByToken(PFCandSrc_, pfCandHandle);
     unsigned int N_pfCand = pfCandHandle->size();
 
+    vector<reco::Vertex> possibleVtxs = {};
+    // cout << "Filling possible vertexes" << endl;
+    for(uint i_vtx = 0; i_vtx<vtxHandle->size(); i_vtx++) {
+      auto vtx = (*vtxHandle)[i_vtx];
+      if (vtx.ndof() <= 4) continue;
+      reco::Vertex tmp = vtxu::refit_vertex(iEvent, iSetup, i_vtx, 0, *pfCandHandle);
+      if (tmp.isValid()) possibleVtxs.push_back(tmp);
+    }
+    if (possibleVtxs.size() == 0) {
+      cout << "No possible primary vertices" << endl;
+      assert(false);
+    }
+
     int n_K = 0, n_pi = 0, n_Kst = 0, n_B = 0;
 
     /*
@@ -188,13 +192,15 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
       if(K.pt() < __pThad_min__) continue;
       // Require to be close to the trigger muon;
       auto K_tk = vtxu::fix_track(K.bestTrack());
-      // Require significant impact parameter
-      auto dxy = K_tk.dxy(*beamSpotHandle);
-      double dxyErr = vtxu::dxyError(K_tk,*beamSpotHandle);
-      auto K_sigdxy_BS = fabs(dxy)/dxyErr;
+      auto K_dxy_BS = K_tk.dxy(*beamSpotHandle);
+      double K_dxyErr_BS = vtxu::dxyError(K_tk,*beamSpotHandle);
+      auto K_sigdxy_BS = fabs(K_dxy_BS)/K_dxyErr_BS;
+      auto K_dxy_PV = K_tk.dxy(primaryVtx.position());
+      double K_dxyErr_PV = vtxu::dxyError(K_tk, primaryVtx);
+      auto K_sigdxy_PV = fabs(K_dxy_PV)/K_dxyErr_PV;
+
       auto K_norm_chi2 = K_tk.normalizedChi2();
       auto K_N_valid_hits = K_tk.numberOfValidHits();
-      if (K_sigdxy_BS < __sigIPpfCand_min__) continue;
 
       n_K++;
       if(verbose){cout << Form("K cand found i:%d, pt:%.2f, eta:%.2f, phi:%.2f ", i_k, K.pt(), K.eta(), K.phi()) << endl;}
@@ -213,13 +219,15 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
         if(pi.pt() < __pThad_min__) continue;
         // Require to be close to the trigger muon;
         auto pi_tk = vtxu::fix_track(pi.bestTrack());
-        // Require significant impact parameter
-        auto dxy = pi_tk.dxy(*beamSpotHandle);
-        double dxyErr = vtxu::dxyError(pi_tk,*beamSpotHandle);
-        auto pi_sigdxy_BS = fabs(dxy)/dxyErr;
+        auto pi_dxy_BS = pi_tk.dxy(*beamSpotHandle);
+        double pi_dxyErr_BS = vtxu::dxyError(pi_tk,*beamSpotHandle);
+        auto pi_sigdxy_BS = fabs(pi_dxy_BS)/pi_dxyErr_BS;
+        auto pi_dxy_PV = pi_tk.dxy(primaryVtx.position());
+        double pi_dxyErr_PV = vtxu::dxyError(pi_tk, primaryVtx);
+        auto pi_sigdxy_PV = fabs(pi_dxy_PV)/pi_dxyErr_PV;
+
         auto pi_norm_chi2 = pi_tk.normalizedChi2();
         auto pi_N_valid_hits = pi_tk.numberOfValidHits();
-        if (pi_sigdxy_BS < __sigIPpfCand_min__) continue;
 
         n_pi++;
         if(verbose){cout << Form("pi cand found i:%d, pt:%.2f, eta:%.2f, phi:%.2f ", i_pi, pi.pt(), pi.eta(), pi.phi()) << endl;}
@@ -227,7 +235,7 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
         //Fit the vertex w/o mass constraint
         auto KstKinTree = vtxu::FitKst_piK(iSetup, pi, K, false);
         auto res_piK = vtxu::fitQuality(KstKinTree, __PvalChi2Vtx_min__);
-        if(!res_piK.isValid) continue;
+        if(!res_piK.isGood) continue;
 
         KstKinTree->movePointerToTheTop();
         auto mass_piK = KstKinTree->currentParticle()->currentState().mass();
@@ -245,7 +253,7 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
         auto sigdxy_vtxKst_PV = fabs(dxy_vtxKst_PV.first)/dxy_vtxKst_PV.second;
         auto dxy_vtxKst_BS = vtxu::vtxsTransverseDistanceFromBeamSpot(*beamSpotHandle, vtxKst);
         auto sigdxy_vtxKst_BS = fabs(dxy_vtxKst_BS.first)/dxy_vtxKst_BS.second;
-        if (sigdxy_vtxKst_BS < 2) continue;
+        // if (sigdxy_vtxKst_BS < 2) continue;
 
         auto PhiKinTree = vtxu::FitPhi_KK(iSetup, pi, K, false);
         float mass_KK = -1;
@@ -340,7 +348,7 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           RefCountedKinematicTree BKinTree;
           BKinTree = vtxu::FitB_mumupiK(iSetup, vecJpsiMuons[i_J].first, vecJpsiMuons[i_J].second, pi, K, false, false, false);
           auto res = vtxu::fitQuality(BKinTree, __PvalChi2Vtx_min__);
-          if(!res.isValid) continue;
+          if(!res.isGood) continue;
           auto mass = BKinTree->currentParticle()->currentState().mass();
           if(fabs(mass - mass_B0) > __dmB0_max__) continue;
 
@@ -348,25 +356,6 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           auto B = BKinTree->currentParticle();
           auto vtxB = BKinTree->currentDecayVertex();
           // Looking for the best vertex to associate it with
-
-          vector<reco::Vertex> possibleVtxs = {};
-          // cout << "Filling possible vertexes" << endl;
-          for(uint i_vtx = 0; i_vtx<vtxHandle->size(); i_vtx++) {
-            auto vtx = (*vtxHandle)[i_vtx];
-            if (vtx.ndof() <= 4) continue;
-            reco::Vertex tmp = vtxu::refit_vertex(iEvent, iSetup, i_vtx, 0, *pfCandHandle);
-            if (tmp.isValid())
-              possibleVtxs.push_back(tmp);
-            else {
-              cout << "[ERROR] Invalid vertex refit for " << i_vtx << endl;
-            }
-          }
-          if (possibleVtxs.size() == 0) {
-            cout << "No possible primary vertices" << endl;
-            assert(false);
-          }
-
-
           uint i_best = 0;
           auto maxCos = vtxu::computePointingCos(possibleVtxs[0], vtxB, B);
           for(uint i_vtx = 1; i_vtx < possibleVtxs.size(); i_vtx++) {
@@ -402,13 +391,24 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           */
           AddTLVToOut(vtxu::getTLVfromCand(pi, mass_Pi), string("pi"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["pi_charge"].push_back(pi.charge());
+          (*outputVecNtuplizer)["pi_dxy_BS"].push_back(pi_dxy_BS);
+          (*outputVecNtuplizer)["pi_dxyErr_BS"].push_back(pi_dxyErr_BS);
           (*outputVecNtuplizer)["pi_sigdxy_BS"].push_back(pi_sigdxy_BS);
+          (*outputVecNtuplizer)["pi_dxy_PV"].push_back(pi_dxy_PV);
+          (*outputVecNtuplizer)["pi_dxyErr_PV"].push_back(pi_dxyErr_PV);
+          (*outputVecNtuplizer)["pi_sigdxy_PV"].push_back(pi_sigdxy_PV);
           (*outputVecNtuplizer)["pi_norm_chi2"].push_back(pi_norm_chi2);
           (*outputVecNtuplizer)["pi_N_valid_hits"].push_back(pi_N_valid_hits);
           (*outputVecNtuplizer)["pi_lostInnerHits"].push_back(pi.lostInnerHits());
+
           AddTLVToOut(vtxu::getTLVfromCand(K, mass_K), string("K"), &(*outputVecNtuplizer));
           (*outputVecNtuplizer)["K_charge"].push_back(K.charge());
+          (*outputVecNtuplizer)["K_dxy_BS"].push_back(K_dxy_BS);
+          (*outputVecNtuplizer)["K_dxyErr_BS"].push_back(K_dxyErr_BS);
           (*outputVecNtuplizer)["K_sigdxy_BS"].push_back(K_sigdxy_BS);
+          (*outputVecNtuplizer)["K_dxy_PV"].push_back(K_dxy_PV);
+          (*outputVecNtuplizer)["K_dxyErr_PV"].push_back(K_dxyErr_PV);
+          (*outputVecNtuplizer)["K_sigdxy_PV"].push_back(K_sigdxy_PV);
           (*outputVecNtuplizer)["K_norm_chi2"].push_back(K_norm_chi2);
           (*outputVecNtuplizer)["K_N_valid_hits"].push_back(K_N_valid_hits);
           (*outputVecNtuplizer)["K_lostInnerHits"].push_back(K.lostInnerHits());
