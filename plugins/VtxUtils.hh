@@ -24,7 +24,7 @@ namespace vtxu {
     bool isGood = false;
   };
 
-  reco::Vertex refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, size_t ipv, bool beamSpotContrant, const std::vector<pat::PackedCandidate> &pfCandHandle);
+  reco::Vertex refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, size_t ipv, bool beamSpotConstraint, const std::vector<pat::PackedCandidate> &pfCandHandle);
 
   void set_isMC(int _isMC);
 

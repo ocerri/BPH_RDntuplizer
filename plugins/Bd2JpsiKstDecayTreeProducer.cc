@@ -19,7 +19,7 @@
 
 #include "VtxUtils.hh"
 
-#define __PvalChi2Vtx_min__ 0.05 // Very loose cut
+#define __PvalChi2Vtx_min__ 0.005 // Very loose cut
 #define __dzMax__ 3.0
 #define __dmJpsi_max__ 0.4 // loose cut
 #define __sigIPpfCand_min__ 2. // loose cut
@@ -141,7 +141,7 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
         if(verbose){cout << "Fitting the J/Psi from: " << Form("%d %d", i1, i2) << endl;}
         auto kinTree = vtxu::FitJpsi_mumu(iSetup, mup, mum, false);
         auto res = vtxu::fitQuality(kinTree, __PvalChi2Vtx_min__);
-        if(!res.isValid) continue;
+        if(!res.isGood) continue;
 
         kinTree->movePointerToTheTop();
         double massMuPair = kinTree->currentParticle()->currentState().mass();
@@ -245,6 +245,7 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
         auto sigdxy_vtxKst_PV = fabs(dxy_vtxKst_PV.first)/dxy_vtxKst_PV.second;
         auto dxy_vtxKst_BS = vtxu::vtxsTransverseDistanceFromBeamSpot(*beamSpotHandle, vtxKst);
         auto sigdxy_vtxKst_BS = fabs(dxy_vtxKst_BS.first)/dxy_vtxKst_BS.second;
+        if (sigdxy_vtxKst_BS < 2) continue;
 
         auto PhiKinTree = vtxu::FitPhi_KK(iSetup, pi, K, false);
         float mass_KK = -1;
@@ -353,7 +354,7 @@ void Bd2JpsiKstDecayTreeProducer::produce(edm::Event& iEvent, const edm::EventSe
           for(uint i_vtx = 0; i_vtx<vtxHandle->size(); i_vtx++) {
             auto vtx = (*vtxHandle)[i_vtx];
             if (vtx.ndof() <= 4) continue;
-            reco::Vertex tmp = vtxu::refit_vertex(iEvent, iSetup, i_vtx, 1, *pfCandHandle);
+            reco::Vertex tmp = vtxu::refit_vertex(iEvent, iSetup, i_vtx, 0, *pfCandHandle);
             if (tmp.isValid())
               possibleVtxs.push_back(tmp);
             else {

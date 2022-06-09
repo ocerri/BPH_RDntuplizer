@@ -73,7 +73,7 @@ static int isMC = 0;
  * we fix the covariance matrix.
  *
  * See https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideOfflinePrimaryVertexProduction#Refitting_vertices_with_selected. */
-reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, size_t ipv, bool beamSpotContrant, const std::vector<pat::PackedCandidate> &pfCandHandle)
+reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetup, size_t ipv, bool beamSpotConstraint, const std::vector<pat::PackedCandidate> &pfCandHandle)
 {
     unsigned int i;
     std::vector<reco::TransientTrack> mytracks;
@@ -114,7 +114,7 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
     }
 
     AdaptiveVertexFitter theFitter;
-    if (beamSpotContrant) {
+    if (beamSpotConstraint) {
       TransientVertex tmp = theFitter.vertex(mytracks, vertexBeamSpot);
       return tmp;
     }
