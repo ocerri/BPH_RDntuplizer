@@ -93,14 +93,15 @@ reco::Vertex vtxu::refit_vertex(edm::Event& iEvent, const edm::EventSetup& iSetu
         const pat::PackedCandidate &ptk = pfCandHandle[i];
 
         if (!ptk.hasTrackDetails()) continue;
+        if (ptk.pt() < 0.5) continue;
 
         if (ptk.fromPV(ipv) < 3) continue;
-
         // Equivalent to the below
         // if (ptk.pvAssociationQuality() != pat::PackedCandidate::PVAssociationQuality::UsedInFitTight) continue;
         // auto vtxTK = ptk.vertexRef();
         // auto vtxMINI = (*vtxHandle)[ipv];
         // if (vtxTK->x() != vtxMINI.x() || vtxTK->y() != vtxMINI.y() || vtxTK->z() != vtxMINI.z()) continue;
+
 
         auto tk = ptk.bestTrack();
         reco::TransientTrack transientTrack = TTBuilder->build(fix_track(tk));
@@ -252,6 +253,18 @@ reco::Track vtxu::fix_track(const reco::Track *tk, double delta)
     if (min_eig < 0) {
         for (i = 0; i < cov.kRows; i++)
             cov(i,i) -= min_eig - delta;
+    }
+
+    // Apply corrections
+    cout << tk->momentum()->rho() << endl;
+    cout << tk->pt() << endl;
+    if (isMC) {
+      // reco::TrackBase::Vector
+
+    }
+    else {
+      // reco::TrackBase::Vector
+
     }
 
     return reco::Track(tk->chi2(), tk->ndof(), tk->referencePoint(), tk->momentum(), tk->charge(), cov, tk->algo(), (reco::TrackBase::TrackQuality) tk->qualityMask());
