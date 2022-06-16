@@ -45,6 +45,10 @@
 #include "VtxUtils.hh"
 #include "TMatrixDSym.h"
 #include "TVectorD.h"
+#include "TRandom.h"
+#include "TFile.h"
+#include "TMath.h"
+#include "TH2D.h"
 
 using namespace std;
 using namespace vtxu;
@@ -68,6 +72,8 @@ using namespace vtxu;
 #define _B0MassErr_ 0.00026
 
 static int isMC = 0;
+TFile fBfield("/storage/af/group/rdst_analysis/BPhysics/data/calibration/bFieldMap_2Dover3D.root", "r");
+TH2D* hBfieldMapsRatio = (TH2D*) fBfield.Get("bfieldMap");
 
 /* Returns a new vertex fit using the adaptive vertex fitter with tracks after
  * we fix the covariance matrix.
@@ -256,18 +262,21 @@ reco::Track vtxu::fix_track(const reco::Track *tk, double delta)
     }
 
     // Apply corrections
-    cout << tk->momentum()->rho() << endl;
-    cout << tk->pt() << endl;
+    double multCorr = 0;
     if (isMC) {
-      // reco::TrackBase::Vector
-
+      double smear = tk->pt() > 1.? 3e-3 : 6e-6;
+      multCorr = gRandom->Gaus(1.0, smear);
     }
     else {
-      // reco::TrackBase::Vector
-
+      double eta = tk->eta();
+      if (fabs(eta) > 2.4) eta = TMath::Sign(2.39, eta);
+      double phi = vtxu::dPhi(tk->phi(), 0);
+      auto idx = hBfieldMapsRatio->GetBin(hBfieldMapsRatio->GetXaxis()->FindBin(phi), hBfieldMapsRatio->GetYaxis()->FindBin(eta));
+      multCorr = 1./hBfieldMapsRatio->GetBinContent(idx);
     }
+    reco::TrackBase::Vector p(multCorr*tk->px(), multCorr*tk->py(), multCorr*tk->pz());
 
-    return reco::Track(tk->chi2(), tk->ndof(), tk->referencePoint(), tk->momentum(), tk->charge(), cov, tk->algo(), (reco::TrackBase::TrackQuality) tk->qualityMask());
+    return reco::Track(tk->chi2(), tk->ndof(), tk->referencePoint(), p, tk->charge(), cov, tk->algo(), (reco::TrackBase::TrackQuality) tk->qualityMask());
 }
 
 RefCountedKinematicTree vtxu::FitD0(const edm::EventSetup& iSetup, pat::PackedCandidate pi, pat::PackedCandidate K, bool mass_constraint) {
